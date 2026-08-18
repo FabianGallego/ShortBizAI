@@ -1,0 +1,12 @@
+# Query: foodshorta
+
+3 results - 3 files
+
+app\page.tsx:
+  15:   src="/logo-foodshortai.png"
+
+app\cliente\agente-aaf\page.tsx:
+  387:     src="/logo-foodshortai.png"
+
+app\diagnostico\page.tsx:
+  103:     src="/logo-foodshortai.png"
