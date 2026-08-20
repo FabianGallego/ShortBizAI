@@ -1,8 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 
-
-
 const pilares = [
   {
     numero: "01",
@@ -37,10 +35,6 @@ const pilares = [
     imagen: "/image/inteligencia-nueva.jpg",
   },
 ];
-
-
-
-
 
 export default function Home() {
   return (
@@ -159,39 +153,43 @@ export default function Home() {
 
           <div className="max-w-3xl">
 
-            <div className="flex items-center gap-4 mb-7">
+            <div className="mb-8 text-center">
 
-              <span className="w-12 h-[3px] bg-red-600" />
-
-              <p className="text-sm md:text-base font-extrabold tracking-[0.22em] text-gray-700">
+              <p className="text-red-600 text-lg md:text-xl lg:text-2xl font-black tracking-[0.18em]">
                 ATRAEMOS · ATENDEMOS · FIDELIZAMOS
               </p>
 
             </div>
 
 
-            <h1 className="text-5xl md:text-7xl lg:text-[78px] leading-[0.98] font-black tracking-tight text-gray-950">
+            <h1 className="text-5xl md:text-7xl lg:text-[76px] leading-[0.98] font-black tracking-tight text-gray-950">
 
-              El sistema para
+              El Sistema para
 
               <br />
 
               <span className="text-red-600">
-                hacer crecer
+                Hacer crecer
               </span>
 
               <br />
 
-              las ventas de tu negocio.
+              Las ventas de tu negocio.
 
             </h1>
 
 
-            <p className="mt-8 max-w-2xl text-lg md:text-xl leading-8 text-gray-600">
+            <p className="mt-7 max-w-2xl text-lg md:text-xl leading-7 text-gray-600">
 
-              ShortBizAI combina Video Shorts, Inteligencia Artificial y
-              automatización para atraer nuevos clientes, atenderlos mejor
-              y conseguir que regresen.
+              ShortBizAI integra estrategia, Inteligencia Artificial y automatización
+              para atraer nuevas personas, convertirlas en clientes y construir
+              relaciones cercanas que hagan que regresen.
+
+              <br />
+              <br />
+
+              Un sistema diseñado para aumentar la recurrencia, impulsar las ventas
+              y contribuir al crecimiento sostenido de tu empresa.
 
             </p>
 
@@ -239,145 +237,62 @@ export default function Home() {
 
 
       {/* =====================================================
-          FRASE CENTRAL
+          SISTEMA AAFI
       ===================================================== */}
-<section
-  id="inicio"
-  className="relative min-h-[820px] flex items-center overflow-hidden bg-white"
->
-  {/* IMAGEN DE FONDO */}
 
-  <div className="absolute inset-0">
-    <Image
-      src="/image/atraccion.jpg"
-      alt="ShortBizAI - Sistema de crecimiento empresarial"
-      fill
-      priority
-      sizes="100vw"
-      className="object-cover"
-    />
-  </div>
+      <section
+        id="sistema"
+        className="py-24 bg-gray-100"
+      >
 
-  {/* CAPA DE LECTURA */}
+        <div className="max-w-7xl mx-auto px-6 lg:px-10">
 
-  <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-white/30" />
+          <div className="rounded-3xl bg-gray-950 shadow-2xl">
 
-  {/* CONTENIDO */}
+            <div className="max-w-4xl mx-auto px-8 py-14 md:px-16 md:py-20 text-center">
 
-  <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-10 pt-24">
-
-    <div className="max-w-4xl">
-
-      {/* ETIQUETA */}
-
-      <div className="flex items-center gap-4 mb-8">
-        <span className="w-12 h-[3px] bg-red-600" />
-
-        <p className="text-sm md:text-base font-extrabold tracking-[0.22em] text-gray-700">
-          EL SISTEMA AAFI
-        </p>
-      </div>
+              <p className="text-red-500 font-black tracking-[0.22em] text-sm md:text-base">
+                EL SISTEMA AAFI
+              </p>
 
 
-      {/* TITULAR */}
+              <h2 className="mt-7 text-4xl md:text-6xl font-black leading-[1.05] text-white">
 
-      <h1 className="text-5xl md:text-7xl lg:text-[76px] leading-[0.98] font-black tracking-tight text-gray-950">
+                Atrae nuevos clientes.
 
-        Atrae nuevos clientes.
-        <br />
+                <br />
 
-        <span className="text-red-600">
-          Conquista su confianza.
-        </span>
+                <span className="text-red-500 whitespace-nowrap">
+                  Conquista su confianza.
+                </span>
 
-        <br />
+                <br />
 
-        Haz que regresen.
+                Hace que regresen.
 
-      </h1>
-
-
-      {/* DESCRIPCIÓN */}
-
-      <p className="mt-8 max-w-2xl text-lg md:text-xl leading-8 text-gray-600">
-
-        ShortBizAI integra estrategia, Inteligencia Artificial y
-        automatización para convertir personas interesadas en clientes
-        reales y recurrentes, impulsando las ventas y el crecimiento
-        sostenido de tu empresa.
-
-      </p>
+              </h2>
 
 
-      {/* BOTONES */}
-
-      <div className="mt-10 flex flex-col sm:flex-row gap-4">
-
-        <Link
-          href="/diagnostico"
-          className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg font-bold shadow-xl transition"
-        >
-          CONOCE EL SISTEMA
-
-          <span className="ml-4 text-xl">
-            →
-          </span>
-        </Link>
+              <div className="w-16 h-[3px] bg-red-500 mx-auto mt-8 mb-7" />
 
 
-        <Link
-          href="/cliente/agente-aaf"
-          className="inline-flex items-center justify-center bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 px-8 py-4 rounded-lg font-bold shadow-lg transition"
-        >
-          HACER UNA RESERVA
+              <p className="max-w-2xl mx-auto text-base md:text-lg leading-7 md:leading-8 text-gray-300">
 
-          <span className="ml-4 text-xl">
-            →
-          </span>
-        </Link>
+                Combinamos Video Shorts e Inteligencia Artificial para atraer personas
+                desde las redes sociales, brindarles una atención cercana y personalizada,
+                convertir su interés en clientes reales y construir una relación de confianza
+                que los motive a convertirse en clientes fieles y recurrentes. Así contribuimos
+                al crecimiento de la empresa.
 
-      </div>
+              </p>
 
+            </div>
 
-      {/* MICRO MENSAJE */}
+          </div>
 
-      <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold text-gray-500">
+        </div>
 
-        <span>
-          Atracción
-        </span>
-
-        <span className="text-red-600">
-          •
-        </span>
-
-        <span>
-          Atención
-        </span>
-
-        <span className="text-red-600">
-          •
-        </span>
-
-        <span>
-          Fidelización
-        </span>
-
-        <span className="text-red-600">
-          •
-        </span>
-
-        <span>
-          Inteligencia
-        </span>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
+      </section>
 
 
       {/* =====================================================
@@ -387,6 +302,8 @@ export default function Home() {
       <section className="py-28 bg-white">
 
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
+
+          {/* IMAGEN / TARJETA LIMPIA */}
 
           <div className="relative h-[520px] overflow-hidden rounded-3xl shadow-2xl">
 
@@ -399,34 +316,34 @@ export default function Home() {
               className="object-cover"
             />
 
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
-
-            <div className="absolute bottom-0 left-0 p-8 md:p-12 text-white">
-
-              <p className="text-sm font-semibold tracking-[0.25em] uppercase">
-                01 · ATRACCIÓN
-              </p>
+          </div>
 
 
+          {/* =================================================
+              TEXTO DEBAJO DE LA TARJETA
+          ================================================= */}
+
+          <div className="mt-10 px-6 md:px-10">
+
+            <p className="text-sm md:text-base font-semibold tracking-[0.25em] uppercase text-red-600">
+              01 · ATRACCIÓN
+            </p>
 
 
-              <h3 className="text-4xl md:text-6xl font-black mt-2 leading-[1.02]">
-  Haz que tu negocio
-  <br />
-  sea imposible de ignorar.
-</h3>
-
-<p className="mt-4 text-lg md:text-xl text-white/90 max-w-2xl leading-7">
-  Creamos Video Shorts estratégicos que presentan tu negocio de forma
-  atractiva, captan la atención de nuevos clientes y convierten tu
-  presencia en redes sociales en una oportunidad real de crecimiento.
-</p>
+            <h3 className="mt-3 text-4xl md:text-5xl font-black leading-tight text-gray-950">
+              Convierte la atención en clientes.
+            </h3>
 
 
+            <p className="mt-5 max-w-3xl text-lg md:text-xl text-gray-600 leading-8">
 
-            </div>
+              Creamos Video Shorts estratégicos que presentan tu negocio de forma
+              atractiva, captan la atención de nuevos clientes y convierten tu
+              presencia en redes sociales en una oportunidad real de crecimiento.
+
+            </p>
 
           </div>
 
@@ -483,7 +400,7 @@ export default function Home() {
               <p className="mt-7 text-lg leading-8 text-gray-600">
 
                 Mediante Inteligencia Artificial facilitamos la atención
-                de tus clientes y organizamos sus solicitudes de forma
+                de nuevos clientes y organizamos sus solicitudes o reservas de forma
                 rápida, clara y eficiente.
 
               </p>
@@ -491,9 +408,7 @@ export default function Home() {
 
               <p className="mt-5 text-lg leading-8 text-gray-600">
 
-                El cliente puede indicar su nombre, teléfono, fecha,
-                hora y cantidad de personas. El negocio recibe la solicitud
-                y puede confirmarla, cancelarla o modificarla.
+                A través de nuestro sistema inteligente y automatizado, cada persona recibe una atención cercana, rápida y efectiva. Sus necesidades son escuchadas y atendidas con respuestas claras y oportunas, acompañándola durante todo el proceso hasta completar su objetivo y disfrutar de los productos o servicios de tu negocio. Así construimos afinidad y confianza, creando experiencias que hacen que quieran volver y convertirse en clientes fieles y recurrentes.
 
               </p>
 
