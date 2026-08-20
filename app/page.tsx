@@ -262,7 +262,7 @@ export default function Home() {
   Haz que regresen.
 </h2>
 
-<p className="mt-6 text-lg md:text-xl leading-8 text-gray-500 max-w-3xl mx-auto">
+<p className="mt-5 text-lg md:text-xl leading-7 text-gray-600 max-w-2xl mx-auto">
   ShortBizAI integra estrategia, Inteligencia Artificial y automatización
   para atraer nuevas personas, convertirlas en clientes, construir
   relaciones cercanas y lograr que regresen. Un sistema diseñado para
