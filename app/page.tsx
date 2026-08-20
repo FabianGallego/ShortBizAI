@@ -1,40 +1,46 @@
 import Link from "next/link";
 import Image from "next/image";
 
+
+
 const pilares = [
   {
     numero: "01",
     titulo: "Atracción",
-    subtitulo: "Video Shorts",
+    subtitulo: "Contenido que genera visibilidad",
     descripcion:
-      "Creamos Video Shorts profesionales para mostrar tu negocio, captar la atención de nuevos clientes y generar oportunidades reales de venta.",
+      "Convertimos la presencia digital de tu negocio en una herramienta comercial. Creamos Video Shorts estratégicos que presentan tu marca, despiertan interés y llevan nuevos prospectos hacia tu negocio.",
     imagen: "/image/atraccion.jpg",
   },
   {
     numero: "02",
     titulo: "Atención",
-    subtitulo: "Inteligencia Artificial",
+    subtitulo: "Inteligencia que responde y organiza",
     descripcion:
-      "Atendemos a tus clientes mediante Inteligencia Artificial, facilitando reservas, consultas y solicitudes de forma rápida y organizada.",
+      "Integramos Inteligencia Artificial para atender consultas, gestionar solicitudes y facilitar reservas de forma ágil y estructurada, ofreciendo a cada cliente una experiencia rápida y profesional.",
     imagen: "/image/atencion.jpg",
   },
   {
     numero: "03",
     titulo: "Fidelización",
-    subtitulo: "Clientes que regresan",
+    subtitulo: "Relaciones que generan recurrencia",
     descripcion:
-      "Utilizamos la información de tus clientes para crear seguimiento, promociones y campañas que incentiven nuevas compras y visitas.",
+      "Transformamos cada interacción en una oportunidad de relación. Utilizamos seguimiento y automatización para mantener el contacto, activar nuevas oportunidades y aumentar la frecuencia de regreso de tus clientes.",
     imagen: "/image/fidelizacion-nueva.jpg",
   },
   {
     numero: "04",
     titulo: "Inteligencia",
-    subtitulo: "Reportes empresariales",
+    subtitulo: "Datos para decidir mejor",
     descripcion:
-      "Obtén información clara sobre clientes, reservas y resultados para entender cómo funciona el sistema y tomar mejores decisiones.",
+      "Convertimos la actividad de tu negocio en información útil para la gestión. Analiza clientes, reservas y resultados para identificar oportunidades y tomar decisiones comerciales con mayor claridad.",
     imagen: "/image/inteligencia-nueva.jpg",
   },
 ];
+
+
+
+
 
 export default function Home() {
   return (
@@ -243,26 +249,28 @@ export default function Home() {
 
         <div className="max-w-5xl mx-auto px-6 text-center">
 
-          <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
-            EL SISTEMA AAFI
-          </p>
+
+<p className="text-red-600 font-bold tracking-[0.22em] text-sm">
+  EL SISTEMA AAFI
+</p>
+
+<h2 className="mt-5 text-4xl md:text-6xl font-black tracking-tight text-gray-950 leading-[1.05]">
+  Atrae nuevos clientes.
+  <br />
+  Conquista su confianza.
+  <br />
+  Haz que regresen.
+</h2>
+
+<p className="mt-6 text-lg md:text-xl leading-8 text-gray-500 max-w-3xl mx-auto">
+  ShortBizAI integra estrategia, Inteligencia Artificial y automatización
+  para atraer nuevas personas, convertirlas en clientes, construir
+  relaciones cercanas y lograr que regresen. Un sistema diseñado para
+  aumentar la recurrencia, impulsar las ventas y contribuir al crecimiento
+  sostenido de tu empresa.
+</p>
 
 
-          <h2 className="mt-5 text-4xl md:text-6xl font-black tracking-tight text-gray-950">
-
-            No se trata solamente
-            <br />
-            de conseguir clientes.
-
-          </h2>
-
-
-          <p className="mt-7 text-xl md:text-2xl leading-9 text-gray-500 max-w-3xl mx-auto">
-
-            Se trata de crear un sistema que atraiga personas,
-            atienda sus necesidades y consiga que vuelvan.
-
-          </p>
 
         </div>
 
@@ -395,18 +403,21 @@ export default function Home() {
               </p>
 
 
-              <h3 className="text-4xl md:text-6xl font-black mt-2">
-                Haz que tu negocio sea visto.
-              </h3>
 
 
-              <p className="mt-4 text-lg md:text-xl text-white/90 max-w-2xl leading-8">
+              <h3 className="text-4xl md:text-6xl font-black mt-2 leading-[1.02]">
+  Haz que tu negocio
+  <br />
+  sea imposible de ignorar.
+</h3>
 
-                Creamos Video Shorts profesionales para mostrar tu negocio,
-                generar impacto y llevar tu marca a las diferentes redes
-                sociales.
+<p className="mt-4 text-lg md:text-xl text-white/90 max-w-2xl leading-7">
+  Creamos Video Shorts estratégicos que presentan tu negocio de forma
+  atractiva, captan la atención de nuevos clientes y convierten tu
+  presencia en redes sociales en una oportunidad real de crecimiento.
+</p>
 
-              </p>
+
 
             </div>
 
