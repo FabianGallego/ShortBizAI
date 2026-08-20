@@ -241,136 +241,143 @@ export default function Home() {
       {/* =====================================================
           FRASE CENTRAL
       ===================================================== */}
+<section
+  id="inicio"
+  className="relative min-h-[820px] flex items-center overflow-hidden bg-white"
+>
+  {/* IMAGEN DE FONDO */}
 
-      <section
-        id="sistema"
-        className="py-24 bg-white"
-      >
+  <div className="absolute inset-0">
+    <Image
+      src="/image/atraccion.jpg"
+      alt="ShortBizAI - Sistema de crecimiento empresarial"
+      fill
+      priority
+      sizes="100vw"
+      className="object-cover"
+    />
+  </div>
 
-        <div className="max-w-5xl mx-auto px-6 text-center">
+  {/* CAPA DE LECTURA */}
 
+  <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-white/30" />
 
-<p className="text-red-600 font-bold tracking-[0.22em] text-sm">
-  EL SISTEMA AAFI
-</p>
+  {/* CONTENIDO */}
 
-<h2 className="mt-5 text-4xl md:text-6xl font-black tracking-tight text-gray-950 leading-[1.05]">
-  Atrae nuevos clientes.
-  <br />
-  Conquista su confianza.
-  <br />
-  Haz que regresen.
-</h2>
+  <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-10 pt-24">
 
-<p className="mt-5 text-lg md:text-xl leading-7 text-gray-600 max-w-2xl mx-auto">
-  ShortBizAI integra estrategia, Inteligencia Artificial y automatización
-  para atraer nuevas personas, convertirlas en clientes, construir
-  relaciones cercanas y lograr que regresen. Un sistema diseñado para
-  aumentar la recurrencia, impulsar las ventas y contribuir al crecimiento
-  sostenido de tu empresa.
-</p>
+    <div className="max-w-4xl">
 
+      {/* ETIQUETA */}
 
+      <div className="flex items-center gap-4 mb-8">
+        <span className="w-12 h-[3px] bg-red-600" />
 
-        </div>
-
-      </section>
-
-
-      {/* =====================================================
-          PILARES
-      ===================================================== */}
-
-      <section
-        id="soluciones"
-        className="bg-gray-100 py-24"
-      >
-
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
-
-          <div className="max-w-3xl mb-14">
-
-            <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
-              NUESTRO MÉTODO
-            </p>
+        <p className="text-sm md:text-base font-extrabold tracking-[0.22em] text-gray-700">
+          EL SISTEMA AAFI
+        </p>
+      </div>
 
 
-            <h2 className="mt-4 text-4xl md:text-6xl font-black text-gray-950">
+      {/* TITULAR */}
 
-              Cuatro áreas.
-              <br />
-              SISTEMA AAFI
+      <h1 className="text-5xl md:text-7xl lg:text-[76px] leading-[0.98] font-black tracking-tight text-gray-950">
 
-            </h2>
+        Atrae nuevos clientes.
+        <br />
 
-          </div>
+        <span className="text-red-600">
+          Conquista su confianza.
+        </span>
 
+        <br />
 
-          <div className="grid md:grid-cols-2 gap-7">
+        Haz que regresen.
 
-            {pilares.map((pilar) => (
-
-              <article
-                key={pilar.numero}
-                className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-500"
-              >
-
-                {/* IMAGEN */}
-
-                <div className="relative h-[280px] overflow-hidden">
-
-                  <Image
-                    src={pilar.imagen}
-                    alt={`${pilar.titulo} - ShortBizAI`}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-cover group-hover:scale-105 transition duration-700"
-                  />
+      </h1>
 
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
+      {/* DESCRIPCIÓN */}
+
+      <p className="mt-8 max-w-2xl text-lg md:text-xl leading-8 text-gray-600">
+
+        ShortBizAI integra estrategia, Inteligencia Artificial y
+        automatización para convertir personas interesadas en clientes
+        reales y recurrentes, impulsando las ventas y el crecimiento
+        sostenido de tu empresa.
+
+      </p>
 
 
-                  <div className="absolute bottom-6 left-7">
+      {/* BOTONES */}
 
-                    <span className="text-white/80 font-bold text-sm tracking-widest">
-                      {pilar.numero}
-                    </span>
+      <div className="mt-10 flex flex-col sm:flex-row gap-4">
 
+        <Link
+          href="/diagnostico"
+          className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg font-bold shadow-xl transition"
+        >
+          CONOCE EL SISTEMA
 
-                    <h3 className="text-3xl font-black text-white mt-1">
-                      {pilar.titulo}
-                    </h3>
-
-                  </div>
-
-                </div>
-
-
-                {/* TEXTO */}
-
-                <div className="p-7">
-
-                  <p className="text-red-600 font-bold">
-                    {pilar.subtitulo}
-                  </p>
+          <span className="ml-4 text-xl">
+            →
+          </span>
+        </Link>
 
 
-                  <p className="mt-4 text-gray-600 leading-7">
-                    {pilar.descripcion}
-                  </p>
+        <Link
+          href="/cliente/agente-aaf"
+          className="inline-flex items-center justify-center bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 px-8 py-4 rounded-lg font-bold shadow-lg transition"
+        >
+          HACER UNA RESERVA
 
-                </div>
+          <span className="ml-4 text-xl">
+            →
+          </span>
+        </Link>
 
-              </article>
+      </div>
 
-            ))}
 
-          </div>
+      {/* MICRO MENSAJE */}
 
-        </div>
+      <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold text-gray-500">
 
-      </section>
+        <span>
+          Atracción
+        </span>
+
+        <span className="text-red-600">
+          •
+        </span>
+
+        <span>
+          Atención
+        </span>
+
+        <span className="text-red-600">
+          •
+        </span>
+
+        <span>
+          Fidelización
+        </span>
+
+        <span className="text-red-600">
+          •
+        </span>
+
+        <span>
+          Inteligencia
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
 
 
       {/* =====================================================
