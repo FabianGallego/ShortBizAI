@@ -8,7 +8,7 @@ const pilares = [
     subtitulo: "Contenido que genera visibilidad",
     descripcion:
       "Convertimos la presencia digital de tu negocio en una herramienta comercial. Creamos Video Shorts estratégicos que presentan tu marca, despiertan interés y llevan nuevos prospectos hacia tu negocio.",
-    imagen: "/image/atraccion.jpg",
+    imagen: "/image/atraccion2.jpg",
   },
   {
     numero: "02",
@@ -119,7 +119,7 @@ export default function Home() {
         <div className="absolute inset-0">
 
           <Image
-            src="/image/atraccion.jpg"
+            src="/image/atraccion2.jpg"
             alt="ShortBizAI - Atracción de clientes"
             fill
             priority
@@ -277,7 +277,7 @@ export default function Home() {
    {/* CELULAR — franja central vertical de la imagen horizontal */}
 <div className="block md:hidden relative w-full h-[600px] overflow-hidden">
   <Image
-    src="/image/atraccion.jpg"
+    src="/image/atraccion2.jpg"
     alt="Video Shorts para atraer nuevos clientes"
     fill
     priority
@@ -291,7 +291,7 @@ export default function Home() {
           <div className="hidden md:block relative w-full aspect-[16/9] overflow-hidden bg-black">
 
             <Image
-              src="/image/atraccion.jpg"
+              src="/image/atraccion2.jpg"
               alt="Video Shorts para atraer nuevos clientes"
               fill
               priority
