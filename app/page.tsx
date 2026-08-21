@@ -501,16 +501,7 @@ export default function Home() {
           resultados.
         </h2>
 
-        <p className="mt-7 text-lg leading-8 text-gray-600">
-          Convertimos la información de tu negocio en datos claros para que
-          puedas entender qué está funcionando y dónde existen nuevas
-          oportunidades de crecimiento.
-        </p>
-
-        <p className="mt-5 text-lg leading-8 text-gray-600">
-          Recibe información sobre clientes, ventas, productos y resultados
-          para tomar mejores decisiones y hacer crecer tu negocio.
-        </p>
+        
 
       </div>
 
@@ -524,7 +515,16 @@ export default function Home() {
           sizes="100vw"
           className="object-cover"
         />
+<p className="mt-7 text-lg leading-8 text-gray-600">
+          Convertimos la información de tu negocio en datos claros para que
+          puedas entender qué está funcionando y dónde existen nuevas
+          oportunidades de crecimiento.
+        </p>
 
+        <p className="mt-5 text-lg leading-8 text-gray-600">
+          Recibe información sobre clientes, ventas, productos y resultados
+          para tomar mejores decisiones y hacer crecer tu negocio.
+        </p>
       </div>
 
     </div>
