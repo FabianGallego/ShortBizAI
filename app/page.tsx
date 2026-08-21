@@ -333,65 +333,58 @@ export default function Home() {
           ATENCIÓN IA
       ===================================================== */}
 
-      <section className="py-28 bg-gray-100">
+     <section className="py-28 bg-gray-100">
 
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+  <div className="max-w-7xl mx-auto px-0 lg:px-10">
 
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+    <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-            <div className="relative w-full h-[600px] overflow-hidden">
-  <Image
-    src="/image/atencion2.jpg"
-    alt="Atención y reservas con inteligencia artificial"
-    fill
-    priority
-    sizes="100vw"
-    className="object-cover"
-  />
-</div>
+      <div className="relative w-full h-[600px] overflow-hidden">
+        <Image
+          src="/image/atencion2.jpg"
+          alt="Atención y reservas con inteligencia artificial"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+      </div>
 
+      <div className="order-1 lg:order-2">
 
-            <div className="order-1 lg:order-2">
+        <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
+          02 · ATENCIÓN
+        </p>
 
-              <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
-                02 · ATENCIÓN
-              </p>
+        <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
+          Atención
+          <br />
+          inteligente.
+        </h2>
 
-              <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
+        <p className="mt-7 text-lg leading-7 text-gray-600">
+          Mediante Inteligencia Artificial facilitamos la atención
+          de nuevos clientes y organizamos sus solicitudes o reservas
+          de forma rápida, clara y eficiente.
+        </p>
 
-                Atención
-                <br />
-                inteligente.
+        <p className="mt-4 text-lg leading-7 text-gray-600">
+          A través de nuestro sistema inteligente y automatizado,
+          cada persona recibe una atención cercana, rápida y efectiva.
+          Sus necesidades son escuchadas y atendidas con respuestas claras
+          y oportunas, acompañándola durante todo el proceso hasta completar
+          su objetivo y disfrutar de los productos o servicios de tu negocio.
+          Así construimos afinidad y confianza, creando experiencias que hacen
+          que quieran volver y convertirse en clientes fieles y recurrentes.
+        </p>
 
-              </h2>
+      </div>
 
-              <p className="mt-7 text-lg leading-7 text-gray-600">
+    </div>
 
-                Mediante Inteligencia Artificial facilitamos la atención
-                de nuevos clientes y organizamos sus solicitudes o reservas
-                de forma rápida, clara y eficiente.
+  </div>
 
-              </p>
-
-              <p className="mt-4 text-lg leading-7 text-gray-600">
-
-                A través de nuestro sistema inteligente y automatizado,
-                cada persona recibe una atención cercana, rápida y efectiva.
-                Sus necesidades son escuchadas y atendidas con respuestas claras
-                y oportunas, acompañándola durante todo el proceso hasta completar
-                su objetivo y disfrutar de los productos o servicios de tu negocio.
-                Así construimos afinidad y confianza, creando experiencias que hacen
-                que quieran volver y convertirse en clientes fieles y recurrentes.
-
-              </p>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
+</section>
 
 
       {/* =====================================================
