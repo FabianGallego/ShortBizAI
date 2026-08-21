@@ -339,19 +339,16 @@ export default function Home() {
 
           <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-            <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-xl">
-
-              <Image
-                src="/image/atencion2.jpg"
-                alt="Atención mediante Inteligencia Artificial"
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover"
-              />
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
-
-            </div>
+            <div className="relative w-full h-[600px] overflow-hidden">
+  <Image
+    src="/image/atencion2.jpg"
+    alt="Atención y reservas con inteligencia artificial"
+    fill
+    priority
+    sizes="100vw"
+    className="object-cover"
+  />
+</div>
 
 
             <div className="order-1 lg:order-2">
