@@ -487,7 +487,24 @@ export default function Home() {
     <div className="grid lg:grid-cols-2 gap-16 items-center">
 
       {/* IMAGEN */}
-      <div className="order-1 lg:order-2 relative w-screen lg:w-full h-[600px] overflow-hidden -ml-[calc((100vw-100%)/2)] lg:ml-0">
+      
+      {/* TEXTO */}
+      <div className="order-2 lg:order-1">
+
+        <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
+          04 · INTELIGENCIA EMPRESARIAL
+        </p>
+
+
+        <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
+          Conoce
+          <br />
+          tus
+          <br />
+          resultados.
+        </h2>
+
+        <div className="order-1 lg:order-2 relative w-screen lg:w-full h-[600px] overflow-hidden -ml-[calc((100vw-100%)/2)] lg:ml-0">
 
         <Image
           src="/image/inteligencia.jpg"
@@ -499,20 +516,6 @@ export default function Home() {
 
       </div>
 
-      {/* TEXTO */}
-      <div className="order-2 lg:order-1">
-
-        <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
-          04 · INTELIGENCIA EMPRESARIAL
-        </p>
-
-        <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
-          Conoce
-          <br />
-          tus
-          <br />
-          resultados.
-        </h2>
 
         <p className="mt-7 text-lg leading-8 text-gray-600">
           Convertimos la información de tu negocio en datos claros para que
