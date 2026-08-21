@@ -389,116 +389,93 @@ export default function Home() {
 
       <section className="py-28 bg-white">
 
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+  <div className="max-w-7xl mx-auto px-0 lg:px-10">
 
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+    <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-            <div>
+      <div className="px-6 lg:px-0">
 
-              <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
-                03 · FIDELIZACIÓN
-              </p>
+        <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
+          03 · FIDELIZACIÓN
+        </p>
 
-              <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
+        <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
+          Haz que tus clientes
+          <br />
+          regresen.
+        </h2>
 
-                Haz que tus clientes
-                <br />
-                regresen.
+        <p className="mt-7 text-lg leading-8 text-gray-600">
+          Cada cliente que llega a través del sistema representa
+          una oportunidad para construir una relación comercial
+          de largo plazo.
+        </p>
 
-              </h2>
+        <p className="mt-5 text-lg leading-8 text-gray-600">
+          Utilizamos correo electrónico, teléfono y automatización
+          para enviar promociones, descuentos, novedades y campañas
+          de fidelización.
+        </p>
 
-              <p className="mt-7 text-lg leading-8 text-gray-600">
+        <div className="mt-8 grid sm:grid-cols-3 gap-4">
 
-                Cada cliente que llega a través del sistema representa
-                una oportunidad para construir una relación comercial
-                de largo plazo.
+          <div className="border border-gray-200 rounded-xl p-5 bg-white">
 
-              </p>
+            <p className="font-black text-red-600">
+              Promociones
+            </p>
 
-              <p className="mt-5 text-lg leading-8 text-gray-600">
+            <p className="text-sm text-gray-500 mt-2">
+              Ofertas personalizadas.
+            </p>
 
-                Utilizamos correo electrónico, teléfono y automatización
-                para enviar promociones, descuentos, novedades y campañas
-                de fidelización.
+          </div>
 
-              </p>
+          <div className="border border-gray-200 rounded-xl p-5 bg-white">
 
-              <div className="mt-8 grid sm:grid-cols-3 gap-4">
+            <p className="font-black text-red-600">
+              Seguimiento
+            </p>
 
-                <div className="border border-gray-200 rounded-xl p-5 bg-white">
+            <p className="text-sm text-gray-500 mt-2">
+              Mantén el contacto.
+            </p>
 
-                  <p className="font-black text-red-600">
-                    Promociones
-                  </p>
+          </div>
 
-                  <p className="text-sm text-gray-500 mt-2">
-                    Ofertas personalizadas.
-                  </p>
+          <div className="border border-gray-200 rounded-xl p-5 bg-white">
 
-                </div>
+            <p className="font-black text-red-600">
+              Regreso
+            </p>
 
-                <div className="border border-gray-200 rounded-xl p-5 bg-white">
-
-                  <p className="font-black text-red-600">
-                    Seguimiento
-                  </p>
-
-                  <p className="text-sm text-gray-500 mt-2">
-                    Mantén el contacto.
-                  </p>
-
-                </div>
-
-                <div className="border border-gray-200 rounded-xl p-5 bg-white">
-
-                  <p className="font-black text-red-600">
-                    Regreso
-                  </p>
-
-                  <p className="text-sm text-gray-500 mt-2">
-                    Clientes recurrentes.
-                  </p>
-
-                </div>
-
-              </div>
-
-            </div>
-
-
-            <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-xl">
-
-              <Image
-                src="/image/fidelizacion2.jpg"
-                alt="Fidelización de clientes"
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover"
-              />
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
-
-              <div className="absolute bottom-8 left-8 text-white">
-
-                <p className="text-red-400 font-bold tracking-widest text-sm">
-                  FIDELIZACIÓN
-                </p>
-
-                <p className="text-3xl md:text-4xl font-black mt-2">
-                  Clientes que vuelven.
-                </p>
-
-              </div>
-
-            </div>
+            <p className="text-sm text-gray-500 mt-2">
+              Clientes recurrentes.
+            </p>
 
           </div>
 
         </div>
 
-      </section>
+      </div>
 
+      <div className="relative w-full h-[600px] overflow-hidden">
 
+        <Image
+          src="/image/fidelizacion.jpg"
+          alt="Fidelización de clientes"
+          fill
+          sizes="100vw"
+          className="object-cover"
+        />
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
       {/* =====================================================
           INTELIGENCIA EMPRESARIAL
       ===================================================== */}
