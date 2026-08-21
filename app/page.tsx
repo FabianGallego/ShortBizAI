@@ -350,7 +350,7 @@ export default function Home() {
         />
       </div>
 
-      <div className="order-1 lg:order-2">
+      <div className="order-1 lg:order-2 px-6 lg:px-0">
 
         <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
           02 · ATENCIÓN
@@ -371,11 +371,7 @@ export default function Home() {
         <p className="mt-4 text-lg leading-7 text-gray-600">
           A través de nuestro sistema inteligente y automatizado,
           cada persona recibe una atención cercana, rápida y efectiva.
-          Sus necesidades son escuchadas y atendidas con respuestas claras
-          y oportunas, acompañándola durante todo el proceso hasta completar
-          su objetivo y disfrutar de los productos o servicios de tu negocio.
-          Así construimos afinidad y confianza, creando experiencias que hacen
-          que quieran volver y convertirse en clientes fieles y recurrentes.
+        
         </p>
 
       </div>
