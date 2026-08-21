@@ -8,7 +8,7 @@ const pilares = [
     subtitulo: "Contenido que genera visibilidad",
     descripcion:
       "Convertimos la presencia digital de tu negocio en una herramienta comercial. Creamos Video Shorts estratégicos que presentan tu marca, despiertan interés y llevan nuevos prospectos hacia tu negocio.",
-    imagen: "/image/atraccion.jpg",
+    imagen: "/image/atraccion-horizontal.jpg",
   },
   {
     numero: "02",
@@ -50,10 +50,7 @@ export default function Home() {
 
           <div className="max-w-7xl mx-auto px-6 lg:px-10 h-[82px] flex items-center justify-between">
 
-            {/* LOGO */}
-
             <Link href="/" className="flex items-center">
-
               <Image
                 src="/logo-foodshortai.png"
                 alt="ShortBizAI"
@@ -62,11 +59,7 @@ export default function Home() {
                 priority
                 className="w-[180px] h-auto object-contain"
               />
-
             </Link>
-
-
-            {/* MENU */}
 
             <nav className="hidden md:flex items-center gap-10 text-[15px] font-semibold text-gray-700">
 
@@ -100,9 +93,6 @@ export default function Home() {
 
             </nav>
 
-
-            {/* CTA */}
-
             <Link
               href="/diagnostico"
               className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-bold text-sm transition shadow-lg"
@@ -126,12 +116,10 @@ export default function Home() {
         className="relative min-h-[820px] flex items-center overflow-hidden"
       >
 
-        {/* IMAGEN DE FONDO */}
-
         <div className="absolute inset-0">
 
           <Image
-            src="/image/atraccion.jpg"
+            src="/image/atraccion-horizontal.jpg"
             alt="ShortBizAI - Atracción de clientes"
             fill
             priority
@@ -141,13 +129,7 @@ export default function Home() {
 
         </div>
 
-
-        {/* CAPA PARA FACILITAR LA LECTURA */}
-
         <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/35" />
-
-
-        {/* CONTENIDO */}
 
         <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-10 pt-24">
 
@@ -160,7 +142,6 @@ export default function Home() {
               </p>
 
             </div>
-
 
             <h1 className="text-5xl md:text-7xl lg:text-[76px] leading-[0.98] font-black tracking-tight text-gray-950">
 
@@ -178,7 +159,6 @@ export default function Home() {
 
             </h1>
 
-
             <p className="mt-7 max-w-2xl text-lg md:text-xl leading-7 text-gray-600">
 
               ShortBizAI integra estrategia, Inteligencia Artificial y automatización
@@ -193,24 +173,18 @@ export default function Home() {
 
             </p>
 
-
-            {/* BOTONES */}
-
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
 
               <Link
                 href="/cliente/agente-aaf"
                 className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg font-bold shadow-xl transition"
               >
-
                 HACER UNA RESERVA
 
                 <span className="ml-4 text-xl">
                   →
                 </span>
-
               </Link>
-
 
               <a
                 href="https://TU-LINK-DE-GLIT"
@@ -218,13 +192,11 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 px-8 py-4 rounded-lg font-bold shadow-lg transition"
               >
-
                 PEDIR A DOMICILIO
 
                 <span className="ml-4 text-xl">
                   →
                 </span>
-
               </a>
 
             </div>
@@ -255,14 +227,13 @@ export default function Home() {
                 EL SISTEMA AAFI
               </p>
 
-
               <h2 className="mt-7 text-4xl md:text-6xl font-black leading-[1.05] text-white">
 
                 Atrae nuevos clientes.
 
                 <br />
 
-                <span className="text-red-500 whitespace-nowrap">
+                <span className="text-red-500">
                   Conquista su confianza.
                 </span>
 
@@ -272,9 +243,7 @@ export default function Home() {
 
               </h2>
 
-
               <div className="w-16 h-[3px] bg-red-500 mx-auto mt-8 mb-7" />
-
 
               <p className="max-w-2xl mx-auto text-base md:text-lg leading-7 md:leading-8 text-gray-300">
 
@@ -301,51 +270,59 @@ export default function Home() {
 
       <section className="py-28 bg-white">
 
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+        <div className="w-full overflow-hidden">
 
-          {/* IMAGEN / TARJETA LIMPIA */}
+          {/* CELULAR — IMAGEN COMPLETA */}
 
-          <div className="relative h-[520px] overflow-hidden rounded-3xl shadow-2xl">
+          {/* CELULAR — muestra el centro de la imagen horizontal */}
+<div className="block md:hidden relative w-full h-[600px] overflow-hidden">
+  <Image
+    src="/image/atraccion-horizontal.jpg"
+    alt="Video Shorts"
+    fill
+    priority
+    sizes="100vw"
+    className="object-cover object-center"
+  />
+</div>
+
+          {/* COMPUTADOR — IMAGEN MÁS ABIERTA */}
+
+          <div className="hidden md:block relative w-full aspect-[16/9] overflow-hidden bg-black">
 
             <Image
-              src="/image/atraccion.jpg"
-              alt="ShortBizAI - Video Shorts para atraer nuevos clientes"
+              src="/image/atraccion-horizontal.jpg"
+              alt="Video Shorts para atraer nuevos clientes"
               fill
               priority
-              sizes="(max-width: 1024px) 100vw, 100vw"
-              className="object-cover"
+              sizes="100vw"
+              className="object-contain object-top"
             />
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
-
           </div>
 
-
-          {/* =================================================
-              TEXTO DEBAJO DE LA TARJETA
-          ================================================= */}
-
-          <div className="mt-10 px-6 md:px-10">
-
-            <p className="text-sm md:text-base font-semibold tracking-[0.25em] uppercase text-red-600">
-              01 · ATRACCIÓN
-            </p>
+        </div>
 
 
-            <h3 className="mt-3 text-4xl md:text-5xl font-black leading-tight text-gray-950">
-              Convierte la atención en clientes.
-            </h3>
+        {/* TEXTO DEBAJO DE LA IMAGEN */}
 
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 mt-10">
 
-            <p className="mt-5 max-w-3xl text-lg md:text-xl text-gray-600 leading-8">
+          <p className="text-sm md:text-base font-semibold tracking-[0.25em] uppercase text-red-600">
+            01 · ATRACCIÓN
+          </p>
 
-              Creamos Video Shorts estratégicos que presentan tu negocio de forma
-              atractiva, captan la atención de nuevos clientes y convierten tu
-              presencia en redes sociales en una oportunidad real de crecimiento.
+          <h3 className="text-4xl md:text-5xl font-black mt-3 leading-tight text-gray-900">
+            Convierte la atención en clientes.
+          </h3>
 
-            </p>
+          <p className="mt-4 max-w-2xl text-lg md:text-xl text-gray-600 leading-7">
 
-          </div>
+            Desde las redes sociales y a través de nuestros Video Shorts,
+            las personas pueden conocer tu negocio y convertirse en clientes
+            fieles y recurrentes.
+
+          </p>
 
         </div>
 
@@ -362,8 +339,6 @@ export default function Home() {
 
           <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-            {/* IMAGEN */}
-
             <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-xl">
 
               <Image
@@ -379,14 +354,11 @@ export default function Home() {
             </div>
 
 
-            {/* TEXTO */}
-
             <div className="order-1 lg:order-2">
 
               <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
                 02 · ATENCIÓN
               </p>
-
 
               <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
 
@@ -396,39 +368,25 @@ export default function Home() {
 
               </h2>
 
-
-              <p className="mt-7 text-lg leading-8 text-gray-600">
+              <p className="mt-7 text-lg leading-7 text-gray-600">
 
                 Mediante Inteligencia Artificial facilitamos la atención
-                de nuevos clientes y organizamos sus solicitudes o reservas de forma
-                rápida, clara y eficiente.
+                de nuevos clientes y organizamos sus solicitudes o reservas
+                de forma rápida, clara y eficiente.
 
               </p>
 
+              <p className="mt-4 text-lg leading-7 text-gray-600">
 
-              <p className="mt-5 text-lg leading-8 text-gray-600">
-
-                A través de nuestro sistema inteligente y automatizado, cada persona recibe una atención cercana, rápida y efectiva. Sus necesidades son escuchadas y atendidas con respuestas claras y oportunas, acompañándola durante todo el proceso hasta completar su objetivo y disfrutar de los productos o servicios de tu negocio. Así construimos afinidad y confianza, creando experiencias que hacen que quieran volver y convertirse en clientes fieles y recurrentes.
+                A través de nuestro sistema inteligente y automatizado,
+                cada persona recibe una atención cercana, rápida y efectiva.
+                Sus necesidades son escuchadas y atendidas con respuestas claras
+                y oportunas, acompañándola durante todo el proceso hasta completar
+                su objetivo y disfrutar de los productos o servicios de tu negocio.
+                Así construimos afinidad y confianza, creando experiencias que hacen
+                que quieran volver y convertirse en clientes fieles y recurrentes.
 
               </p>
-
-
-              <div className="mt-8">
-
-                <Link
-                  href="/cliente/agente-aaf"
-                  className="inline-flex items-center bg-red-600 hover:bg-red-700 text-white px-7 py-4 rounded-lg font-bold shadow-lg transition"
-                >
-
-                  HACER UNA RESERVA
-
-                  <span className="ml-4">
-                    →
-                  </span>
-
-                </Link>
-
-              </div>
 
             </div>
 
@@ -449,14 +407,11 @@ export default function Home() {
 
           <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-            {/* TEXTO */}
-
             <div>
 
               <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
                 03 · FIDELIZACIÓN
               </p>
-
 
               <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
 
@@ -466,7 +421,6 @@ export default function Home() {
 
               </h2>
 
-
               <p className="mt-7 text-lg leading-8 text-gray-600">
 
                 Cada cliente que llega a través del sistema representa
@@ -475,7 +429,6 @@ export default function Home() {
 
               </p>
 
-
               <p className="mt-5 text-lg leading-8 text-gray-600">
 
                 Utilizamos correo electrónico, teléfono y automatización
@@ -483,7 +436,6 @@ export default function Home() {
                 de fidelización.
 
               </p>
-
 
               <div className="mt-8 grid sm:grid-cols-3 gap-4">
 
@@ -499,7 +451,6 @@ export default function Home() {
 
                 </div>
 
-
                 <div className="border border-gray-200 rounded-xl p-5 bg-white">
 
                   <p className="font-black text-red-600">
@@ -511,7 +462,6 @@ export default function Home() {
                   </p>
 
                 </div>
-
 
                 <div className="border border-gray-200 rounded-xl p-5 bg-white">
 
@@ -530,8 +480,6 @@ export default function Home() {
             </div>
 
 
-            {/* IMAGEN */}
-
             <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-xl">
 
               <Image
@@ -542,16 +490,13 @@ export default function Home() {
                 className="object-cover"
               />
 
-
               <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
-
 
               <div className="absolute bottom-8 left-8 text-white">
 
                 <p className="text-red-400 font-bold tracking-widest text-sm">
                   FIDELIZACIÓN
                 </p>
-
 
                 <p className="text-3xl md:text-4xl font-black mt-2">
                   Clientes que vuelven.
@@ -578,8 +523,6 @@ export default function Home() {
 
           <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-            {/* IMAGEN */}
-
             <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl">
 
               <Image
@@ -593,14 +536,11 @@ export default function Home() {
             </div>
 
 
-            {/* TEXTO */}
-
             <div>
 
               <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
                 04 · INTELIGENCIA EMPRESARIAL
               </p>
-
 
               <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
 
@@ -610,7 +550,6 @@ export default function Home() {
 
               </h2>
 
-
               <p className="mt-7 text-lg leading-8 text-gray-600">
 
                 Convertimos la información de tu negocio en datos claros
@@ -619,16 +558,12 @@ export default function Home() {
 
               </p>
 
-
               <p className="mt-5 text-lg leading-8 text-gray-600">
 
                 Recibe información sobre clientes, reservas, ventas,
                 comportamiento y resultados del sistema ShortBizAI.
 
               </p>
-
-
-              {/* INDICADORES */}
 
               <div className="grid grid-cols-2 gap-4 mt-10">
 
@@ -644,7 +579,6 @@ export default function Home() {
 
                 </div>
 
-
                 <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
 
                   <p className="text-red-600 text-xl font-black">
@@ -657,7 +591,6 @@ export default function Home() {
 
                 </div>
 
-
                 <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
 
                   <p className="text-red-600 text-xl font-black">
@@ -669,7 +602,6 @@ export default function Home() {
                   </p>
 
                 </div>
-
 
                 <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
 
@@ -703,8 +635,6 @@ export default function Home() {
         className="relative py-32 overflow-hidden"
       >
 
-        {/* IMAGEN DE FONDO */}
-
         <div className="absolute inset-0">
 
           <Image
@@ -717,18 +647,13 @@ export default function Home() {
 
         </div>
 
-
-        {/* CAPA DE LECTURA */}
-
         <div className="absolute inset-0 bg-white/90" />
-
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
 
           <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
             DIAGNÓSTICO EMPRESARIAL
           </p>
-
 
           <h2 className="mt-5 text-5xl md:text-7xl font-black text-gray-950">
 
@@ -738,7 +663,6 @@ export default function Home() {
 
           </h2>
 
-
           <p className="mt-7 text-xl leading-8 text-gray-600">
 
             Realiza nuestro diagnóstico gratuito y descubre cómo se encuentra
@@ -746,7 +670,6 @@ export default function Home() {
             crecimiento digital.
 
           </p>
-
 
           <Link
             href="/diagnostico"
@@ -760,7 +683,6 @@ export default function Home() {
             </span>
 
           </Link>
-
 
           <p className="mt-5 text-sm text-gray-500">
             Gratis · Menos de 3 minutos · Resultado personalizado
@@ -787,7 +709,6 @@ export default function Home() {
                 SHORTBIZAI
               </p>
 
-
               <h2 className="text-4xl md:text-5xl font-black mt-3">
 
                 Atraemos.
@@ -799,7 +720,6 @@ export default function Home() {
               </h2>
 
             </div>
-
 
             <Link
               href="/diagnostico"
@@ -830,7 +750,6 @@ export default function Home() {
             height={50}
             className="w-[160px] h-auto"
           />
-
 
           <p className="text-sm text-gray-400">
 
