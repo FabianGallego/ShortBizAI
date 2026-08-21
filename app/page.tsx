@@ -480,113 +480,58 @@ export default function Home() {
           INTELIGENCIA EMPRESARIAL
       ===================================================== */}
 
-      <section className="py-28 bg-white">
+      <section className="py-28 bg-gray-100">
 
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
+  <div className="max-w-7xl mx-auto px-6 lg:px-10">
 
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+    <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-            <div className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl">
+      {/* TEXTO */}
+      <div className="order-1">
 
-              <Image
-                src="/image/inteligencia2.jpg"
-                alt="Inteligencia empresarial y reportes de ShortBizAI"
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover"
-              />
+        <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
+          04 · INTELIGENCIA EMPRESARIAL
+        </p>
 
-            </div>
+        <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
+          Conoce
+          <br />
+          tus
+          <br />
+          resultados.
+        </h2>
 
+        <p className="mt-7 text-lg leading-8 text-gray-600">
+          Convertimos la información de tu negocio en datos claros para que
+          puedas entender qué está funcionando y dónde existen nuevas
+          oportunidades de crecimiento.
+        </p>
 
-            <div>
+        <p className="mt-5 text-lg leading-8 text-gray-600">
+          Recibe información sobre clientes, ventas, productos y resultados
+          para tomar mejores decisiones y hacer crecer tu negocio.
+        </p>
 
-              <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
-                04 · INTELIGENCIA EMPRESARIAL
-              </p>
+      </div>
 
-              <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
+      {/* IMAGEN */}
+      <div className="order-2 relative w-full h-[600px] overflow-hidden">
 
-                Conoce
-                <br />
-                tus resultados.
+        <Image
+          src="/image/inteligencia.jpg"
+          alt="Inteligencia empresarial y análisis de resultados"
+          fill
+          sizes="100vw"
+          className="object-cover"
+        />
 
-              </h2>
+      </div>
 
-              <p className="mt-7 text-lg leading-8 text-gray-600">
+    </div>
 
-                Convertimos la información de tu negocio en datos claros
-                para que puedas entender qué está funcionando y dónde
-                existen nuevas oportunidades de crecimiento.
+  </div>
 
-              </p>
-
-              <p className="mt-5 text-lg leading-8 text-gray-600">
-
-                Recibe información sobre clientes, reservas, ventas,
-                comportamiento y resultados del sistema ShortBizAI.
-
-              </p>
-
-              <div className="grid grid-cols-2 gap-4 mt-10">
-
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
-
-                  <p className="text-red-600 text-xl font-black">
-                    CLIENTES
-                  </p>
-
-                  <p className="mt-2 text-gray-500 text-sm">
-                    Nuevas oportunidades generadas.
-                  </p>
-
-                </div>
-
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
-
-                  <p className="text-red-600 text-xl font-black">
-                    RESERVAS
-                  </p>
-
-                  <p className="mt-2 text-gray-500 text-sm">
-                    Solicitudes recibidas y atendidas.
-                  </p>
-
-                </div>
-
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
-
-                  <p className="text-red-600 text-xl font-black">
-                    VENTAS
-                  </p>
-
-                  <p className="mt-2 text-gray-500 text-sm">
-                    Evolución del resultado comercial.
-                  </p>
-
-                </div>
-
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
-
-                  <p className="text-red-600 text-xl font-black">
-                    REPORTES
-                  </p>
-
-                  <p className="mt-2 text-gray-500 text-sm">
-                    Información para tomar decisiones.
-                  </p>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </section>
+</section>
 
 
       {/* =====================================================
