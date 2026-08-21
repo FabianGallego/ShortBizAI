@@ -462,7 +462,7 @@ export default function Home() {
       <div className="relative w-full h-[600px] overflow-hidden">
 
         <Image
-          src="/image/fidelizacion.jpg"
+          src="/image/fidelizacion2.jpg"
           alt="Fidelización de clientes"
           fill
           sizes="100vw"
