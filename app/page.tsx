@@ -274,17 +274,15 @@ export default function Home() {
 
           {/* CELULAR — IMAGEN COMPLETA */}
 
-          {/* CELULAR — muestra el centro de la imagen horizontal */}
-{/* CELULAR — mostrar la imagen completa */}
-<div className="block md:hidden w-full overflow-hidden">
+   {/* CELULAR — franja central vertical de la imagen horizontal */}
+<div className="block md:hidden relative w-full h-[600px] overflow-hidden">
   <Image
     src="/image/atraccion-horizontal2.jpg"
-    alt="Video Shorts"
-    width={1566}
-    height={1024}
+    alt="Video Shorts para atraer nuevos clientes"
+    fill
     priority
     sizes="100vw"
-    className="w-full h-auto object-contain"
+    className="object-cover object-center"
   />
 </div>
 
