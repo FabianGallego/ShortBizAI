@@ -515,7 +515,7 @@ export default function Home() {
       </div>
 
       {/* IMAGEN */}
-      <div className="order-2 relative w-full h-[600px] overflow-hidden">
+      <div className="order-2 relative w-screen h-[600px] overflow-hidden -ml-[calc((100vw-100%)/2)] lg:ml-0 lg:w-full">
 
         <Image
           src="/image/inteligencia.jpg"
