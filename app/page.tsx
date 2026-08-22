@@ -395,87 +395,98 @@ export default function Home() {
           FIDELIZACIÓN
       ===================================================== */}
 
-      <section className="py-28 bg-white">
+     <section className="py-28 bg-white">
 
   <div className="max-w-7xl mx-auto px-0 lg:px-10">
 
-    <div className="grid lg:grid-cols-2 gap-16 items-center">
+    {/* IMAGEN + TÍTULO */}
+    <div className="relative w-full h-[600px] overflow-hidden">
 
-      <div className="px-6 lg:px-0">
+      <Image
+        src="/image/fidelizacion2.jpg"
+        alt="Fidelización de clientes"
+        fill
+        sizes="100vw"
+        className="object-cover"
+      />
 
-        <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
+      {/* Sombra para que el texto blanco se lea bien */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+      {/* TÍTULO SOBRE LA IMAGEN */}
+      <div className="absolute inset-x-0 bottom-0 z-10 px-6 lg:px-10 pb-10">
+
+        <p className="text-red-500 font-bold tracking-[0.25em] text-sm mb-5">
           03 · FIDELIZACIÓN
         </p>
 
-        <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
+        <h2 className="text-5xl md:text-6xl font-black leading-tight text-white">
           Haz que tus clientes
           <br />
           regresen.
         </h2>
 
-        <p className="mt-7 text-lg leading-8 text-gray-600">
-          Cada cliente que llega a través del sistema representa
-          una oportunidad para construir una relación comercial
-          de largo plazo.
-        </p>
+      </div>
 
-        <p className="mt-5 text-lg leading-8 text-gray-600">
-          Utilizamos correo electrónico, teléfono y automatización
-          para enviar promociones, descuentos, novedades y campañas
-          de fidelización.
-        </p>
+    </div>
 
-        <div className="mt-8 grid sm:grid-cols-3 gap-4">
 
-          <div className="border border-gray-200 rounded-xl p-5 bg-white">
+    {/* CONTENIDO DEBAJO DE LA IMAGEN */}
+    <div className="px-6 lg:px-0 mt-12">
 
-            <p className="font-black text-red-600">
-              Promociones
-            </p>
+      <p className="text-lg leading-8 text-gray-600">
+        Cada cliente que llega a través del sistema representa
+        una oportunidad para construir una relación comercial
+        de largo plazo.
+      </p>
 
-            <p className="text-sm text-gray-500 mt-2">
-              Ofertas personalizadas.
-            </p>
+      <p className="mt-5 text-lg leading-8 text-gray-600">
+        Utilizamos correo electrónico, teléfono y automatización
+        para enviar promociones, descuentos, novedades y campañas
+        de fidelización.
+      </p>
 
-          </div>
 
-          <div className="border border-gray-200 rounded-xl p-5 bg-white">
+      {/* TARJETAS */}
+      <div className="mt-8 grid sm:grid-cols-3 gap-4">
 
-            <p className="font-black text-red-600">
-              Seguimiento
-            </p>
+        <div className="border border-gray-200 rounded-xl p-5 bg-white">
 
-            <p className="text-sm text-gray-500 mt-2">
-              Mantén el contacto.
-            </p>
+          <p className="font-black text-red-600">
+            Promociones
+          </p>
 
-          </div>
-
-          <div className="border border-gray-200 rounded-xl p-5 bg-white">
-
-            <p className="font-black text-red-600">
-              Regreso
-            </p>
-
-            <p className="text-sm text-gray-500 mt-2">
-              Clientes recurrentes.
-            </p>
-
-          </div>
+          <p className="text-sm text-gray-500 mt-2">
+            Ofertas personalizadas.
+          </p>
 
         </div>
 
-      </div>
 
-      <div className="relative w-full h-[600px] overflow-hidden">
+        <div className="border border-gray-200 rounded-xl p-5 bg-white">
 
-        <Image
-          src="/image/fidelizacion2.jpg"
-          alt="Fidelización de clientes"
-          fill
-          sizes="100vw"
-          className="object-cover"
-        />
+          <p className="font-black text-red-600">
+            Seguimiento
+          </p>
+
+          <p className="text-sm text-gray-500 mt-2">
+            Mantén el contacto.
+          </p>
+
+        </div>
+
+
+        <div className="border border-gray-200 rounded-xl p-5 bg-white">
+
+          <p className="font-black text-red-600">
+            Regreso
+          </p>
+
+          <p className="text-sm text-gray-500 mt-2">
+            Clientes recurrentes.
+          </p>
+
+        </div>
 
       </div>
 
