@@ -110,102 +110,101 @@ export default function Home() {
       {/* =====================================================
           HERO PRINCIPAL
       ===================================================== */}
+<section
+  id="inicio"
+  className="relative min-h-[820px] flex items-center overflow-hidden"
+>
 
-      <section
-        id="inicio"
-        className="relative min-h-[820px] flex items-center overflow-hidden"
-      >
+  <div className="absolute inset-0">
 
-        <div className="absolute inset-0">
+    <Image
+      src="/image/atraccion-fondo.jpg"
+      alt="ShortBizAI - Atracción de clientes"
+      fill
+      priority
+      sizes="100vw"
+      className="object-cover"
+    />
 
-          <Image
-            src="/image/atraccion2.jpg"
-            alt="ShortBizAI - Atracción de clientes"
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
-          />
+  </div>
 
-        </div>
+  <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/35" />
 
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/35" />
+  <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-10 pt-24">
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-10 pt-24">
+    <div className="max-w-3xl">
 
-          <div className="max-w-3xl">
+      <div className="mb-8 text-center">
 
-            <div className="mb-8 text-center">
+        <p className="text-red-600 text-lg md:text-xl lg:text-2xl font-black tracking-[0.18em]">
+          ATRAEMOS · ATENDEMOS · FIDELIZAMOS
+        </p>
 
-              <p className="text-red-600 text-lg md:text-xl lg:text-2xl font-black tracking-[0.18em]">
-                ATRAEMOS · ATENDEMOS · FIDELIZAMOS
-              </p>
+      </div>
 
-            </div>
+      <h1 className="text-5xl md:text-7xl lg:text-[76px] leading-[0.98] font-black tracking-tight text-gray-950">
 
-            <h1 className="text-5xl md:text-7xl lg:text-[76px] leading-[0.98] font-black tracking-tight text-gray-950">
+        El Sistema para
 
-              El Sistema para
+        <br />
 
-              <br />
+        <span className="text-red-600">
+          Hacer crecer
+        </span>
 
-              <span className="text-red-600">
-                Hacer crecer
-              </span>
+        <br />
 
-              <br />
+        Las ventas de tu negocio.
 
-              Las ventas de tu negocio.
+      </h1>
 
-            </h1>
+      <p className="mt-7 max-w-2xl text-lg md:text-xl leading-7 text-gray-600">
 
-            <p className="mt-7 max-w-2xl text-lg md:text-xl leading-7 text-gray-600">
+        ShortBizAI integra estrategia, Inteligencia Artificial y automatización
+        para atraer nuevas personas, convertirlas en clientes y construir
+        relaciones cercanas que hagan que regresen.
 
-              ShortBizAI integra estrategia, Inteligencia Artificial y automatización
-              para atraer nuevas personas, convertirlas en clientes y construir
-              relaciones cercanas que hagan que regresen.
+        <br />
+        <br />
 
-              <br />
-              <br />
+        Un sistema diseñado para aumentar la recurrencia, impulsar las ventas
+        y contribuir al crecimiento sostenido de tu empresa.
 
-              Un sistema diseñado para aumentar la recurrencia, impulsar las ventas
-              y contribuir al crecimiento sostenido de tu empresa.
+      </p>
 
-            </p>
+      <div className="mt-10 flex flex-col sm:flex-row gap-4">
 
-            <div className="mt-10 flex flex-col sm:flex-row gap-4">
+        <Link
+          href="/cliente/agente-aaf"
+          className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg font-bold shadow-xl transition"
+        >
+          HACER UNA RESERVA
 
-              <Link
-                href="/cliente/agente-aaf"
-                className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg font-bold shadow-xl transition"
-              >
-                HACER UNA RESERVA
+          <span className="ml-4 text-xl">
+            →
+          </span>
+        </Link>
 
-                <span className="ml-4 text-xl">
-                  →
-                </span>
-              </Link>
+        <a
+          href="https://TU-LINK-DE-GLIT"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 px-8 py-4 rounded-lg font-bold shadow-lg transition"
+        >
+          PEDIR A DOMICILIO
 
-              <a
-                href="https://TU-LINK-DE-GLIT"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 px-8 py-4 rounded-lg font-bold shadow-lg transition"
-              >
-                PEDIR A DOMICILIO
+          <span className="ml-4 text-xl">
+            →
+          </span>
+        </a>
 
-                <span className="ml-4 text-xl">
-                  →
-                </span>
-              </a>
+      </div>
 
-            </div>
+    </div>
 
-          </div>
+  </div>
 
-        </div>
-
-      </section>
+</section>
 
 
       {/* =====================================================
