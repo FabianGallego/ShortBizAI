@@ -332,25 +332,24 @@ export default function Home() {
           ATENCIÓN IA
       ===================================================== */}
 
-     <section className="py-28 bg-gray-100">
-
-
+    <section className="py-28 bg-gray-100">
 
   <div className="max-w-7xl mx-auto px-6 lg:px-10">
-<p className="text-red-600 font-bold tracking-[0.25em] text-sm">
-          02 · ATENCIÓN
-        </p>
 
-        <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
-          Atención
-          <br />
-          inteligente.
-        </h2>
+    <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
+      02 · ATENCIÓN
+    </p>
 
+    <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
+      Atención
+      <br />
+      inteligente.
+    </h2>
 
     <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-      <div className="relative w-full h-[600px] overflow-hidden">
+      {/* IMAGEN */}
+      <div className="relative left-1/2 -translate-x-1/2 w-screen h-[600px] overflow-hidden lg:left-0 lg:translate-x-0 lg:w-full">
         <Image
           src="/image/atencion2.jpg"
           alt="Atención y reservas con inteligencia artificial"
@@ -361,9 +360,8 @@ export default function Home() {
         />
       </div>
 
+      {/* TEXTO */}
       <div className="order-1 lg:order-2 px-6 lg:px-0">
-
-        
 
         <p className="mt-7 text-lg leading-7 text-gray-600">
           Mediante Inteligencia Artificial facilitamos la atención
@@ -374,7 +372,6 @@ export default function Home() {
         <p className="mt-4 text-lg leading-7 text-gray-600">
           A través de nuestro sistema inteligente y automatizado,
           cada persona recibe una atención cercana, rápida y efectiva.
-        
         </p>
 
       </div>
