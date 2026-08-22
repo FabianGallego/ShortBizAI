@@ -399,6 +399,9 @@ export default function Home() {
 
   <div className="max-w-7xl mx-auto px-0 lg:px-10">
 
+  <p className="text-red-500 font-bold tracking-[0.25em] text-sm mb-5">
+          03 · FIDELIZACIÓN
+        </p>
     {/* IMAGEN + TÍTULO */}
     <div className="relative w-full h-[600px] overflow-hidden">
 
@@ -413,14 +416,11 @@ export default function Home() {
       {/* Sombra para que el texto blanco se lea bien */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
- <p className="text-red-500 font-bold tracking-[0.25em] text-sm mb-5">
-          03 · FIDELIZACIÓN
-        </p>
-
       {/* TÍTULO SOBRE LA IMAGEN */}
       <div className="absolute inset-x-0 bottom-0 z-10 px-6 lg:px-10 pb-10">
 
-       
+      
+
         <h2 className="text-5xl md:text-6xl font-black leading-tight text-white">
           Haz que tus clientes
           <br />
