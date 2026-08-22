@@ -335,7 +335,15 @@ export default function Home() {
      <section className="py-28 bg-gray-100">
 
   <div className="max-w-7xl mx-auto px-0 lg:px-10">
+<p className="text-red-600 font-bold tracking-[0.25em] text-sm">
+          02 · ATENCIÓN
+        </p>
 
+        <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
+          Atención
+          <br />
+          inteligente.
+        </h2>
     <div className="grid lg:grid-cols-2 gap-16 items-center">
 
       <div className="relative w-full h-[600px] overflow-hidden">
@@ -351,15 +359,7 @@ export default function Home() {
 
       <div className="order-1 lg:order-2 px-6 lg:px-0">
 
-        <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
-          02 · ATENCIÓN
-        </p>
-
-        <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
-          Atención
-          <br />
-          inteligente.
-        </h2>
+        
 
         <p className="mt-7 text-lg leading-7 text-gray-600">
           Mediante Inteligencia Artificial facilitamos la atención
