@@ -334,7 +334,9 @@ export default function Home() {
 
      <section className="py-28 bg-gray-100">
 
-  <div className="max-w-7xl mx-auto px-0 lg:px-10">
+
+
+  <div className="max-w-7xl mx-auto px-6 lg:px-10">
 <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
           02 · ATENCIÓN
         </p>
@@ -344,6 +346,8 @@ export default function Home() {
           <br />
           inteligente.
         </h2>
+
+
     <div className="grid lg:grid-cols-2 gap-16 items-center">
 
       <div className="relative w-full h-[600px] overflow-hidden">
