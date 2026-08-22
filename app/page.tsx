@@ -398,7 +398,7 @@ export default function Home() {
      <section className="py-28 bg-white">
 
   {/* TÍTULO ROJO ARRIBA DE LA IMAGEN */}
-  <div className="max-w-7xl mx-auto px-6 lg:px-10 mb-6">
+  <div className="max-w-7xl mx-auto px-6 lg:px-10 pt-8 mb-6">
 
     <p className="text-red-500 font-bold tracking-[0.25em] text-sm">
       03 · FIDELIZACIÓN
@@ -419,6 +419,83 @@ export default function Home() {
     />
 
     {/* TÍTULO SOBRE LA PARTE INFERIOR DE LA IMAGEN */}
+    <div className="absolute inset-x-0 bottom-0 z-10 px-6 lg:px-10 pb-10">
+
+      <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+      <h2 className="text-5xl md:text-6xl font-black leading-tight text-white">
+        Haz que tus clientes
+        <br />
+        regresen.
+      </h2>
+
+    </div>
+
+  </div>
+
+
+  {/* CONTENIDO DEBAJO DE LA IMAGEN */}
+  <div className="max-w-7xl mx-auto px-6 lg:px-10 mt-12">
+
+    <p className="text-lg leading-8 text-gray-600">
+      Cada cliente que llega a través del sistema representa
+      una oportunidad para construir una relación comercial
+      de largo plazo.
+    </p>
+
+    <p className="mt-5 text-lg leading-8 text-gray-600">
+      Utilizamos correo electrónico, teléfono y automatización
+      para enviar promociones, descuentos, novedades y campañas
+      de fidelización.
+    </p>
+
+
+    {/* TARJETAS */}
+    <div className="mt-8 grid sm:grid-cols-3 gap-4">
+
+      <div className="border border-gray-200 rounded-xl p-5 bg-white">
+
+        <p className="font-black text-red-600">
+          Promociones
+        </p>
+
+        <p className="text-sm text-gray-500 mt-2">
+          Ofertas personalizadas.
+        </p>
+
+      </div>
+
+
+      <div className="border border-gray-200 rounded-xl p-5 bg-white">
+
+        <p className="font-black text-red-600">
+          Seguimiento
+        </p>
+
+        <p className="text-sm text-gray-500 mt-2">
+          Mantén el contacto.
+        </p>
+
+      </div>
+
+
+      <div className="border border-gray-200 rounded-xl p-5 bg-white">
+
+        <p className="font-black text-red-600">
+          Regreso
+        </p>
+
+        <p className="text-sm text-gray-500 mt-2">
+          Clientes recurrentes.
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
       {/* =====================================================
           INTELIGENCIA EMPRESARIAL
       ===================================================== */}
