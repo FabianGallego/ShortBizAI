@@ -331,9 +331,9 @@ export default function Home() {
       {/* =====================================================
           ATENCIÓN IA
       ===================================================== */}
+<section className="py-28 bg-gray-100">
 
-    <section className="py-28 bg-gray-100">
-
+  {/* ENCABEZADO */}
   <div className="max-w-7xl mx-auto px-6 lg:px-10">
 
     <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
@@ -346,10 +346,17 @@ export default function Home() {
       inteligente.
     </h2>
 
+  </div>
+
+
+  {/* CONTENIDO */}
+  <div className="max-w-7xl mx-auto mt-10 lg:mt-16">
+
     <div className="grid lg:grid-cols-2 gap-16 items-center">
 
       {/* IMAGEN */}
-      <div className="relative left-1/2 -translate-x-1/2 w-screen h-[600px] overflow-hidden lg:left-0 lg:translate-x-0 lg:w-full">
+      <div className="relative w-full h-[600px] overflow-hidden">
+
         <Image
           src="/image/atencion2.jpg"
           alt="Atención y reservas con inteligencia artificial"
@@ -358,12 +365,14 @@ export default function Home() {
           sizes="100vw"
           className="object-cover"
         />
+
       </div>
 
-      {/* TEXTO */}
-      <div className="order-1 lg:order-2 px-6 lg:px-0">
 
-        <p className="mt-7 text-lg leading-7 text-gray-600">
+      {/* TEXTO */}
+      <div className="px-6 lg:px-0">
+
+        <p className="text-lg leading-7 text-gray-600">
           Mediante Inteligencia Artificial facilitamos la atención
           de nuevos clientes y organizamos sus solicitudes o reservas
           de forma rápida, clara y eficiente.
@@ -381,7 +390,6 @@ export default function Home() {
   </div>
 
 </section>
-
 
       {/* =====================================================
           FIDELIZACIÓN
