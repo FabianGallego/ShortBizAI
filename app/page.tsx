@@ -396,12 +396,13 @@ export default function Home() {
       ===================================================== */}
 
      <section className="py-28 bg-white">
-
-  <div className="max-w-7xl mx-auto px-0 lg:px-10">
-
-  <p className="text-red-500 font-bold tracking-[0.25em] text-sm mb-5">
+      <div className="max-w-7xl mx-auto px-6 lg:px-10"></div> 
+<p className="text-red-500 font-bold tracking-[0.25em] text-sm mb-5">
           03 · FIDELIZACIÓN
         </p>
+  <div className="max-w-7xl mx-auto px-0 lg:px-10">
+
+  
     {/* IMAGEN + TÍTULO */}
     <div className="relative w-full h-[600px] overflow-hidden">
 
