@@ -336,8 +336,11 @@ export default function Home() {
 
 
 
-  <div className="max-w-7xl mx-auto px-6 lg:px-10">
+  
 <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
+  <div className="max-w-7xl mx-auto px-6 lg:px-10">
+    
+  </div>
           02 · ATENCIÓN
         </p>
 
