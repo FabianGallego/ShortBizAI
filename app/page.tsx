@@ -336,11 +336,8 @@ export default function Home() {
 
 
 
-  
-<p className="text-red-600 font-bold tracking-[0.25em] text-sm">
   <div className="max-w-7xl mx-auto px-6 lg:px-10">
-    
-  </div>
+<p className="text-red-600 font-bold tracking-[0.25em] text-sm">
           02 · ATENCIÓN
         </p>
 
