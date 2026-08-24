@@ -113,9 +113,9 @@ export default function AgenteAAFPage() {
 
   const [conversacion, setConversacion] = useState<Mensaje[]>([
     {
-      autor: "ReservAI",
+      autor: "Asistente",
       texto:
-        "👋 ¡Bienvenido(a)! Estoy listo para ayudarte a reservar una mesa, consultar disponibilidad o responder cualquier inquietud. ¿En qué puedo ayudarte hoy?",
+        "👋 Bienvenido al sistema de reservas y disponibilidad, ¿en qué puedo ayudar?",
     },
   ]);
 
@@ -144,7 +144,7 @@ export default function AgenteAAFPage() {
         setConversacion((anterior) => [
           ...anterior,
           {
-            autor: "ReservAI",
+            autor: "Asistente",
             texto:
               "¡Con mucho gusto! ¿A nombre de quién hago la reserva?",
           },
@@ -155,9 +155,9 @@ export default function AgenteAAFPage() {
         setConversacion((anterior) => [
           ...anterior,
           {
-            autor: "ReservAI",
+            autor: "Asistente",
             texto:
-              "Puedo ayudarte a realizar una reserva. Solo escribe “quiero una reserva”.",
+              "Puedo ayudarte con reservas y disponibilidad. Indícame qué necesitas.",
           },
         ]);
       }
@@ -171,7 +171,7 @@ export default function AgenteAAFPage() {
       setConversacion((anterior) => [
         ...anterior,
         {
-          autor: "ReservAI",
+          autor: "Asistente",
           texto: "¿Cuál es tu número de teléfono?",
         },
       ]);
@@ -185,7 +185,7 @@ export default function AgenteAAFPage() {
         setConversacion((anterior) => [
           ...anterior,
           {
-            autor: "ReservAI",
+            autor: "Asistente",
             texto:
               "❌ El teléfono debe tener 10 dígitos. Inténtalo nuevamente.",
           },
@@ -199,7 +199,7 @@ export default function AgenteAAFPage() {
       setConversacion((anterior) => [
         ...anterior,
         {
-          autor: "ReservAI",
+          autor: "Asistente",
           texto: "¿Para qué fecha deseas la reserva?",
         },
       ]);
@@ -215,7 +215,7 @@ export default function AgenteAAFPage() {
         setConversacion((anterior) => [
           ...anterior,
           {
-            autor: "ReservAI",
+            autor: "Asistente",
             texto:
               "❌ Fecha inválida. Ejemplo: 10 de agosto de 2026.",
           },
@@ -229,7 +229,7 @@ export default function AgenteAAFPage() {
       setConversacion((anterior) => [
         ...anterior,
         {
-          autor: "ReservAI",
+          autor: "Asistente",
           texto: "¿A qué hora deseas la reserva?",
         },
       ]);
@@ -245,7 +245,7 @@ export default function AgenteAAFPage() {
         setConversacion((anterior) => [
           ...anterior,
           {
-            autor: "ReservAI",
+            autor: "Asistente",
             texto:
               "❌ Hora inválida. Escribe, por ejemplo: 2 pm, 2:30 pm o 14:00.",
           },
@@ -259,7 +259,7 @@ export default function AgenteAAFPage() {
       setConversacion((anterior) => [
         ...anterior,
         {
-          autor: "ReservAI",
+          autor: "Asistente",
           texto: "¿Para cuántas personas será la reserva?",
         },
       ]);
@@ -276,8 +276,8 @@ export default function AgenteAAFPage() {
       setConversacion((anterior) => [
         ...anterior,
         {
-          autor: "ReservAI",
-          texto: "✅ Guardando tu reserva...",
+          autor: "Asistente",
+          texto: "⏳ Guardando tu reserva...",
         },
       ]);
 
@@ -306,7 +306,7 @@ export default function AgenteAAFPage() {
         setConversacion((anterior) => [
           ...anterior,
           {
-            autor: "ReservAI",
+            autor: "Asistente",
             texto:
               "❌ No pude guardar la reserva. Por favor, inténtalo nuevamente.",
           },
@@ -362,7 +362,7 @@ export default function AgenteAAFPage() {
       setConversacion((anterior) => [
         ...anterior,
         {
-          autor: "ReservAI",
+          autor: "Asistente",
           texto:
             "🎉 ¡Reserva registrada correctamente! En unos minutos recibirás la confirmación.",
         },
@@ -371,9 +371,9 @@ export default function AgenteAAFPage() {
       setTimeout(() => {
         setConversacion([
           {
-            autor: "ReservAI",
+            autor: "Asistente",
             texto:
-              "👋 Bienvenido a ShortBizAI. Escribe “quiero una reserva” para comenzar.",
+              "👋 Bienvenido al sistema de reservas y disponibilidad, ¿en qué puedo ayudar?",
           },
         ]);
 
@@ -390,11 +390,11 @@ export default function AgenteAAFPage() {
 
   return (
     <main className="min-h-screen w-full bg-white text-gray-900">
-      <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
 
         {/* ENCABEZADO */}
-        <header className="mb-6 border-b border-gray-200 pb-5 sm:mb-8 sm:pb-6">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <header className="mb-5 border-b border-gray-200 pb-5 sm:mb-7 sm:pb-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
             {/* TÍTULO */}
             <div className="min-w-0">
@@ -419,31 +419,33 @@ export default function AgenteAAFPage() {
                 width={235}
                 height={235}
                 priority
-                className="h-auto w-[190px] max-w-full object-contain sm:w-[235px]"
+                className="h-auto w-[175px] max-w-full object-contain sm:w-[220px]"
               />
             </div>
 
           </div>
         </header>
 
-        {/* CHAT */}
-        <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        {/* PANEL DE RESERVAS */}
+        <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md">
 
           {/* CABECERA */}
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-4 sm:px-6">
-            <h2 className="text-lg font-bold text-gray-950">
-              ReservAI
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-4 sm:px-6 sm:py-5">
+
+            <h2 className="text-lg font-bold text-gray-950 sm:text-xl">
+              Asistente de reservas y disponibilidad
             </h2>
 
-            <p className="mt-1 text-sm text-gray-500">
-              Asistente virtual para reservas y disponibilidad.
+            <p className="mt-1 text-sm leading-6 text-gray-500 sm:text-base">
+              Bienvenido al sistema de reservas y disponibilidad, ¿en qué puedo ayudar?
             </p>
+
           </div>
 
           {/* CONVERSACIÓN */}
-          <div className="h-[420px] overflow-y-auto bg-white p-4 sm:h-[500px] sm:p-6">
+          <div className="min-h-[260px] max-h-[360px] overflow-y-auto bg-white px-4 py-5 sm:min-h-[300px] sm:max-h-[420px] sm:px-6">
 
-            <div className="space-y-4">
+            <div className="space-y-3">
 
               {conversacion.map((item, index) => {
                 const esCliente = item.autor === "Cliente";
@@ -457,13 +459,15 @@ export default function AgenteAAFPage() {
                         : "justify-start"
                     }`}
                   >
+
                     <div
-                      className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[75%] ${
+                      className={`max-w-[90%] rounded-2xl px-4 py-3 sm:max-w-[75%] ${
                         esCliente
                           ? "rounded-br-md bg-blue-600 text-white"
                           : "rounded-bl-md bg-gray-100 text-gray-900"
                       }`}
                     >
+
                       <p
                         className={`mb-1 text-xs font-bold ${
                           esCliente
@@ -477,24 +481,29 @@ export default function AgenteAAFPage() {
                       <p className="text-sm leading-6 sm:text-base">
                         {item.texto}
                       </p>
+
                     </div>
+
                   </div>
                 );
               })}
 
               {guardando && (
                 <div className="flex justify-start">
+
                   <div className="rounded-2xl rounded-bl-md bg-gray-100 px-4 py-3 text-sm text-gray-500">
                     Guardando reserva...
                   </div>
+
                 </div>
               )}
 
             </div>
+
           </div>
 
           {/* CAMPO DE MENSAJE */}
-          <div className="border-t border-gray-200 bg-white p-4 sm:p-6">
+          <div className="border-t border-gray-200 bg-white p-4 sm:p-5">
 
             <div className="flex flex-col gap-3 sm:flex-row">
 
@@ -507,14 +516,14 @@ export default function AgenteAAFPage() {
                   }
                 }}
                 disabled={guardando}
-                className="min-h-[54px] w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100"
+                className="min-h-[52px] w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100"
                 placeholder="Escribe tu solicitud de reserva"
               />
 
               <button
                 onClick={enviarMensaje}
                 disabled={guardando || !mensaje.trim()}
-                className="min-h-[54px] w-full rounded-xl bg-blue-600 px-6 text-base font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 sm:w-auto"
+                className="min-h-[52px] w-full rounded-xl bg-blue-600 px-6 text-base font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 sm:w-auto"
               >
                 {guardando
                   ? "Guardando..."
@@ -522,10 +531,6 @@ export default function AgenteAAFPage() {
               </button>
 
             </div>
-
-            <p className="mt-3 text-center text-xs text-gray-400">
-              Escribe “quiero una reserva” para comenzar.
-            </p>
 
           </div>
 
