@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 
@@ -111,12 +111,30 @@ export default function AgenteAAFPage() {
   const [hora, setHora] = useState("");
   const [personas, setPersonas] = useState("");
 
-  // IMPORTANTE:
-  // El mensaje de bienvenida ya está arriba,
-  // por eso el chat comienza vacío.
   const [conversacion, setConversacion] = useState<Mensaje[]>([]);
 
   const [guardando, setGuardando] = useState(false);
+
+  // ==========================================
+  // REFERENCIA PARA EL AUTOSCROLL DEL CHAT
+  // ==========================================
+
+  const finalConversacionRef = useRef<HTMLDivElement>(null);
+
+  // ==========================================
+  // AUTOSCROLL AUTOMÁTICO
+  // ==========================================
+
+  useEffect(() => {
+    finalConversacionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [conversacion, guardando]);
+
+  // ==========================================
+  // ENVIAR MENSAJE
+  // ==========================================
 
   async function enviarMensaje() {
     if (!mensaje.trim() || guardando) return;
@@ -134,9 +152,9 @@ export default function AgenteAAFPage() {
 
     setMensaje("");
 
-    // =========================
+    // ==========================================
     // INICIO
-    // =========================
+    // ==========================================
 
     if (paso === "inicio") {
       if (
@@ -167,9 +185,9 @@ export default function AgenteAAFPage() {
       return;
     }
 
-    // =========================
+    // ==========================================
     // NOMBRE
-    // =========================
+    // ==========================================
 
     if (paso === "nombre") {
       setNombre(texto);
@@ -183,12 +201,13 @@ export default function AgenteAAFPage() {
       ]);
 
       setPaso("telefono");
+
       return;
     }
 
-    // =========================
+    // ==========================================
     // TELÉFONO
-    // =========================
+    // ==========================================
 
     if (paso === "telefono") {
       if (!/^\d{10}$/.test(texto)) {
@@ -215,12 +234,13 @@ export default function AgenteAAFPage() {
       ]);
 
       setPaso("fecha");
+
       return;
     }
 
-    // =========================
+    // ==========================================
     // FECHA
-    // =========================
+    // ==========================================
 
     if (paso === "fecha") {
       const fechaConvertida = convertirFecha(texto);
@@ -249,12 +269,13 @@ export default function AgenteAAFPage() {
       ]);
 
       setPaso("hora");
+
       return;
     }
 
-    // =========================
+    // ==========================================
     // HORA
-    // =========================
+    // ==========================================
 
     if (paso === "hora") {
       const horaConvertida = convertirHora(texto);
@@ -283,12 +304,13 @@ export default function AgenteAAFPage() {
       ]);
 
       setPaso("personas");
+
       return;
     }
 
-    // =========================
+    // ==========================================
     // PERSONAS
-    // =========================
+    // ==========================================
 
     if (paso === "personas") {
       setPersonas(texto);
@@ -320,6 +342,10 @@ export default function AgenteAAFPage() {
         .select()
         .single();
 
+      // ==========================================
+      // ERROR SUPABASE
+      // ==========================================
+
       if (error) {
         console.error("ERROR AL GUARDAR:", error);
 
@@ -335,12 +361,13 @@ export default function AgenteAAFPage() {
         ]);
 
         setPaso("inicio");
+
         return;
       }
 
-      // =========================
+      // ==========================================
       // TELEGRAM
-      // =========================
+      // ==========================================
 
       try {
         await fetch(
@@ -387,6 +414,10 @@ export default function AgenteAAFPage() {
 
       setGuardando(false);
 
+      // ==========================================
+      // RESERVA REGISTRADA
+      // ==========================================
+
       setConversacion((anterior) => [
         ...anterior,
         {
@@ -396,9 +427,9 @@ export default function AgenteAAFPage() {
         },
       ]);
 
-      // =========================
-      // REINICIAR
-      // =========================
+      // ==========================================
+      // REINICIAR CHAT
+      // ==========================================
 
       setTimeout(() => {
         setConversacion([]);
@@ -419,9 +450,9 @@ export default function AgenteAAFPage() {
 
       <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
 
-        {/* =========================
+        {/* ==========================================
             ENCABEZADO
-        ========================= */}
+        ========================================== */}
 
         <header className="mb-6 border-b border-gray-200 pb-5 sm:mb-8 sm:pb-6">
 
@@ -466,9 +497,9 @@ export default function AgenteAAFPage() {
 
         </header>
 
-        {/* =========================
+        {/* ==========================================
             PANEL PRINCIPAL
-        ========================= */}
+        ========================================== */}
 
         <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
 
@@ -487,16 +518,15 @@ export default function AgenteAAFPage() {
 
           </div>
 
-          {/* =========================
+          {/* ==========================================
               CONVERSACIÓN
-          ========================= */}
+          ========================================== */}
 
-          <div className="min-h-[280px] max-h-[500px] overflow-y-auto bg-white p-4 sm:min-h-[320px] sm:p-6">
+          <div className="max-h-[500px] min-h-[280px] overflow-y-auto bg-white p-4 sm:min-h-[320px] sm:p-6">
 
             <div className="space-y-4">
 
               {conversacion.map((item, index) => {
-
                 const esCliente = item.autor === "Cliente";
 
                 return (
@@ -535,11 +565,9 @@ export default function AgenteAAFPage() {
 
                   </div>
                 );
-
               })}
 
               {guardando && (
-
                 <div className="flex justify-start">
 
                   <div className="rounded-2xl rounded-bl-md bg-gray-100 px-4 py-3 text-sm text-gray-500">
@@ -547,16 +575,22 @@ export default function AgenteAAFPage() {
                   </div>
 
                 </div>
-
               )}
+
+              {/* PUNTO FINAL PARA AUTOSCROLL */}
+
+              <div
+                ref={finalConversacionRef}
+                className="h-px w-full"
+              />
 
             </div>
 
           </div>
 
-          {/* =========================
+          {/* ==========================================
               CAMPO DE MENSAJE
-          ========================= */}
+          ========================================== */}
 
           <div className="border-t border-gray-200 bg-white p-4 sm:p-6">
 
