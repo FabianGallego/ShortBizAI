@@ -111,13 +111,10 @@ export default function AgenteAAFPage() {
   const [hora, setHora] = useState("");
   const [personas, setPersonas] = useState("");
 
-  const [conversacion, setConversacion] = useState<Mensaje[]>([
-    {
-      autor: "Asistente",
-      texto:
-        "👋 Bienvenido al sistema de reservas y disponibilidad, ¿en qué puedo ayudar?",
-    },
-  ]);
+  // IMPORTANTE:
+  // El mensaje de bienvenida ya está arriba,
+  // por eso el chat comienza vacío.
+  const [conversacion, setConversacion] = useState<Mensaje[]>([]);
 
   const [guardando, setGuardando] = useState(false);
 
@@ -126,6 +123,7 @@ export default function AgenteAAFPage() {
 
     const texto = mensaje.trim();
 
+    // Mostrar mensaje del cliente
     setConversacion((anterior) => [
       ...anterior,
       {
@@ -135,6 +133,10 @@ export default function AgenteAAFPage() {
     ]);
 
     setMensaje("");
+
+    // =========================
+    // INICIO
+    // =========================
 
     if (paso === "inicio") {
       if (
@@ -157,13 +159,17 @@ export default function AgenteAAFPage() {
           {
             autor: "Asistente",
             texto:
-              "Puedo ayudarte con reservas y disponibilidad. Indícame qué necesitas.",
+              "Puedo ayudarte a realizar una reserva. Escribe “quiero una reserva” para comenzar.",
           },
         ]);
       }
 
       return;
     }
+
+    // =========================
+    // NOMBRE
+    // =========================
 
     if (paso === "nombre") {
       setNombre(texto);
@@ -179,6 +185,10 @@ export default function AgenteAAFPage() {
       setPaso("telefono");
       return;
     }
+
+    // =========================
+    // TELÉFONO
+    // =========================
 
     if (paso === "telefono") {
       if (!/^\d{10}$/.test(texto)) {
@@ -207,6 +217,10 @@ export default function AgenteAAFPage() {
       setPaso("fecha");
       return;
     }
+
+    // =========================
+    // FECHA
+    // =========================
 
     if (paso === "fecha") {
       const fechaConvertida = convertirFecha(texto);
@@ -238,6 +252,10 @@ export default function AgenteAAFPage() {
       return;
     }
 
+    // =========================
+    // HORA
+    // =========================
+
     if (paso === "hora") {
       const horaConvertida = convertirHora(texto);
 
@@ -268,6 +286,10 @@ export default function AgenteAAFPage() {
       return;
     }
 
+    // =========================
+    // PERSONAS
+    // =========================
+
     if (paso === "personas") {
       setPersonas(texto);
       setPaso("confirmado");
@@ -277,7 +299,7 @@ export default function AgenteAAFPage() {
         ...anterior,
         {
           autor: "Asistente",
-          texto: "⏳ Guardando tu reserva...",
+          texto: "✅ Guardando tu reserva...",
         },
       ]);
 
@@ -316,6 +338,10 @@ export default function AgenteAAFPage() {
         return;
       }
 
+      // =========================
+      // TELEGRAM
+      // =========================
+
       try {
         await fetch(
           "https://api.telegram.org/bot8848673785:AAEPLTJ5B-CF_lFPFuA4156JvE2Rgf15MNc/sendMessage",
@@ -326,6 +352,7 @@ export default function AgenteAAFPage() {
             },
             body: JSON.stringify({
               chat_id: "-1004324063012",
+
               text: `🍽️ Nueva reserva
 
 👤 Cliente: ${nombre}
@@ -333,6 +360,7 @@ export default function AgenteAAFPage() {
 📅 Fecha: ${fecha}
 🕒 Hora: ${hora}
 👥 Personas: ${texto}`,
+
               reply_markup: {
                 inline_keyboard: [
                   [
@@ -368,14 +396,12 @@ export default function AgenteAAFPage() {
         },
       ]);
 
+      // =========================
+      // REINICIAR
+      // =========================
+
       setTimeout(() => {
-        setConversacion([
-          {
-            autor: "Asistente",
-            texto:
-              "👋 Bienvenido al sistema de reservas y disponibilidad, ¿en qué puedo ayudar?",
-          },
-        ]);
+        setConversacion([]);
 
         setPaso("inicio");
         setNombre("");
@@ -390,64 +416,87 @@ export default function AgenteAAFPage() {
 
   return (
     <main className="min-h-screen w-full bg-white text-gray-900">
-      <div className="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
 
-        {/* ENCABEZADO */}
-        <header className="mb-5 border-b border-gray-200 pb-5 sm:mb-7 sm:pb-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
+
+        {/* =========================
+            ENCABEZADO
+        ========================= */}
+
+        <header className="mb-6 border-b border-gray-200 pb-5 sm:mb-8 sm:pb-6">
+
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
 
             {/* TÍTULO */}
+
             <div className="min-w-0">
+
               <h1 className="text-3xl font-black leading-tight tracking-tight text-gray-950 sm:text-4xl">
                 Centro de Reservas
               </h1>
 
               <div className="mt-2 flex items-center gap-2">
+
                 <span className="h-3 w-3 shrink-0 rounded-full bg-green-500" />
 
                 <p className="text-sm font-medium text-green-600 sm:text-base">
                   Asistente inteligente disponible 24/7
                 </p>
+
               </div>
+
             </div>
 
             {/* LOGO */}
+
             <div className="flex w-full justify-start sm:w-auto sm:justify-end">
+
               <Image
                 src="/logo-foodshortai.png"
                 alt="ShortBizAI"
                 width={235}
                 height={235}
                 priority
-                className="h-auto w-[175px] max-w-full object-contain sm:w-[220px]"
+                className="h-auto w-[190px] max-w-full object-contain sm:w-[235px]"
               />
+
             </div>
 
           </div>
+
         </header>
 
-        {/* PANEL DE RESERVAS */}
-        <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md">
+        {/* =========================
+            PANEL PRINCIPAL
+        ========================= */}
+
+        <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
 
           {/* CABECERA */}
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-4 sm:px-6 sm:py-5">
 
-            <h2 className="text-lg font-bold text-gray-950 sm:text-xl">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-5 sm:px-6">
+
+            <h2 className="text-xl font-bold leading-tight text-gray-950 sm:text-2xl">
               Asistente de reservas y disponibilidad
             </h2>
 
-            <p className="mt-1 text-sm leading-6 text-gray-500 sm:text-base">
-              Bienvenido al sistema de reservas y disponibilidad, ¿en qué puedo ayudar?
+            <p className="mt-2 text-base leading-6 text-gray-500 sm:text-lg">
+              Bienvenido al sistema de reservas y disponibilidad,
+              ¿en qué puedo ayudar?
             </p>
 
           </div>
 
-          {/* CONVERSACIÓN */}
-          <div className="min-h-[260px] max-h-[360px] overflow-y-auto bg-white px-4 py-5 sm:min-h-[300px] sm:max-h-[420px] sm:px-6">
+          {/* =========================
+              CONVERSACIÓN
+          ========================= */}
 
-            <div className="space-y-3">
+          <div className="min-h-[280px] max-h-[500px] overflow-y-auto bg-white p-4 sm:min-h-[320px] sm:p-6">
+
+            <div className="space-y-4">
 
               {conversacion.map((item, index) => {
+
                 const esCliente = item.autor === "Cliente";
 
                 return (
@@ -461,7 +510,7 @@ export default function AgenteAAFPage() {
                   >
 
                     <div
-                      className={`max-w-[90%] rounded-2xl px-4 py-3 sm:max-w-[75%] ${
+                      className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[75%] ${
                         esCliente
                           ? "rounded-br-md bg-blue-600 text-white"
                           : "rounded-bl-md bg-gray-100 text-gray-900"
@@ -486,9 +535,11 @@ export default function AgenteAAFPage() {
 
                   </div>
                 );
+
               })}
 
               {guardando && (
+
                 <div className="flex justify-start">
 
                   <div className="rounded-2xl rounded-bl-md bg-gray-100 px-4 py-3 text-sm text-gray-500">
@@ -496,14 +547,18 @@ export default function AgenteAAFPage() {
                   </div>
 
                 </div>
+
               )}
 
             </div>
 
           </div>
 
-          {/* CAMPO DE MENSAJE */}
-          <div className="border-t border-gray-200 bg-white p-4 sm:p-5">
+          {/* =========================
+              CAMPO DE MENSAJE
+          ========================= */}
+
+          <div className="border-t border-gray-200 bg-white p-4 sm:p-6">
 
             <div className="flex flex-col gap-3 sm:flex-row">
 
@@ -516,14 +571,14 @@ export default function AgenteAAFPage() {
                   }
                 }}
                 disabled={guardando}
-                className="min-h-[52px] w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100"
+                className="min-h-[54px] w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100"
                 placeholder="Escribe tu solicitud de reserva"
               />
 
               <button
                 onClick={enviarMensaje}
                 disabled={guardando || !mensaje.trim()}
-                className="min-h-[52px] w-full rounded-xl bg-blue-600 px-6 text-base font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 sm:w-auto"
+                className="min-h-[54px] w-full rounded-xl bg-blue-600 px-6 text-base font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 sm:w-auto"
               >
                 {guardando
                   ? "Guardando..."
@@ -537,6 +592,7 @@ export default function AgenteAAFPage() {
         </section>
 
       </div>
+
     </main>
   );
 }
