@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 
@@ -101,7 +101,77 @@ type Mensaje = {
   texto: string;
 };
 
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat(
+    (4 - (base64String.length % 4)) % 4
+  );
+
+  const base64 = (base64String + padding)
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+
+  const rawData = window.atob(base64);
+
+  return Uint8Array.from(
+    [...rawData].map((char) => char.charCodeAt(0))
+  );
+}
+
+
 export default function AgenteAAFPage() {
+
+  useEffect(() => {
+  registrarNotificaciones();
+}, []);
+
+async function registrarNotificaciones() {
+  console.log("PUSH: iniciando registro");
+  
+  try {
+    if (!("serviceWorker" in navigator)) {
+      console.log("Este navegador no soporta Service Worker");
+      return;
+    }
+
+    if (!("PushManager" in window)) {
+      console.log("Este navegador no soporta notificaciones Push");
+      return;
+    }
+
+    const permiso = await Notification.requestPermission();
+
+    if (permiso !== "granted") {
+      console.log("Permiso de notificaciones no concedido");
+      return;
+    }
+
+    const registro = await navigator.serviceWorker.register("/sw.js");
+
+    const subscription = await registro.pushManager.subscribe({
+      userVisibleOnly: true,
+
+     applicationServerKey: urlBase64ToUint8Array(
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
+),
+    });
+
+    console.log("PUSH REGISTRADO:", subscription);
+
+    await fetch("/api/push", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        subscription,
+      }),
+    });
+
+    console.log("Celular registrado para recibir notificaciones");
+  } catch (error) {
+    console.error("ERROR REGISTRANDO PUSH:", error);
+  }
+}
   const [mensaje, setMensaje] = useState("");
   const [paso, setPaso] = useState("inicio");
 
