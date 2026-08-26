@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState,useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 
@@ -101,6 +101,8 @@ type Mensaje = {
   texto: string;
 };
 
+
+
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat(
     (4 - (base64String.length % 4)) % 4
@@ -118,6 +120,8 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 
+
+
 export default function AgenteAAFPage() {
 
   useEffect(() => {
@@ -126,7 +130,7 @@ export default function AgenteAAFPage() {
 
 async function registrarNotificaciones() {
   console.log("PUSH: iniciando registro");
-  
+
   try {
     if (!("serviceWorker" in navigator)) {
       console.log("Este navegador no soporta Service Worker");
@@ -189,7 +193,7 @@ async function registrarNotificaciones() {
   // REFERENCIA PARA EL AUTOSCROLL DEL CHAT
   // ==========================================
 
-  const finalConversacionRef = useRef<HTMLDivElement>(null);
+const finalConversacionRef = useRef<HTMLDivElement>(null);
 
   // ==========================================
   // AUTOSCROLL AUTOMÁTICO
