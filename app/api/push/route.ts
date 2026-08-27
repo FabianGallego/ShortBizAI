@@ -21,22 +21,40 @@ export async function POST(request: Request) {
     }
 
     // ==========================================
-    // GUARDAR SUSCRIPCIÓN DEL NAVEGADOR
+    // OBTENER ENDPOINT DEL DISPOSITIVO
+    // ==========================================
+
+    const endpoint = subscription.endpoint;
+
+    if (!endpoint) {
+      return Response.json(
+        { error: "La suscripción no tiene endpoint" },
+        { status: 400 }
+      );
+    }
+
+    console.log("PUSH ENDPOINT:", endpoint);
+
+    // ==========================================
+    // GUARDAR / ACTUALIZAR SUSCRIPCIÓN
     // ==========================================
 
     const { error: saveError } = await supabaseAdmin
       .from("push_subscriptions")
-      .insert([
+      .upsert(
         {
+          endpoint,
           subscription,
         },
-      ]);
+        {
+          onConflict: "endpoint",
+        }
+      );
 
     if (saveError) {
-      console.error("ERROR GUARDANDO PUSH:", saveError);
       console.error(
-        "ERROR PUSH JSON:",
-        JSON.stringify(saveError, null, 2)
+        "ERROR GUARDANDO PUSH:",
+        saveError
       );
 
       return Response.json(
@@ -48,10 +66,12 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log("PUSH: suscripción guardada correctamente");
+    console.log(
+      "PUSH: suscripción guardada/actualizada correctamente"
+    );
 
     // ==========================================
-    // ENVIAR NOTIFICACIÓN SI VIENE MENSAJE
+    // ENVIAR NOTIFICACIÓN DE PRUEBA
     // ==========================================
 
     if (title || message) {
@@ -59,29 +79,36 @@ export async function POST(request: Request) {
         subscription,
         JSON.stringify({
           title: title || "ShortBizAI",
-          body: message || "Tienes una nueva notificación.",
+          body:
+            message ||
+            "Tienes una nueva notificación.",
           icon: "/logo-foodshortai.png",
         })
       );
 
-      console.log("PUSH: notificación enviada");
+      console.log(
+        "PUSH: notificación enviada"
+      );
     }
 
     return Response.json({
       success: true,
-      message: "Suscripción registrada correctamente",
+      message:
+        "Suscripción registrada correctamente",
     });
-  } catch (error) {
-    console.error("ERROR PUSH:", error);
+
+  } catch (error: any) {
     console.error(
-      "ERROR PUSH JSON:",
-      JSON.stringify(error, null, 2)
+      "ERROR PUSH:",
+      error
     );
 
     return Response.json(
       {
         success: false,
-        error: "No se pudo procesar la notificación",
+        error:
+          error?.message ||
+          "No se pudo procesar la notificación",
       },
       { status: 500 }
     );

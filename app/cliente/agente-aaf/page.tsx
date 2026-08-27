@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState,useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 
@@ -22,7 +22,6 @@ function convertirFecha(fecha: string): string | null {
 
   const texto = fecha.toLowerCase().trim();
 
-  // Ejemplo: agosto 10 de 2026
   let m = texto.match(/^([a-zñ]+)\s+(\d{1,2})\s+de\s+(\d{4})$/);
 
   if (m) {
@@ -33,8 +32,9 @@ function convertirFecha(fecha: string): string | null {
     return `${m[3]}-${mes}-${m[2].padStart(2, "0")}`;
   }
 
-  // Ejemplo: 10 de agosto de 2026
-  m = texto.match(/^(\d{1,2})\s+de\s+([a-zñ]+)\s+de\s+(\d{4})$/);
+  m = texto.match(
+    /^(\d{1,2})\s+de\s+([a-zñ]+)\s+de\s+(\d{4})$/
+  );
 
   if (m) {
     const mes = meses[m[2]];
@@ -50,7 +50,6 @@ function convertirFecha(fecha: string): string | null {
 function convertirHora(hora: string): string | null {
   const texto = hora.toLowerCase().trim();
 
-  // Ejemplo: 2 pm
   let m = texto.match(/^(\d{1,2})\s*(am|pm)$/);
 
   if (m) {
@@ -65,7 +64,6 @@ function convertirHora(hora: string): string | null {
     return `${String(h).padStart(2, "0")}:00`;
   }
 
-  // Ejemplo: 2:30 pm
   m = texto.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
 
   if (m) {
@@ -81,7 +79,6 @@ function convertirHora(hora: string): string | null {
     return `${String(h).padStart(2, "0")}:${minutos}`;
   }
 
-  // Ejemplo: 14:00
   m = texto.match(/^(\d{1,2}):(\d{2})$/);
 
   if (m) {
@@ -101,8 +98,6 @@ type Mensaje = {
   texto: string;
 };
 
-
-
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat(
     (4 - (base64String.length % 4)) % 4
@@ -119,63 +114,7 @@ function urlBase64ToUint8Array(base64String: string) {
   );
 }
 
-
-
-
 export default function AgenteAAFPage() {
-
-  useEffect(() => {
-  registrarNotificaciones();
-}, []);
-
-async function registrarNotificaciones() {
-  console.log("PUSH: iniciando registro");
-
-  try {
-    if (!("serviceWorker" in navigator)) {
-      console.log("Este navegador no soporta Service Worker");
-      return;
-    }
-
-    if (!("PushManager" in window)) {
-      console.log("Este navegador no soporta notificaciones Push");
-      return;
-    }
-
-    const permiso = await Notification.requestPermission();
-
-    if (permiso !== "granted") {
-      console.log("Permiso de notificaciones no concedido");
-      return;
-    }
-
-    const registro = await navigator.serviceWorker.register("/sw.js");
-
-    const subscription = await registro.pushManager.subscribe({
-      userVisibleOnly: true,
-
-     applicationServerKey: urlBase64ToUint8Array(
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-),
-    });
-
-    console.log("PUSH REGISTRADO:", subscription);
-
-    await fetch("/api/push", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        subscription,
-      }),
-    });
-
-    console.log("Celular registrado para recibir notificaciones");
-  } catch (error) {
-    console.error("ERROR REGISTRANDO PUSH:", error);
-  }
-}
   const [mensaje, setMensaje] = useState("");
   const [paso, setPaso] = useState("inicio");
 
@@ -189,15 +128,171 @@ async function registrarNotificaciones() {
 
   const [guardando, setGuardando] = useState(false);
 
-  // ==========================================
-  // REFERENCIA PARA EL AUTOSCROLL DEL CHAT
-  // ==========================================
+  // =====================================================
+  // ENDPOINT DEL DISPOSITIVO
+  // =====================================================
 
-const finalConversacionRef = useRef<HTMLDivElement>(null);
+  const [pushEndpoint, setPushEndpoint] = useState<string | null>(null);
 
-  // ==========================================
-  // AUTOSCROLL AUTOMÁTICO
-  // ==========================================
+  // =====================================================
+  // REFERENCIA AUTOSCROLL
+  // =====================================================
+
+  const finalConversacionRef =
+    useRef<HTMLDivElement>(null);
+
+  // =====================================================
+  // REGISTRAR / RECUPERAR PUSH
+  // =====================================================
+
+  useEffect(() => {
+    registrarNotificaciones();
+  }, []);
+
+  async function registrarNotificaciones() {
+    console.log("PUSH: iniciando registro");
+
+    try {
+      if (!("serviceWorker" in navigator)) {
+        console.log(
+          "Este navegador no soporta Service Worker"
+        );
+        return;
+      }
+
+      if (!("PushManager" in window)) {
+        console.log(
+          "Este navegador no soporta notificaciones Push"
+        );
+        return;
+      }
+
+      if (!("Notification" in window)) {
+        console.log(
+          "Este navegador no soporta Notification API"
+        );
+        return;
+      }
+
+      // =================================================
+      // PEDIR PERMISO
+      // =================================================
+
+      let permiso = Notification.permission;
+
+      if (permiso === "default") {
+        permiso = await Notification.requestPermission();
+      }
+
+      if (permiso !== "granted") {
+        console.log(
+          "Permiso de notificaciones no concedido"
+        );
+        return;
+      }
+
+      // =================================================
+      // REGISTRAR SERVICE WORKER
+      // =================================================
+
+      const registro =
+        await navigator.serviceWorker.register("/sw.js");
+
+      await navigator.serviceWorker.ready;
+
+      // =================================================
+      // BUSCAR SUSCRIPCIÓN EXISTENTE
+      // =================================================
+
+      let subscription =
+        await registro.pushManager.getSubscription();
+
+      // =================================================
+      // SOLO CREAR UNA NUEVA SI NO EXISTE
+      // =================================================
+
+      if (!subscription) {
+        console.log(
+          "PUSH: no existe suscripción, creando una nueva"
+        );
+
+        const vapidKey =
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+
+        if (!vapidKey) {
+          console.error(
+            "Falta NEXT_PUBLIC_VAPID_PUBLIC_KEY"
+          );
+          return;
+        }
+
+        subscription =
+          await registro.pushManager.subscribe({
+            userVisibleOnly: true,
+
+            applicationServerKey:
+              urlBase64ToUint8Array(vapidKey),
+          });
+      } else {
+        console.log(
+          "PUSH: usando suscripción existente"
+        );
+      }
+
+      // =================================================
+      // OBTENER ENDPOINT
+      // =================================================
+
+      const endpoint = subscription.endpoint;
+
+      console.log(
+        "PUSH ENDPOINT:",
+        endpoint
+      );
+
+      setPushEndpoint(endpoint);
+
+      // =================================================
+      // REGISTRAR EN EL SERVIDOR
+      // =================================================
+
+      const respuesta = await fetch("/api/push", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          subscription,
+        }),
+      });
+
+      const resultado = await respuesta.json();
+
+      if (!respuesta.ok) {
+        console.error(
+          "ERROR REGISTRANDO PUSH EN SERVIDOR:",
+          resultado
+        );
+
+        return;
+      }
+
+      console.log(
+        "PUSH: dispositivo registrado correctamente"
+      );
+    } catch (error) {
+      console.error(
+        "ERROR REGISTRANDO PUSH:",
+        error
+      );
+    }
+  }
+
+  // =====================================================
+  // AUTOSCROLL
+  // =====================================================
 
   useEffect(() => {
     finalConversacionRef.current?.scrollIntoView({
@@ -206,16 +301,15 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
     });
   }, [conversacion, guardando]);
 
-  // ==========================================
+  // =====================================================
   // ENVIAR MENSAJE
-  // ==========================================
+  // =====================================================
 
   async function enviarMensaje() {
     if (!mensaje.trim() || guardando) return;
 
     const texto = mensaje.trim();
 
-    // Mostrar mensaje del cliente
     setConversacion((anterior) => [
       ...anterior,
       {
@@ -226,9 +320,9 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
 
     setMensaje("");
 
-    // ==========================================
+    // =====================================================
     // INICIO
-    // ==========================================
+    // =====================================================
 
     if (paso === "inicio") {
       if (
@@ -259,9 +353,9 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
       return;
     }
 
-    // ==========================================
+    // =====================================================
     // NOMBRE
-    // ==========================================
+    // =====================================================
 
     if (paso === "nombre") {
       setNombre(texto);
@@ -270,7 +364,8 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
         ...anterior,
         {
           autor: "Asistente",
-          texto: "¿Cuál es tu número de teléfono?",
+          texto:
+            "¿Cuál es tu número de teléfono?",
         },
       ]);
 
@@ -279,9 +374,9 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
       return;
     }
 
-    // ==========================================
+    // =====================================================
     // TELÉFONO
-    // ==========================================
+    // =====================================================
 
     if (paso === "telefono") {
       if (!/^\d{10}$/.test(texto)) {
@@ -303,7 +398,8 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
         ...anterior,
         {
           autor: "Asistente",
-          texto: "¿Para qué fecha deseas la reserva?",
+          texto:
+            "¿Para qué fecha deseas la reserva?",
         },
       ]);
 
@@ -312,12 +408,13 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
       return;
     }
 
-    // ==========================================
+    // =====================================================
     // FECHA
-    // ==========================================
+    // =====================================================
 
     if (paso === "fecha") {
-      const fechaConvertida = convertirFecha(texto);
+      const fechaConvertida =
+        convertirFecha(texto);
 
       if (!fechaConvertida) {
         setConversacion((anterior) => [
@@ -338,7 +435,8 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
         ...anterior,
         {
           autor: "Asistente",
-          texto: "¿A qué hora deseas la reserva?",
+          texto:
+            "¿A qué hora deseas la reserva?",
         },
       ]);
 
@@ -347,12 +445,13 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
       return;
     }
 
-    // ==========================================
+    // =====================================================
     // HORA
-    // ==========================================
+    // =====================================================
 
     if (paso === "hora") {
-      const horaConvertida = convertirHora(texto);
+      const horaConvertida =
+        convertirHora(texto);
 
       if (!horaConvertida) {
         setConversacion((anterior) => [
@@ -373,7 +472,8 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
         ...anterior,
         {
           autor: "Asistente",
-          texto: "¿Para cuántas personas será la reserva?",
+          texto:
+            "¿Para cuántas personas será la reserva?",
         },
       ]);
 
@@ -382,12 +482,13 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
       return;
     }
 
-    // ==========================================
+    // =====================================================
     // PERSONAS
-    // ==========================================
+    // =====================================================
 
     if (paso === "personas") {
       setPersonas(texto);
+
       setPaso("confirmado");
       setGuardando(true);
 
@@ -395,33 +496,59 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
         ...anterior,
         {
           autor: "Asistente",
-          texto: "✅ Guardando tu reserva...",
+          texto:
+            "✅ Guardando tu reserva...",
         },
       ]);
 
-      const fechaConvertida = convertirFecha(fecha);
-      const horaConvertida = convertirHora(hora);
+      const fechaConvertida =
+        convertirFecha(fecha);
 
-      const { data, error } = await supabase
-        .from("reservas")
-        .insert([
-          {
-            cliente_nombre: nombre,
-            telefono,
-            fecha: fechaConvertida,
-            hora: horaConvertida,
-            personas: texto,
-          },
-        ])
-        .select()
-        .single();
+      const horaConvertida =
+        convertirHora(hora);
 
-      // ==========================================
+      // =================================================
+      // COMPROBAR PUSH
+      // =================================================
+
+      if (!pushEndpoint) {
+        console.warn(
+          "PUSH: no hay endpoint asociado al dispositivo"
+        );
+      }
+
+      // =================================================
+      // GUARDAR RESERVA
+      // =================================================
+
+      const { data, error } =
+        await supabase
+          .from("reservas")
+          .insert([
+            {
+              cliente_nombre: nombre,
+              telefono,
+              fecha: fechaConvertida,
+              hora: horaConvertida,
+              personas: texto,
+
+              // IMPORTANTE:
+              // Este campo debe existir en reservas
+              push_endpoint: pushEndpoint,
+            },
+          ])
+          .select()
+          .single();
+
+      // =================================================
       // ERROR SUPABASE
-      // ==========================================
+      // =================================================
 
       if (error) {
-        console.error("ERROR AL GUARDAR:", error);
+        console.error(
+          "ERROR AL GUARDAR:",
+          error
+        );
 
         setGuardando(false);
 
@@ -439,58 +566,60 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
         return;
       }
 
-      // ==========================================
-      // TELEGRAM
-      // ==========================================
+      console.log(
+        "RESERVA CREADA:",
+        data
+      );
+
+      // =================================================
+      // ENVIAR RESERVA AL SERVIDOR
+      // =================================================
 
       try {
-        await fetch(
-          "https://api.telegram.org/bot8848673785:AAESh-IKRAX--aC3OQ0W9Dv_C2SnULW3fX4/sendMessage",
-          {
+        const respuestaTelegram =
+          await fetch("/api/reservas/notificar", {
             method: "POST",
+
             headers: {
               "Content-Type": "application/json",
             },
+
             body: JSON.stringify({
-              chat_id: "-1004324063012",
-
-              text: `🍽️ Nueva reserva
-
-👤 Cliente: ${nombre}
-📞 Teléfono: ${telefono}
-📅 Fecha: ${fecha}
-🕒 Hora: ${hora}
-👥 Personas: ${texto}`,
-
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text: "✅ Confirmar",
-                      callback_data: `confirmar_${data.id}`,
-                    },
-                    {
-                      text: "❌ Cancelar",
-                      callback_data: `cancelar_${data.id}`,
-                    },
-                  ],
-                ],
-              },
+              reservaId: data.id,
+              cliente_nombre: nombre,
+              telefono,
+              fecha: fechaConvertida,
+              hora: horaConvertida,
+              personas: texto,
             }),
-          }
-        );
-      } catch (telegramError) {
+          });
+
+        const resultadoTelegram =
+          await respuestaTelegram.json();
+
+        if (!respuestaTelegram.ok) {
+          console.error(
+            "ERROR NOTIFICANDO RESERVA:",
+            resultadoTelegram
+          );
+        } else {
+          console.log(
+            "RESERVA ENVIADA AL SERVIDOR:",
+            resultadoTelegram
+          );
+        }
+      } catch (error) {
         console.error(
-          "Error enviando la reserva a Telegram:",
-          telegramError
+          "ERROR COMUNICANDO CON /api/reservas/notificar:",
+          error
         );
       }
 
       setGuardando(false);
 
-      // ==========================================
+      // =================================================
       // RESERVA REGISTRADA
-      // ==========================================
+      // =================================================
 
       setConversacion((anterior) => [
         ...anterior,
@@ -501,19 +630,21 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
         },
       ]);
 
-      // ==========================================
+      // =================================================
       // REINICIAR CHAT
-      // ==========================================
+      // =================================================
 
       setTimeout(() => {
         setConversacion([]);
 
         setPaso("inicio");
+
         setNombre("");
         setTelefono("");
         setFecha("");
         setHora("");
         setPersonas("");
+
         setMensaje("");
       }, 5000);
     }
@@ -524,15 +655,13 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
 
       <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
 
-        {/* ==========================================
+        {/* ==================================================
             ENCABEZADO
-        ========================================== */}
+        ================================================== */}
 
         <header className="mb-6 border-b border-gray-200 pb-5 sm:mb-8 sm:pb-6">
 
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-
-            {/* TÍTULO */}
 
             <div className="min-w-0">
 
@@ -552,8 +681,6 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
 
             </div>
 
-            {/* LOGO */}
-
             <div className="flex w-full justify-start sm:w-auto sm:justify-end">
 
               <Image
@@ -571,13 +698,11 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
 
         </header>
 
-        {/* ==========================================
+        {/* ==================================================
             PANEL PRINCIPAL
-        ========================================== */}
+        ================================================== */}
 
         <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-
-          {/* CABECERA */}
 
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-5 sm:px-6">
 
@@ -592,16 +717,18 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
 
           </div>
 
-          {/* ==========================================
+          {/* ==================================================
               CONVERSACIÓN
-          ========================================== */}
+          ================================================== */}
 
           <div className="max-h-[500px] min-h-[280px] overflow-y-auto bg-white p-4 sm:min-h-[320px] sm:p-6">
 
             <div className="space-y-4">
 
               {conversacion.map((item, index) => {
-                const esCliente = item.autor === "Cliente";
+
+                const esCliente =
+                  item.autor === "Cliente";
 
                 return (
                   <div
@@ -651,8 +778,6 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
                 </div>
               )}
 
-              {/* PUNTO FINAL PARA AUTOSCROLL */}
-
               <div
                 ref={finalConversacionRef}
                 className="h-px w-full"
@@ -662,9 +787,9 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
 
           </div>
 
-          {/* ==========================================
+          {/* ==================================================
               CAMPO DE MENSAJE
-          ========================================== */}
+          ================================================== */}
 
           <div className="border-t border-gray-200 bg-white p-4 sm:p-6">
 
@@ -672,7 +797,9 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
 
               <input
                 value={mensaje}
-                onChange={(e) => setMensaje(e.target.value)}
+                onChange={(e) =>
+                  setMensaje(e.target.value)
+                }
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     enviarMensaje();
@@ -685,7 +812,10 @@ const finalConversacionRef = useRef<HTMLDivElement>(null);
 
               <button
                 onClick={enviarMensaje}
-                disabled={guardando || !mensaje.trim()}
+                disabled={
+                  guardando ||
+                  !mensaje.trim()
+                }
                 className="min-h-[54px] w-full rounded-xl bg-blue-600 px-6 text-base font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 sm:w-auto"
               >
                 {guardando
