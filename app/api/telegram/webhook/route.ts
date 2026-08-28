@@ -14,7 +14,10 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    console.log("TELEGRAM WEBHOOK:", JSON.stringify(body, null, 2));
+    console.log(
+      "TELEGRAM WEBHOOK:",
+      JSON.stringify(body, null, 2)
+    );
 
     // =====================================================
     // BOTONES: CONFIRMAR / CANCELAR
@@ -27,11 +30,28 @@ export async function POST(req: Request) {
 
       console.log("ACCIÓN TELEGRAM:", accion);
 
-      const [tipo, idTexto] = accion.split("_");
-      const id = Number(idTexto);
+      // -----------------------------------------------------
+      // SEPARAR ACCIÓN E ID
+      // -----------------------------------------------------
 
-      if (!id || !["confirmar", "cancelar"].includes(tipo)) {
-        console.error("Acción inválida:", accion);
+      const [tipo, idTexto] = accion.split("_");
+
+      // IMPORTANTE:
+      // El ID se mantiene como texto.
+      // No lo convertimos a Number porque puede ser UUID.
+      const id = idTexto;
+
+      console.log("TIPO:", tipo);
+      console.log("ID RESERVA:", id);
+
+      if (
+        !id ||
+        !["confirmar", "cancelar"].includes(tipo)
+      ) {
+        console.error(
+          "❌ ACCIÓN INVÁLIDA:",
+          accion
+        );
 
         return NextResponse.json({
           ok: true,
@@ -47,37 +67,65 @@ export async function POST(req: Request) {
           ? "confirmada"
           : "cancelada";
 
+      console.log(
+        "NUEVO ESTADO:",
+        estado
+      );
+
       // =====================================================
-      // ACTUALIZAR RESERVA
+      // ACTUALIZAR RESERVA EN SUPABASE
       // =====================================================
 
-      const { data: reserva, error: reservaError } =
-        await supabaseAdmin
-          .from("reservas")
-          .update({
-            estado,
-          })
-          .eq("id", id)
-          .select()
-          .single();
+      const {
+        data: reserva,
+        error: reservaError,
+      } = await supabaseAdmin
+        .from("reservas")
+        .update({
+          estado,
+        })
+        .eq("id", id)
+        .select()
+        .single();
+
+      // =====================================================
+      // ERROR ACTUALIZANDO RESERVA
+      // =====================================================
 
       if (reservaError) {
         console.error(
-          "ERROR ACTUALIZANDO RESERVA:",
+          "❌ ERROR ACTUALIZANDO RESERVA:",
           reservaError
         );
 
         return NextResponse.json(
           {
             ok: false,
-            error: "No se pudo actualizar la reserva",
+            error:
+              "No se pudo actualizar la reserva",
+            detalle: reservaError.message,
           },
           { status: 500 }
         );
       }
 
+      if (!reserva) {
+        console.error(
+          "❌ NO SE ENCONTRÓ LA RESERVA:",
+          id
+        );
+
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Reserva no encontrada",
+          },
+          { status: 404 }
+        );
+      }
+
       console.log(
-        `RESERVA ${id} ACTUALIZADA:`,
+        `✅ RESERVA ${id} ACTUALIZADA:`,
         estado
       );
 
@@ -85,21 +133,34 @@ export async function POST(req: Request) {
       // RESPONDER AL CLICK DE TELEGRAM
       // =====================================================
 
-      await fetch(
-        `https://api.telegram.org/bot${TELEGRAM_TOKEN}/answerCallbackQuery`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            callback_query_id: callbackQuery.id,
-            text:
-              tipo === "confirmar"
-                ? "✅ Reserva confirmada"
-                : "❌ Reserva cancelada",
-          }),
-        }
+      const respuestaCallback =
+        await fetch(
+          `https://api.telegram.org/bot${TELEGRAM_TOKEN}/answerCallbackQuery`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json",
+            },
+
+            body: JSON.stringify({
+              callback_query_id:
+                callbackQuery.id,
+
+              text:
+                tipo === "confirmar"
+                  ? "✅ Reserva confirmada"
+                  : "❌ Reserva cancelada",
+            }),
+          }
+        );
+
+      const resultadoCallback =
+        await respuestaCallback.json();
+
+      console.log(
+        "TELEGRAM CALLBACK RESPONSE:",
+        resultadoCallback
       );
 
       // =====================================================
@@ -115,13 +176,14 @@ export async function POST(req: Request) {
 
       if (suscripcionesError) {
         console.error(
-          "ERROR BUSCANDO SUSCRIPCIONES:",
+          "❌ ERROR BUSCANDO SUSCRIPCIONES:",
           suscripcionesError
         );
 
         return NextResponse.json({
           ok: true,
           reservaActualizada: true,
+          estado,
           pushEnviado: false,
         });
       }
@@ -142,8 +204,20 @@ export async function POST(req: Request) {
 
       const mensaje =
         tipo === "confirmar"
-          ? `La reserva de ${reserva.cliente_nombre} para ${reserva.fecha} a las ${reserva.hora} fue confirmada.`
-          : `La reserva de ${reserva.cliente_nombre} para ${reserva.fecha} a las ${reserva.hora} fue cancelada.`;
+          ? `La reserva de ${
+              reserva.cliente_nombre
+            } para ${
+              reserva.fecha
+            } a las ${
+              reserva.hora
+            } fue confirmada.`
+          : `La reserva de ${
+              reserva.cliente_nombre
+            } para ${
+              reserva.fecha
+            } a las ${
+              reserva.hora
+            } fue cancelada.`;
 
       // =====================================================
       // ENVIAR PUSH A LOS NAVEGADORES
@@ -161,16 +235,19 @@ export async function POST(req: Request) {
           );
 
           console.log(
-            "PUSH ENVIADO CORRECTAMENTE:",
+            "✅ PUSH ENVIADO CORRECTAMENTE:",
             item.id
           );
         } catch (pushError: any) {
           console.error(
-            "ERROR ENVIANDO PUSH:",
+            "❌ ERROR ENVIANDO PUSH:",
             pushError
           );
 
-          // Suscripción vencida o inválida
+          // -------------------------------------------------
+          // SUSCRIPCIÓN VENCIDA O INVÁLIDA
+          // -------------------------------------------------
+
           if (
             pushError?.statusCode === 404 ||
             pushError?.statusCode === 410
@@ -181,16 +258,43 @@ export async function POST(req: Request) {
               .eq("id", item.id);
 
             console.log(
-              "SUSCRIPCIÓN ELIMINADA:",
+              "🗑️ SUSCRIPCIÓN ELIMINADA:",
               item.id
             );
           }
         }
       }
 
+      // =====================================================
+      // RESPUESTA FINAL
+      // =====================================================
+
+      console.log(
+        "================================="
+      );
+
+      console.log(
+        "✅ PROCESO COMPLETADO"
+      );
+
+      console.log(
+        "RESERVA:",
+        id
+      );
+
+      console.log(
+        "ESTADO:",
+        estado
+      );
+
+      console.log(
+        "================================="
+      );
+
       return NextResponse.json({
         ok: true,
         reservaActualizada: true,
+        reservaId: id,
         estado,
         pushEnviado: true,
       });
@@ -210,16 +314,19 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ok: true,
     });
-  } catch (error) {
+
+  } catch (error: any) {
     console.error(
-      "ERROR WEBHOOK TELEGRAM:",
+      "❌ ERROR WEBHOOK TELEGRAM:",
       error
     );
 
     return NextResponse.json(
       {
         ok: false,
-        error: "Error interno",
+        error:
+          error?.message ||
+          "Error interno",
       },
       { status: 500 }
     );
