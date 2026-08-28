@@ -569,3 +569,32 @@ export async function POST(req: Request) {
     );
   }
 }
+export async function GET() {
+  try {
+    const respuesta = await fetch(
+      `https://api.telegram.org/bot${TELEGRAM_TOKEN}/getWebhookInfo`,
+      {
+        cache: "no-store",
+      }
+    );
+
+    const resultado = await respuesta.json();
+
+    console.log(
+      "TELEGRAM WEBHOOK INFO:",
+      JSON.stringify(resultado, null, 2)
+    );
+
+    return NextResponse.json(resultado);
+  } catch (error: any) {
+    console.error("ERROR WEBHOOK INFO:", error);
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: error?.message || "Error",
+      },
+      { status: 500 }
+    );
+  }
+}
