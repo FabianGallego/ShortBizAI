@@ -50,6 +50,51 @@ function convertirFecha(fecha: string): string | null {
   return null;
 }
 
+function convertirFechaIngles(fecha: string): string | null {
+  const meses: Record<string, string> = {
+    january: "01",
+    february: "02",
+    march: "03",
+    april: "04",
+    may: "05",
+    june: "06",
+    july: "07",
+    august: "08",
+    september: "09",
+    october: "10",
+    november: "11",
+    december: "12",
+  };
+
+  const texto = fecha.toLowerCase().trim();
+
+  let m = texto.match(
+    /^([a-z]+)\s+(\d{1,2}),?\s+(\d{4})$/
+  );
+
+  if (m) {
+    const mes = meses[m[1]];
+
+    if (!mes) return null;
+
+    return `${m[3]}-${mes}-${m[2].padStart(2, "0")}`;
+  }
+
+  m = texto.match(
+    /^(\d{1,2})\s+([a-z]+)\s+(\d{4})$/
+  );
+
+  if (m) {
+    const mes = meses[m[2]];
+
+    if (!mes) return null;
+
+    return `${m[3]}-${mes}-${m[1].padStart(2, "0")}`;
+  }
+
+  return null;
+}
+
 function convertirHora(hora: string): string | null {
   const texto = hora.toLowerCase().trim();
 
@@ -118,6 +163,18 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export default function AgenteAAFPage() {
+  // =====================================================
+  // IDIOMA
+  // =====================================================
+
+  // INGLÉS ES EL IDIOMA POR DEFECTO
+  const [idioma, setIdioma] =
+    useState<"es" | "en">("en");
+
+  // =====================================================
+  // RESERVA
+  // =====================================================
+
   const [mensaje, setMensaje] = useState("");
   const [paso, setPaso] = useState("inicio");
 
@@ -127,9 +184,255 @@ export default function AgenteAAFPage() {
   const [hora, setHora] = useState("");
   const [personas, setPersonas] = useState("");
 
-  const [conversacion, setConversacion] = useState<Mensaje[]>([]);
+  const [conversacion, setConversacion] =
+    useState<Mensaje[]>([]);
 
-  const [guardando, setGuardando] = useState(false);
+  const [guardando, setGuardando] =
+    useState(false);
+
+  // =====================================================
+  // TEXTOS
+  // =====================================================
+
+  const textos = {
+    en: {
+      titulo: "Reservation Center",
+
+      disponible:
+        "Smart assistant available 24/7",
+
+      activarTitulo:
+        "Enable notifications",
+
+      activarTexto:
+        "To receive the confirmation or cancellation of your reservation directly on this device, you must enable notifications.",
+
+      soloAvisos:
+        "You will only receive notifications related to your reservation.",
+
+      activarBoton:
+        "🔔 Enable notifications",
+
+      activando:
+        "Activating...",
+
+      notificacionesActivadas:
+        "Notifications enabled",
+
+      dispositivoListo:
+        "This device is ready to receive your reservation confirmation or cancellation.",
+
+      asistente:
+        "Reservation and Availability Assistant",
+
+      bienvenida:
+        "Welcome to the reservation and availability system. How can I help you?",
+
+      activarPrimero:
+        "🔔 Enable notifications to start your reservation.",
+
+      placeholder:
+        "Write your reservation request",
+
+      placeholderBloqueado:
+        "Enable notifications first",
+
+      consultar:
+        "Check Availability",
+
+      guardando:
+        "Saving...",
+
+      cliente:
+        "Customer",
+
+      asistenteNombre:
+        "Assistant",
+
+      reservaPregunta:
+        "Of course! What name should I put the reservation under?",
+
+      telefonoPregunta:
+        "What is your phone number?",
+
+      fechaPregunta:
+        "What date would you like the reservation for?",
+
+      horaPregunta:
+        "What time would you like the reservation for?",
+
+      personasPregunta:
+        "How many people will the reservation be for?",
+
+      inicioAyuda:
+        "I can help you make a reservation. Type “I want a reservation” to get started.",
+
+      telefonoInvalido:
+        "❌ The phone number must have 10 digits. Please try again.",
+
+      fechaInvalida:
+        "❌ Invalid date. Example: August 28, 2026.",
+
+      horaInvalida:
+        "❌ Invalid time. For example: 2 pm, 2:30 pm, or 14:00.",
+
+      guardandoReserva:
+        "✅ Saving your reservation...",
+
+      sinEndpoint:
+        "❌ The reservation cannot be saved because notifications are not enabled.",
+
+      errorGuardar:
+        "❌ I couldn't save the reservation. Please try again.",
+
+      reservaRegistrada:
+        "🎉 Reservation registered successfully! You will receive confirmation shortly.",
+
+      errorNotificaciones:
+        "You must allow notifications to receive your reservation confirmation or cancellation.",
+
+      navegadorNoSoporta:
+        "This browser does not support notifications.",
+
+      pushNoSoporta:
+        "This browser does not support Push notifications.",
+
+      configuracionFaltante:
+        "Notification configuration was not found.",
+
+      registrarError:
+        "We could not register this device. Please try again.",
+
+      activarError:
+        "We could not enable notifications. Please try again.",
+
+      español:
+        "Español",
+
+      ingles:
+        "English",
+    },
+
+    es: {
+      titulo: "Centro de Reservas",
+
+      disponible:
+        "Asistente inteligente disponible 24/7",
+
+      activarTitulo:
+        "Activa las notificaciones",
+
+      activarTexto:
+        "Para recibir directamente en este dispositivo la confirmación o cancelación de tu reserva, debes activar las notificaciones.",
+
+      soloAvisos:
+        "Solo recibirás avisos relacionados con tu reserva.",
+
+      activarBoton:
+        "🔔 Activar notificaciones",
+
+      activando:
+        "Activando...",
+
+      notificacionesActivadas:
+        "Notificaciones activadas",
+
+      dispositivoListo:
+        "Este dispositivo está listo para recibir la confirmación o cancelación de tu reserva.",
+
+      asistente:
+        "Asistente de reservas y disponibilidad",
+
+      bienvenida:
+        "Bienvenido al sistema de reservas y disponibilidad, ¿en qué puedo ayudar?",
+
+      activarPrimero:
+        "🔔 Activa las notificaciones para comenzar tu reserva.",
+
+      placeholder:
+        "Escribe tu solicitud de reserva",
+
+      placeholderBloqueado:
+        "Activa primero las notificaciones",
+
+      consultar:
+        "Consultar Disponibilidad",
+
+      guardando:
+        "Guardando...",
+
+      cliente:
+        "Cliente",
+
+      asistenteNombre:
+        "Asistente",
+
+      reservaPregunta:
+        "¡Con mucho gusto! ¿A nombre de quién hago la reserva?",
+
+      telefonoPregunta:
+        "¿Cuál es tu número de teléfono?",
+
+      fechaPregunta:
+        "¿Para qué fecha deseas la reserva?",
+
+      horaPregunta:
+        "¿A qué hora deseas la reserva?",
+
+      personasPregunta:
+        "¿Para cuántas personas será la reserva?",
+
+      inicioAyuda:
+        "Puedo ayudarte a realizar una reserva. Escribe “quiero una reserva” para comenzar.",
+
+      telefonoInvalido:
+        "❌ El teléfono debe tener 10 dígitos. Inténtalo nuevamente.",
+
+      fechaInvalida:
+        "❌ Fecha inválida. Ejemplo: 28 de agosto de 2026.",
+
+      horaInvalida:
+        "❌ Hora inválida. Escribe, por ejemplo: 2 pm, 2:30 pm o 14:00.",
+
+      guardandoReserva:
+        "✅ Guardando tu reserva...",
+
+      sinEndpoint:
+        "❌ No se puede guardar la reserva porque las notificaciones no están activadas.",
+
+      errorGuardar:
+        "❌ No pude guardar la reserva. Por favor, inténtalo nuevamente.",
+
+      reservaRegistrada:
+        "🎉 ¡Reserva registrada correctamente! En unos minutos recibirás la confirmación.",
+
+      errorNotificaciones:
+        "Debes permitir las notificaciones para recibir la confirmación o cancelación de tu reserva.",
+
+      navegadorNoSoporta:
+        "Este navegador no soporta notificaciones.",
+
+      pushNoSoporta:
+        "Este navegador no soporta notificaciones Push.",
+
+      configuracionFaltante:
+        "No se encontró la configuración de notificaciones.",
+
+      registrarError:
+        "No pudimos registrar este dispositivo. Inténtalo nuevamente.",
+
+      activarError:
+        "No pudimos activar las notificaciones. Inténtalo nuevamente.",
+
+      español:
+        "Español",
+
+      ingles:
+        "English",
+    },
+  };
+
+  const t = textos[idioma];
 
   // =====================================================
   // PUSH
@@ -171,7 +474,7 @@ export default function AgenteAAFPage() {
 
       if (!("serviceWorker" in navigator)) {
         setErrorNotificaciones(
-          "Este navegador no soporta notificaciones."
+          t.navegadorNoSoporta
         );
 
         console.log(
@@ -187,11 +490,11 @@ export default function AgenteAAFPage() {
 
       if (!("PushManager" in window)) {
         setErrorNotificaciones(
-          "Este navegador no soporta notificaciones Push."
+          t.pushNoSoporta
         );
 
         console.log(
-          "Este navegador no soporta notificaciones Push"
+          "Este navegador no soporta Push"
         );
 
         return;
@@ -203,11 +506,7 @@ export default function AgenteAAFPage() {
 
       if (!("Notification" in window)) {
         setErrorNotificaciones(
-          "Este navegador no soporta notificaciones."
-        );
-
-        console.log(
-          "Este navegador no soporta Notification API"
+          t.navegadorNoSoporta
         );
 
         return;
@@ -217,7 +516,8 @@ export default function AgenteAAFPage() {
       // PEDIR PERMISO
       // =================================================
 
-      let permiso = Notification.permission;
+      let permiso =
+        Notification.permission;
 
       console.log(
         "PUSH: permiso actual:",
@@ -242,11 +542,11 @@ export default function AgenteAAFPage() {
         setNotificacionesActivas(false);
 
         setErrorNotificaciones(
-          "Debes permitir las notificaciones para recibir la confirmación o cancelación de tu reserva."
+          t.errorNotificaciones
         );
 
         console.log(
-          "PUSH: permiso de notificaciones no concedido"
+          "PUSH: permiso no concedido"
         );
 
         return;
@@ -284,7 +584,7 @@ export default function AgenteAAFPage() {
 
       if (!subscription) {
         console.log(
-          "PUSH: no existe suscripción, creando una nueva"
+          "PUSH: no existe suscripción, creando nueva"
         );
 
         const vapidKey =
@@ -293,7 +593,7 @@ export default function AgenteAAFPage() {
 
         if (!vapidKey) {
           setErrorNotificaciones(
-            "No se encontró la configuración de notificaciones."
+            t.configuracionFaltante
           );
 
           console.error(
@@ -323,7 +623,7 @@ export default function AgenteAAFPage() {
       }
 
       // =================================================
-      // OBTENER ENDPOINT
+      // ENDPOINT
       // =================================================
 
       const endpoint =
@@ -337,7 +637,7 @@ export default function AgenteAAFPage() {
       setPushEndpoint(endpoint);
 
       // =================================================
-      // GUARDAR SUSCRIPCIÓN EN EL SERVIDOR
+      // GUARDAR SUSCRIPCIÓN
       // =================================================
 
       console.log(
@@ -370,7 +670,7 @@ export default function AgenteAAFPage() {
         setNotificacionesActivas(false);
 
         setErrorNotificaciones(
-          "No pudimos registrar este dispositivo. Inténtalo nuevamente."
+          t.registrarError
         );
 
         console.error(
@@ -400,7 +700,7 @@ export default function AgenteAAFPage() {
       setNotificacionesActivas(false);
 
       setErrorNotificaciones(
-        "No pudimos activar las notificaciones. Inténtalo nuevamente."
+        t.activarError
       );
     } finally {
       setActivandoNotificaciones(false);
@@ -419,10 +719,16 @@ export default function AgenteAAFPage() {
   }, [conversacion, guardando]);
 
   // =====================================================
-  // REGISTRAR PUSH AUTOMÁTICAMENTE
+  // CAMBIAR IDIOMA
   // =====================================================
 
- 
+  function cambiarIdioma(
+    nuevoIdioma: "es" | "en"
+  ) {
+    setIdioma(nuevoIdioma);
+
+    setErrorNotificaciones("");
+  }
 
   // =====================================================
   // ENVIAR MENSAJE
@@ -442,25 +748,28 @@ export default function AgenteAAFPage() {
       setConversacion((anterior) => [
         ...anterior,
         {
-          autor: "Asistente",
+          autor:
+            t.asistenteNombre,
+
           texto:
-            "🔔 Primero debes activar las notificaciones para poder realizar una reserva.",
+            t.activarPrimero,
         },
       ]);
 
       setErrorNotificaciones(
-        "Activa las notificaciones para recibir la confirmación o cancelación de tu reserva."
+        t.errorNotificaciones
       );
 
       return;
     }
 
-    const texto = mensaje.trim();
+    const texto =
+      mensaje.trim();
 
     setConversacion((anterior) => [
       ...anterior,
       {
-        autor: "Cliente",
+        autor: t.cliente,
         texto,
       },
     ]);
@@ -472,20 +781,36 @@ export default function AgenteAAFPage() {
     // =====================================================
 
     if (paso === "inicio") {
-      if (
-        texto
-          .toLowerCase()
-          .includes("reserva") ||
-        texto
-          .toLowerCase()
-          .includes("mesa")
-      ) {
+      const textoMinuscula =
+        texto.toLowerCase();
+
+      const quiereReserva =
+        idioma === "en"
+          ? textoMinuscula.includes(
+              "reservation"
+            ) ||
+            textoMinuscula.includes(
+              "table"
+            ) ||
+            textoMinuscula.includes(
+              "reserve"
+            )
+          : textoMinuscula.includes(
+              "reserva"
+            ) ||
+            textoMinuscula.includes(
+              "mesa"
+            );
+
+      if (quiereReserva) {
         setConversacion((anterior) => [
           ...anterior,
           {
-            autor: "Asistente",
+            autor:
+              t.asistenteNombre,
+
             texto:
-              "¡Con mucho gusto! ¿A nombre de quién hago la reserva?",
+              t.reservaPregunta,
           },
         ]);
 
@@ -494,9 +819,11 @@ export default function AgenteAAFPage() {
         setConversacion((anterior) => [
           ...anterior,
           {
-            autor: "Asistente",
+            autor:
+              t.asistenteNombre,
+
             texto:
-              "Puedo ayudarte a realizar una reserva. Escribe “quiero una reserva” para comenzar.",
+              t.inicioAyuda,
           },
         ]);
       }
@@ -514,9 +841,11 @@ export default function AgenteAAFPage() {
       setConversacion((anterior) => [
         ...anterior,
         {
-          autor: "Asistente",
+          autor:
+            t.asistenteNombre,
+
           texto:
-            "¿Cuál es tu número de teléfono?",
+            t.telefonoPregunta,
         },
       ]);
 
@@ -530,27 +859,38 @@ export default function AgenteAAFPage() {
     // =====================================================
 
     if (paso === "telefono") {
-      if (!/^\d{10}$/.test(texto)) {
+      const telefonoLimpio =
+        texto.replace(/\D/g, "");
+
+      if (
+        telefonoLimpio.length !== 10
+      ) {
         setConversacion((anterior) => [
           ...anterior,
           {
-            autor: "Asistente",
+            autor:
+              t.asistenteNombre,
+
             texto:
-              "❌ El teléfono debe tener 10 dígitos. Inténtalo nuevamente.",
+              t.telefonoInvalido,
           },
         ]);
 
         return;
       }
 
-      setTelefono(texto);
+      setTelefono(
+        telefonoLimpio
+      );
 
       setConversacion((anterior) => [
         ...anterior,
         {
-          autor: "Asistente",
+          autor:
+            t.asistenteNombre,
+
           texto:
-            "¿Para qué fecha deseas la reserva?",
+            t.fechaPregunta,
         },
       ]);
 
@@ -565,15 +905,19 @@ export default function AgenteAAFPage() {
 
     if (paso === "fecha") {
       const fechaConvertida =
-        convertirFecha(texto);
+        idioma === "en"
+          ? convertirFechaIngles(texto)
+          : convertirFecha(texto);
 
       if (!fechaConvertida) {
         setConversacion((anterior) => [
           ...anterior,
           {
-            autor: "Asistente",
+            autor:
+              t.asistenteNombre,
+
             texto:
-              "❌ Fecha inválida. Ejemplo: 10 de agosto de 2026.",
+              t.fechaInvalida,
           },
         ]);
 
@@ -585,9 +929,11 @@ export default function AgenteAAFPage() {
       setConversacion((anterior) => [
         ...anterior,
         {
-          autor: "Asistente",
+          autor:
+            t.asistenteNombre,
+
           texto:
-            "¿A qué hora deseas la reserva?",
+            t.horaPregunta,
         },
       ]);
 
@@ -608,9 +954,11 @@ export default function AgenteAAFPage() {
         setConversacion((anterior) => [
           ...anterior,
           {
-            autor: "Asistente",
+            autor:
+              t.asistenteNombre,
+
             texto:
-              "❌ Hora inválida. Escribe, por ejemplo: 2 pm, 2:30 pm o 14:00.",
+              t.horaInvalida,
           },
         ]);
 
@@ -622,9 +970,11 @@ export default function AgenteAAFPage() {
       setConversacion((anterior) => [
         ...anterior,
         {
-          autor: "Asistente",
+          autor:
+            t.asistenteNombre,
+
           texto:
-            "¿Para cuántas personas será la reserva?",
+            t.personasPregunta,
         },
       ]);
 
@@ -646,14 +996,18 @@ export default function AgenteAAFPage() {
       setConversacion((anterior) => [
         ...anterior,
         {
-          autor: "Asistente",
+          autor:
+            t.asistenteNombre,
+
           texto:
-            "✅ Guardando tu reserva...",
+            t.guardandoReserva,
         },
       ]);
 
       const fechaConvertida =
-        convertirFecha(fecha);
+        idioma === "en"
+          ? convertirFechaIngles(fecha)
+          : convertirFecha(fecha);
 
       const horaConvertida =
         convertirHora(hora);
@@ -664,7 +1018,7 @@ export default function AgenteAAFPage() {
 
       if (!pushEndpoint) {
         console.error(
-          "PUSH: no hay endpoint. No se puede guardar la reserva."
+          "PUSH: no hay endpoint"
         );
 
         setGuardando(false);
@@ -672,9 +1026,11 @@ export default function AgenteAAFPage() {
         setConversacion((anterior) => [
           ...anterior,
           {
-            autor: "Asistente",
+            autor:
+              t.asistenteNombre,
+
             texto:
-              "❌ No se puede guardar la reserva porque las notificaciones no están activadas.",
+              t.sinEndpoint,
           },
         ]);
 
@@ -684,7 +1040,7 @@ export default function AgenteAAFPage() {
       }
 
       console.log(
-        "PUSH: endpoint asociado a la reserva:",
+        "PUSH: endpoint asociado:",
         pushEndpoint
       );
 
@@ -697,11 +1053,19 @@ export default function AgenteAAFPage() {
           .from("reservas")
           .insert([
             {
-              cliente_nombre: nombre,
+              cliente_nombre:
+                nombre,
+
               telefono,
-              fecha: fechaConvertida,
-              hora: horaConvertida,
-              personas: texto,
+
+              fecha:
+                fechaConvertida,
+
+              hora:
+                horaConvertida,
+
+              personas:
+                texto,
 
               push_endpoint:
                 pushEndpoint,
@@ -725,9 +1089,11 @@ export default function AgenteAAFPage() {
         setConversacion((anterior) => [
           ...anterior,
           {
-            autor: "Asistente",
+            autor:
+              t.asistenteNombre,
+
             texto:
-              "❌ No pude guardar la reserva. Por favor, inténtalo nuevamente.",
+              t.errorGuardar,
           },
         ]);
 
@@ -758,15 +1124,23 @@ export default function AgenteAAFPage() {
               },
 
               body: JSON.stringify({
-                reservaId: data.id,
+                reservaId:
+                  data.id,
+
                 cliente_nombre:
                   nombre,
+
                 telefono,
+
                 fecha:
                   fechaConvertida,
+
                 hora:
                   horaConvertida,
-                personas: texto,
+
+                personas:
+                  texto,
+
                 pushEndpoint:
                   pushEndpoint,
               }),
@@ -777,13 +1151,14 @@ export default function AgenteAAFPage() {
           await respuestaTelegram.json();
 
         if (!respuestaTelegram.ok) {
-         
-         console.error(
-  "ERROR NOTIFICANDO RESERVA:",
-  JSON.stringify(resultadoTelegram, null, 2)
-);
-
-
+          console.error(
+            "ERROR NOTIFICANDO RESERVA:",
+            JSON.stringify(
+              resultadoTelegram,
+              null,
+              2
+            )
+          );
         } else {
           console.log(
             "RESERVA NOTIFICADA CORRECTAMENTE:",
@@ -806,9 +1181,11 @@ export default function AgenteAAFPage() {
       setConversacion((anterior) => [
         ...anterior,
         {
-          autor: "Asistente",
+          autor:
+            t.asistenteNombre,
+
           texto:
-            "🎉 ¡Reserva registrada correctamente! En unos minutos recibirás la confirmación.",
+            t.reservaRegistrada,
         },
       ]);
 
@@ -839,6 +1216,50 @@ export default function AgenteAAFPage() {
         <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
 
           {/* ==================================================
+              SELECTOR DE IDIOMA
+          ================================================== */}
+
+          <div className="mb-5 flex justify-end">
+
+            <div className="flex overflow-hidden rounded-lg border border-gray-300 bg-white">
+
+              {/* ENGLISH PRIMERO */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  cambiarIdioma("en")
+                }
+                className={`px-4 py-2 text-sm font-bold transition ${
+                  idioma === "en"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                🇺🇸 English
+              </button>
+
+              {/* ESPAÑOL SEGUNDO */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  cambiarIdioma("es")
+                }
+                className={`px-4 py-2 text-sm font-bold transition ${
+                  idioma === "es"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                🇪🇸 Español
+              </button>
+
+            </div>
+
+          </div>
+
+          {/* ==================================================
               ENCABEZADO
           ================================================== */}
 
@@ -849,7 +1270,7 @@ export default function AgenteAAFPage() {
               <div className="min-w-0">
 
                 <h1 className="text-3xl font-black leading-tight tracking-tight text-gray-950 sm:text-4xl">
-                  Centro de Reservas
+                  {t.titulo}
                 </h1>
 
                 <div className="mt-2 flex items-center gap-2">
@@ -857,7 +1278,7 @@ export default function AgenteAAFPage() {
                   <span className="h-3 w-3 shrink-0 rounded-full bg-green-500" />
 
                   <p className="text-sm font-medium text-green-600 sm:text-base">
-                    Asistente inteligente disponible 24/7
+                    {t.disponible}
                   </p>
 
                 </div>
@@ -905,19 +1326,15 @@ export default function AgenteAAFPage() {
                     <div>
 
                       <h2 className="text-lg font-bold text-gray-950 sm:text-xl">
-                        Activa las notificaciones
+                        {t.activarTitulo}
                       </h2>
 
                       <p className="mt-1 text-sm leading-6 text-gray-600 sm:text-base">
-                        Para recibir directamente en este
-                        dispositivo la confirmación o
-                        cancelación de tu reserva, debes
-                        activar las notificaciones.
+                        {t.activarTexto}
                       </p>
 
                       <p className="mt-1 text-xs text-gray-500 sm:text-sm">
-                        Solo recibirás avisos relacionados
-                        con tu reserva.
+                        {t.soloAvisos}
                       </p>
 
                     </div>
@@ -934,8 +1351,8 @@ export default function AgenteAAFPage() {
                     className="min-h-[50px] w-full shrink-0 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400 sm:w-auto"
                   >
                     {activandoNotificaciones
-                      ? "Activando..."
-                      : "🔔 Activar notificaciones"}
+                      ? t.activando
+                      : t.activarBoton}
                   </button>
 
                 </div>
@@ -965,13 +1382,11 @@ export default function AgenteAAFPage() {
                   <div>
 
                     <p className="font-bold text-green-800">
-                      Notificaciones activadas
+                      {t.notificacionesActivadas}
                     </p>
 
                     <p className="text-sm text-green-700">
-                      Este dispositivo está listo para
-                      recibir la confirmación o
-                      cancelación de tu reserva.
+                      {t.dispositivoListo}
                     </p>
 
                   </div>
@@ -988,12 +1403,11 @@ export default function AgenteAAFPage() {
             <div className="border-b border-gray-200 bg-gray-50 px-4 py-5 sm:px-6">
 
               <h2 className="text-xl font-bold leading-tight text-gray-950 sm:text-2xl">
-                Asistente de reservas y disponibilidad
+                {t.asistente}
               </h2>
 
               <p className="mt-2 text-base leading-6 text-gray-500 sm:text-lg">
-                Bienvenido al sistema de reservas y disponibilidad,
-                ¿en qué puedo ayudar?
+                {t.bienvenida}
               </p>
 
             </div>
@@ -1011,7 +1425,7 @@ export default function AgenteAAFPage() {
 
                     const esCliente =
                       item.autor ===
-                      "Cliente";
+                      t.cliente;
 
                     return (
                       <div
@@ -1056,7 +1470,7 @@ export default function AgenteAAFPage() {
                   <div className="flex justify-start">
 
                     <div className="rounded-2xl rounded-bl-md bg-gray-100 px-4 py-3 text-sm text-gray-500">
-                      Guardando reserva...
+                      {t.guardando}
                     </div>
 
                   </div>
@@ -1083,8 +1497,7 @@ export default function AgenteAAFPage() {
                 <div className="mb-4 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3">
 
                   <p className="text-sm font-semibold text-yellow-800">
-                    🔔 Activa las notificaciones
-                    para comenzar tu reserva.
+                    {t.activarPrimero}
                   </p>
 
                 </div>
@@ -1111,8 +1524,8 @@ export default function AgenteAAFPage() {
                   className="min-h-[54px] w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                   placeholder={
                     notificacionesActivas
-                      ? "Escribe tu solicitud de reserva"
-                      : "Activa primero las notificaciones"
+                      ? t.placeholder
+                      : t.placeholderBloqueado
                   }
                 />
 
@@ -1128,8 +1541,8 @@ export default function AgenteAAFPage() {
                   className="min-h-[54px] w-full rounded-xl bg-blue-600 px-6 text-base font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 sm:w-auto"
                 >
                   {guardando
-                    ? "Guardando..."
-                    : "Consultar Disponibilidad"}
+                    ? t.guardando
+                    : t.consultar}
                 </button>
 
               </div>
