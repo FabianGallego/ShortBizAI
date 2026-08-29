@@ -569,15 +569,12 @@ export async function POST(req: Request) {
     );
   }
 }
+
 export async function GET() {
   try {
-    const webhookUrl =
-      "https://shortbizai.com/api/telegram/webhook";
-
     const respuesta = await fetch(
-      `https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`,
+      `https://api.telegram.org/bot${TELEGRAM_TOKEN}/getWebhookInfo`,
       {
-        method: "GET",
         cache: "no-store",
       }
     );
@@ -585,18 +582,15 @@ export async function GET() {
     const resultado = await respuesta.json();
 
     console.log(
-      "TELEGRAM SET WEBHOOK:",
+      "TELEGRAM WEBHOOK INFO:",
       JSON.stringify(resultado, null, 2)
     );
 
-    return NextResponse.json({
-      ok: resultado.ok,
-      webhookUrl,
-      telegram: resultado,
-    });
+    return NextResponse.json(resultado);
+
   } catch (error: any) {
     console.error(
-      "ERROR CONFIGURANDO WEBHOOK:",
+      "ERROR WEBHOOK INFO:",
       error
     );
 
@@ -605,7 +599,7 @@ export async function GET() {
         ok: false,
         error:
           error?.message ||
-          "Error configurando webhook",
+          "Error",
       },
       { status: 500 }
     );
