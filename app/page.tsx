@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 
 const pilares = [
   {
     numero: "01",
     titulo: "Attraction",
-    subtitulo: "Content that generates visibility",
+    subtitulo: "Content that creates visibility",
     descripcion:
       "We turn your business's digital presence into a commercial tool. We create strategic Video Shorts that present your brand, generate interest, and bring new prospects to your business.",
     imagen: "/image/atraccion2.jpg",
@@ -18,27 +19,37 @@ const pilares = [
     subtitulo: "Intelligence that responds and organizes",
     descripcion:
       "We integrate Artificial Intelligence to answer questions, manage requests, and facilitate reservations quickly and efficiently, giving every customer a professional experience.",
-    imagen: "/image/atencion.jpg",
+    imagen: "/image/atencion2.jpg",
   },
   {
     numero: "03",
     titulo: "Loyalty",
-    subtitulo: "Relationships that generate repeat business",
+    subtitulo: "Relationships that create repeat business",
     descripcion:
-      "We turn every interaction into an opportunity to build a relationship. We use follow-up and automation to maintain contact, activate new opportunities, and increase customer return frequency.",
-    imagen: "/image/fidelizacion-nueva.jpg",
+      "We transform every interaction into an opportunity for a long-term relationship. We use follow-up and automation to maintain contact and encourage customers to return.",
+    imagen: "/image/fidelizacion2.jpg",
   },
   {
     numero: "04",
     titulo: "Business Intelligence",
     subtitulo: "Data to make better decisions",
     descripcion:
-      "We turn your business activity into useful information for management. Analyze customers, reservations, and results to identify opportunities and make clearer commercial decisions.",
-    imagen: "/image/inteligencia-nueva.jpg",
+      "We turn your business activity into useful information. Analyze customers, reservations, sales, and results to identify opportunities and make better decisions.",
+    imagen: "/image/inteligencia.jpg",
   },
 ];
 
 export default function Home() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [language, setLanguage] = useState<"en" | "es">("en");
+
+  const isEnglish = language === "en";
+
+  function cambiarIdioma(idioma: "en" | "es") {
+    setLanguage(idioma);
+    setMenuOpen(false);
+  }
+
   return (
     <main className="min-h-screen bg-white text-gray-900">
 
@@ -57,6 +68,7 @@ export default function Home() {
             <Link
               href="/"
               className="flex items-center shrink-0"
+              onClick={() => setMenuOpen(false)}
             >
               <Image
                 src="/logo-foodshortai.png"
@@ -64,206 +76,213 @@ export default function Home() {
                 width={190}
                 height={60}
                 priority
-                className="w-[145px] sm:w-[180px] h-auto object-contain"
+                className="w-[150px] sm:w-[180px] h-auto object-contain"
               />
             </Link>
 
 
             {/* =================================================
-                MENÚ DESKTOP
+                MENU DESKTOP
             ================================================= */}
 
-            <nav className="hidden md:flex items-center gap-7 lg:gap-9 text-[14px] lg:text-[15px] font-semibold text-gray-700">
+            <nav className="hidden lg:flex items-center gap-8 xl:gap-10 text-[15px] font-semibold text-gray-700">
 
               <a
                 href="#inicio"
                 className="hover:text-red-600 transition"
               >
-                Home
+                {isEnglish ? "Home" : "Inicio"}
               </a>
 
               <a
                 href="#sistema"
                 className="hover:text-red-600 transition"
               >
-                The System
+                {isEnglish ? "The System" : "El sistema"}
               </a>
 
               <a
                 href="#soluciones"
                 className="hover:text-red-600 transition"
               >
-                Solutions
+                {isEnglish ? "Solutions" : "Soluciones"}
               </a>
 
               <a
                 href="#diagnostico"
                 className="hover:text-red-600 transition"
               >
-                Assessment
+                {isEnglish ? "Assessment" : "Diagnóstico"}
               </a>
 
             </nav>
 
 
             {/* =================================================
-                IDIOMA DESKTOP
+                IDIOMAS DESKTOP
             ================================================= */}
 
-            <div className="hidden lg:flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
+            <div className="hidden md:flex items-center rounded-lg border border-gray-200 overflow-hidden">
 
               <button
-                type="button"
-                className="rounded-md bg-blue-600 px-3 py-2 text-xs font-bold text-white"
+                onClick={() => cambiarIdioma("en")}
+                className={`px-3 py-2 text-xs font-bold transition ${
+                  isEnglish
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-gray-600 hover:bg-gray-50"
+                }`}
               >
-                🇺🇸 English
+                US English
               </button>
 
               <button
-                type="button"
-                className="rounded-md px-3 py-2 text-xs font-bold text-gray-700 hover:bg-gray-100"
+                onClick={() => cambiarIdioma("es")}
+                className={`px-3 py-2 text-xs font-bold transition ${
+                  !isEnglish
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-gray-600 hover:bg-gray-50"
+                }`}
               >
-                🇪🇸 Español
+                ES Español
               </button>
 
             </div>
 
 
             {/* =================================================
-                BOTÓN DESKTOP
+                BOTÓN ASSESSMENT DESKTOP
             ================================================= */}
 
             <Link
               href="/diagnostico"
-              className="hidden sm:inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white px-5 lg:px-6 py-3 rounded-lg font-bold text-xs lg:text-sm transition shadow-lg whitespace-nowrap"
+              className="hidden sm:inline-flex bg-red-600 hover:bg-red-700 text-white px-5 lg:px-6 py-3 rounded-lg font-bold text-xs lg:text-sm transition shadow-lg whitespace-nowrap"
             >
-              FREE BUSINESS ASSESSMENT
+              {isEnglish
+                ? "FREE BUSINESS ASSESSMENT"
+                : "EVALUACIÓN GRATUITA"}
             </Link>
 
 
             {/* =================================================
-                MENÚ HAMBURGUESA — TABLET / CELULAR
+                HAMBURGER MOBILE
             ================================================= */}
 
-            <details className="relative md:hidden shrink-0">
-
-              <summary
-                className="flex h-12 w-12 cursor-pointer list-none items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-900 shadow-sm"
-                aria-label="Open menu"
-              >
-
-                <span className="flex flex-col gap-1.5">
-
-                  <span className="block h-0.5 w-6 bg-gray-900" />
-                  <span className="block h-0.5 w-6 bg-gray-900" />
-                  <span className="block h-0.5 w-6 bg-gray-900" />
-
+            <button
+              type="button"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="lg:hidden flex items-center justify-center w-12 h-12 rounded-xl border border-gray-300 bg-white text-gray-900 shadow-sm hover:bg-gray-50 transition"
+            >
+              {menuOpen ? (
+                <span className="text-3xl leading-none">
+                  ×
                 </span>
+              ) : (
+                <span className="text-3xl leading-none">
+                  ☰
+                </span>
+              )}
+            </button>
 
-              </summary>
-
-
-              {/* PANEL DEL MENÚ */}
-
-              <div className="absolute right-0 top-14 z-[100] w-[280px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
-
-                <div className="flex flex-col p-3">
-
-                  {/* HOME */}
-
-                  <a
-                    href="#inicio"
-                    className="rounded-xl px-4 py-3 text-base font-semibold text-gray-800 hover:bg-gray-100"
-                  >
-                    Home
-                  </a>
+          </div>
 
 
-                  {/* SYSTEM */}
+          {/* =====================================================
+              MENÚ MOBILE
+          ===================================================== */}
 
-                  <a
-                    href="#sistema"
-                    className="rounded-xl px-4 py-3 text-base font-semibold text-gray-800 hover:bg-gray-100"
-                  >
-                    The System
-                  </a>
+          {menuOpen && (
+            <div className="lg:hidden border-t border-gray-200 bg-white shadow-xl">
+
+              <div className="px-5 py-5 space-y-2">
+
+                <a
+                  href="#inicio"
+                  onClick={() => setMenuOpen(false)}
+                  className="block rounded-lg px-4 py-3 text-base font-bold text-gray-800 hover:bg-gray-100"
+                >
+                  {isEnglish ? "Home" : "Inicio"}
+                </a>
+
+                <a
+                  href="#sistema"
+                  onClick={() => setMenuOpen(false)}
+                  className="block rounded-lg px-4 py-3 text-base font-bold text-gray-800 hover:bg-gray-100"
+                >
+                  {isEnglish ? "The System" : "El sistema"}
+                </a>
+
+                <a
+                  href="#soluciones"
+                  onClick={() => setMenuOpen(false)}
+                  className="block rounded-lg px-4 py-3 text-base font-bold text-gray-800 hover:bg-gray-100"
+                >
+                  {isEnglish ? "Solutions" : "Soluciones"}
+                </a>
+
+                <a
+                  href="#diagnostico"
+                  onClick={() => setMenuOpen(false)}
+                  className="block rounded-lg px-4 py-3 text-base font-bold text-gray-800 hover:bg-gray-100"
+                >
+                  {isEnglish ? "Assessment" : "Diagnóstico"}
+                </a>
 
 
-                  {/* SOLUTIONS */}
+                {/* IDIOMA MOBILE */}
 
-                  <a
-                    href="#soluciones"
-                    className="rounded-xl px-4 py-3 text-base font-semibold text-gray-800 hover:bg-gray-100"
-                  >
-                    Solutions
-                  </a>
+                <div className="pt-4 border-t border-gray-200">
 
+                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
+                    Language
+                  </p>
 
-                  {/* ASSESSMENT */}
+                  <div className="grid grid-cols-2 gap-2">
 
-                  <a
-                    href="#diagnostico"
-                    className="rounded-xl px-4 py-3 text-base font-semibold text-gray-800 hover:bg-gray-100"
-                  >
-                    Assessment
-                  </a>
+                    <button
+                      onClick={() => cambiarIdioma("en")}
+                      className={`rounded-lg px-4 py-3 text-sm font-bold border transition ${
+                        isEnglish
+                          ? "bg-blue-600 border-blue-600 text-white"
+                          : "bg-white border-gray-300 text-gray-700"
+                      }`}
+                    >
+                      🇺🇸 English
+                    </button>
 
-
-                  {/* DIVISOR */}
-
-                  <div className="my-2 border-t border-gray-200" />
-
-
-                  {/* IDIOMAS */}
-
-                  <div className="px-4 py-2">
-
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">
-                      Language
-                    </p>
-
-                    <div className="flex flex-wrap gap-2">
-
-                      <button
-                        type="button"
-                        className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-bold text-white"
-                      >
-                        🇺🇸 English
-                      </button>
-
-                      <button
-                        type="button"
-                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-bold text-gray-700 hover:bg-gray-100"
-                      >
-                        🇪🇸 Español
-                      </button>
-
-                    </div>
+                    <button
+                      onClick={() => cambiarIdioma("es")}
+                      className={`rounded-lg px-4 py-3 text-sm font-bold border transition ${
+                        !isEnglish
+                          ? "bg-blue-600 border-blue-600 text-white"
+                          : "bg-white border-gray-300 text-gray-700"
+                      }`}
+                    >
+                      🇪🇸 Español
+                    </button>
 
                   </div>
 
-
-                  {/* DIVISOR */}
-
-                  <div className="my-2 border-t border-gray-200" />
-
-
-                  {/* ASSESSMENT */}
-
-                  <Link
-                    href="/diagnostico"
-                    className="mt-1 rounded-xl bg-red-600 px-4 py-4 text-center text-sm font-black text-white hover:bg-red-700"
-                  >
-                    FREE BUSINESS ASSESSMENT
-                  </Link>
-
                 </div>
+
+
+                {/* BOTÓN ASSESSMENT MOBILE */}
+
+                <Link
+                  href="/diagnostico"
+                  onClick={() => setMenuOpen(false)}
+                  className="mt-4 flex items-center justify-center rounded-lg bg-red-600 hover:bg-red-700 px-5 py-4 text-sm font-black text-white shadow-lg"
+                >
+                  {isEnglish
+                    ? "FREE BUSINESS ASSESSMENT"
+                    : "EVALUACIÓN GRATUITA"}
+                </Link>
 
               </div>
 
-            </details>
-
-          </div>
+            </div>
+          )}
 
         </div>
 
@@ -271,19 +290,19 @@ export default function Home() {
 
 
       {/* =====================================================
-          HERO PRINCIPAL
+          HERO
       ===================================================== */}
 
       <section
         id="inicio"
-        className="relative min-h-[820px] flex items-center overflow-hidden"
+        className="relative min-h-[820px] flex items-center overflow-hidden pt-20"
       >
 
         <div className="absolute inset-0">
 
           <Image
             src="/image/atraccion-fondo.jpg"
-            alt="ShortBizAI - Attract new customers"
+            alt="ShortBizAI"
             fill
             priority
             sizes="100vw"
@@ -292,18 +311,20 @@ export default function Home() {
 
         </div>
 
-
         <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/35" />
 
-
-        <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-10 pt-28">
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-6 lg:px-10">
 
           <div className="max-w-3xl">
 
-            <div className="mb-8 text-center">
+            <div className="mb-8 text-center md:text-left">
 
               <p className="text-red-600 text-lg md:text-xl lg:text-2xl font-black tracking-[0.18em]">
-                ATTRACT · SERVE · BUILD LOYALTY
+
+                {isEnglish
+                  ? "ATTRACT · SERVE · BUILD LOYALTY"
+                  : "ATRAEMOS · ATENDEMOS · FIDELIZAMOS"}
+
               </p>
 
             </div>
@@ -311,37 +332,65 @@ export default function Home() {
 
             <h1 className="text-5xl md:text-7xl lg:text-[76px] leading-[0.98] font-black tracking-tight text-gray-950">
 
-              The System to
-
-              <br />
-
-              <span className="text-red-600">
-                Grow
-              </span>
-
-              <br />
-
-              Your Business
-
-              <br />
-
-              Sales.
+              {isEnglish ? (
+                <>
+                  The System to
+                  <br />
+                  <span className="text-red-600">
+                    Grow
+                  </span>
+                  <br />
+                  Your Business
+                  <br />
+                  Sales.
+                </>
+              ) : (
+                <>
+                  El Sistema para
+                  <br />
+                  <span className="text-red-600">
+                    Hacer crecer
+                  </span>
+                  <br />
+                  las ventas de
+                  <br />
+                  tu negocio.
+                </>
+              )}
 
             </h1>
 
 
-            <p className="mt-7 max-w-2xl text-lg md:text-xl leading-7 text-gray-600">
+            <p className="mt-7 max-w-2xl text-lg md:text-xl leading-8 text-gray-600">
 
-              ShortBizAI integrates strategy, Artificial Intelligence,
-              and automation to attract new people, turn them into
-              customers, and build meaningful relationships that bring
-              them back.
+              {isEnglish ? (
+                <>
+                  ShortBizAI integrates strategy, Artificial Intelligence,
+                  and automation to attract new people, turn them into
+                  customers, and build meaningful relationships that bring
+                  them back.
 
-              <br />
-              <br />
+                  <br />
+                  <br />
 
-              A system designed to increase repeat business, drive sales,
-              and contribute to the sustainable growth of your company.
+                  A system designed to increase repeat business, drive sales,
+                  and contribute to the sustainable growth of your company.
+                </>
+              ) : (
+                <>
+                  ShortBizAI integra estrategia, Inteligencia Artificial y
+                  automatización para atraer nuevas personas, convertirlas
+                  en clientes y construir relaciones cercanas que hagan
+                  que regresen.
+
+                  <br />
+                  <br />
+
+                  Un sistema diseñado para aumentar la recurrencia,
+                  impulsar las ventas y contribuir al crecimiento sostenido
+                  de tu empresa.
+                </>
+              )}
 
             </p>
 
@@ -352,7 +401,9 @@ export default function Home() {
                 href="/cliente/agente-aaf"
                 className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-lg font-bold shadow-xl transition"
               >
-                MAKE A RESERVATION
+                {isEnglish
+                  ? "MAKE A RESERVATION"
+                  : "HACER UNA RESERVA"}
 
                 <span className="ml-4 text-xl">
                   →
@@ -362,12 +413,12 @@ export default function Home() {
 
 
               <a
-                href="https://TU-LINK-DE-GLIT"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="#soluciones"
                 className="inline-flex items-center justify-center bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 px-8 py-4 rounded-lg font-bold shadow-lg transition"
               >
-                ORDER DELIVERY
+                {isEnglish
+                  ? "EXPLORE SOLUTIONS"
+                  : "VER SOLUCIONES"}
 
                 <span className="ml-4 text-xl">
                   →
@@ -385,7 +436,7 @@ export default function Home() {
 
 
       {/* =====================================================
-          SISTEMA AAFI
+          SISTEMA
       ===================================================== */}
 
       <section
@@ -400,23 +451,35 @@ export default function Home() {
             <div className="max-w-4xl mx-auto px-8 py-14 md:px-16 md:py-20 text-center">
 
               <p className="text-red-500 font-black tracking-[0.22em] text-sm md:text-base">
-                THE AAFI SYSTEM
+                {isEnglish
+                  ? "THE SHORTBIZAI SYSTEM"
+                  : "EL SISTEMA SHORTBIZAI"}
               </p>
 
 
               <h2 className="mt-7 text-4xl md:text-6xl font-black leading-[1.05] text-white">
 
-                Attract new customers.
-
-                <br />
-
-                <span className="text-red-500">
-                  Earn their trust.
-                </span>
-
-                <br />
-
-                Make them come back.
+                {isEnglish ? (
+                  <>
+                    Attract new customers.
+                    <br />
+                    <span className="text-red-500">
+                      Earn their trust.
+                    </span>
+                    <br />
+                    Make them come back.
+                  </>
+                ) : (
+                  <>
+                    Atrae nuevos clientes.
+                    <br />
+                    <span className="text-red-500">
+                      Conquista su confianza.
+                    </span>
+                    <br />
+                    Haz que regresen.
+                  </>
+                )}
 
               </h2>
 
@@ -426,11 +489,9 @@ export default function Home() {
 
               <p className="max-w-2xl mx-auto text-base md:text-lg leading-7 md:leading-8 text-gray-300">
 
-                We combine Video Shorts and Artificial Intelligence
-                to attract people through social media, provide
-                personalized attention, turn interest into real customers,
-                and build trusted relationships that encourage them to
-                become loyal and repeat customers.
+                {isEnglish
+                  ? "We combine Video Shorts and Artificial Intelligence to attract people from social media, provide personalized service, turn interest into real customers, and build relationships that encourage them to become loyal and recurring customers."
+                  : "Combinamos Video Shorts e Inteligencia Artificial para atraer personas desde las redes sociales, brindarles una atención personalizada, convertir su interés en clientes reales y construir relaciones que los motiven a convertirse en clientes fieles y recurrentes."}
 
               </p>
 
@@ -444,7 +505,7 @@ export default function Home() {
 
 
       {/* =====================================================
-          SOLUTIONS / ATRACCIÓN
+          SOLUCIONES
       ===================================================== */}
 
       <section
@@ -452,17 +513,113 @@ export default function Home() {
         className="py-28 bg-white"
       >
 
-        <div className="w-full overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 lg:px-10">
 
-          {/* CELULAR */}
+          <div className="text-center max-w-3xl mx-auto mb-16">
+
+            <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
+              {isEnglish
+                ? "OUR SOLUTIONS"
+                : "NUESTRAS SOLUCIONES"}
+            </p>
+
+            <h2 className="mt-5 text-5xl md:text-6xl font-black text-gray-950">
+              {isEnglish
+                ? "Everything your business needs to grow."
+                : "Todo lo que tu negocio necesita para crecer."}
+            </h2>
+
+          </div>
+
+
+          <div className="grid md:grid-cols-2 gap-8">
+
+            {pilares.map((pilar) => (
+
+              <div
+                key={pilar.numero}
+                className="rounded-3xl overflow-hidden border border-gray-200 bg-white shadow-lg"
+              >
+
+                <div className="relative h-[360px]">
+
+                  <Image
+                    src={pilar.imagen}
+                    alt={pilar.titulo}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover"
+                  />
+
+                </div>
+
+
+                <div className="p-7">
+
+                  <p className="text-sm font-black tracking-[0.25em] text-red-600">
+                    {pilar.numero}
+                  </p>
+
+                  <h3 className="mt-2 text-3xl font-black text-gray-950">
+                    {isEnglish
+                      ? pilar.titulo
+                      : [
+                          "Atracción",
+                          "Atención",
+                          "Fidelización",
+                          "Inteligencia Empresarial",
+                        ][Number(pilar.numero) - 1]}
+                  </h3>
+
+                  <p className="mt-2 font-bold text-gray-800">
+                    {isEnglish
+                      ? pilar.subtitulo
+                      : [
+                          "Contenido que genera visibilidad",
+                          "Inteligencia que responde y organiza",
+                          "Relaciones que generan recurrencia",
+                          "Datos para decidir mejor",
+                        ][Number(pilar.numero) - 1]}
+                  </p>
+
+                  <p className="mt-4 text-gray-600 leading-7">
+                    {isEnglish
+                      ? pilar.descripcion
+                      : [
+                          "Convertimos la presencia digital de tu negocio en una herramienta comercial. Creamos Video Shorts estratégicos que presentan tu marca, despiertan interés y llevan nuevos prospectos hacia tu negocio.",
+                          "Integramos Inteligencia Artificial para atender consultas, gestionar solicitudes y facilitar reservas de forma ágil y estructurada, ofreciendo a cada cliente una experiencia rápida y profesional.",
+                          "Transformamos cada interacción en una oportunidad de relación. Utilizamos seguimiento y automatización para mantener el contacto, activar nuevas oportunidades y aumentar la frecuencia de regreso de tus clientes.",
+                          "Convertimos la actividad de tu negocio en información útil para la gestión. Analiza clientes, reservas y resultados para identificar oportunidades y tomar decisiones comerciales con mayor claridad.",
+                        ][Number(pilar.numero) - 1]}
+                  </p>
+
+                </div>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      {/* =====================================================
+          ATRACCIÓN
+      ===================================================== */}
+
+      <section className="py-28 bg-white">
+
+        <div className="w-full overflow-hidden">
 
           <div className="block md:hidden relative w-full h-[600px] overflow-hidden">
 
             <Image
               src="/image/atraccion2.jpg"
-              alt="Video Shorts to attract new customers"
+              alt="Video Shorts"
               fill
-              priority
               sizes="100vw"
               className="object-cover object-center"
             />
@@ -470,15 +627,12 @@ export default function Home() {
           </div>
 
 
-          {/* COMPUTADOR */}
-
           <div className="hidden md:block relative w-full aspect-[16/9] overflow-hidden bg-black">
 
             <Image
               src="/image/atraccion2.jpg"
-              alt="Video Shorts to attract new customers"
+              alt="Video Shorts"
               fill
-              priority
               sizes="100vw"
               className="object-contain object-top"
             />
@@ -488,26 +642,22 @@ export default function Home() {
         </div>
 
 
-        {/* TEXTO */}
-
         <div className="max-w-7xl mx-auto px-6 lg:px-10 mt-10">
 
           <p className="text-sm md:text-base font-semibold tracking-[0.25em] uppercase text-red-600">
-            01 · ATTRACTION
+            01 · {isEnglish ? "ATTRACTION" : "ATRACCIÓN"}
           </p>
 
-
           <h3 className="text-4xl md:text-5xl font-black mt-3 leading-tight text-gray-900">
-            Turn attention into customers.
+            {isEnglish
+              ? "Turn attention into customers."
+              : "Convierte la atención en clientes."}
           </h3>
 
-
           <p className="mt-4 max-w-2xl text-lg md:text-xl text-gray-600 leading-7">
-
-            Through social media and our Video Shorts,
-            people can discover your business and become
-            loyal and repeat customers.
-
+            {isEnglish
+              ? "Through social media and our Video Shorts, people can discover your business and become loyal, recurring customers."
+              : "Desde las redes sociales y a través de nuestros Video Shorts, las personas pueden conocer tu negocio y convertirse en clientes fieles y recurrentes."}
           </p>
 
         </div>
@@ -516,46 +666,48 @@ export default function Home() {
 
 
       {/* =====================================================
-          ATENCIÓN IA
+          ATENCIÓN
       ===================================================== */}
 
       <section className="py-28 bg-gray-100">
 
-        {/* ENCABEZADO */}
-
         <div className="max-w-7xl mx-auto px-6 lg:px-10">
 
           <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
-            02 · SERVICE
+            02 · {isEnglish ? "SERVICE" : "ATENCIÓN"}
           </p>
-
 
           <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
 
-            Intelligent
-            <br />
-            service.
+            {isEnglish ? (
+              <>
+                Intelligent
+                <br />
+                service.
+              </>
+            ) : (
+              <>
+                Atención
+                <br />
+                inteligente.
+              </>
+            )}
 
           </h2>
 
         </div>
 
 
-        {/* CONTENIDO */}
-
         <div className="max-w-7xl mx-auto mt-10 lg:mt-16">
 
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-
-            {/* IMAGEN */}
 
             <div className="relative w-full h-[600px] overflow-hidden">
 
               <Image
                 src="/image/atencion2.jpg"
-                alt="Customer service and reservations with Artificial Intelligence"
+                alt="Artificial Intelligence service"
                 fill
-                priority
                 sizes="100vw"
                 className="object-cover"
               />
@@ -563,24 +715,21 @@ export default function Home() {
             </div>
 
 
-            {/* TEXTO */}
-
             <div className="px-6 lg:px-0">
 
               <p className="text-lg leading-7 text-gray-600">
 
-                Through Artificial Intelligence, we make it easier
-                to serve new customers and organize their requests
-                or reservations quickly, clearly, and efficiently.
+                {isEnglish
+                  ? "Through Artificial Intelligence, we help businesses serve new customers and organize requests or reservations quickly, clearly, and efficiently."
+                  : "Mediante Inteligencia Artificial facilitamos la atención de nuevos clientes y organizamos sus solicitudes o reservas de forma rápida, clara y eficiente."}
 
               </p>
 
-
               <p className="mt-4 text-lg leading-7 text-gray-600">
 
-                Through our intelligent and automated system,
-                every person receives fast, personalized,
-                and effective service.
+                {isEnglish
+                  ? "Through our intelligent and automated system, every person receives fast, personalized, and effective service."
+                  : "A través de nuestro sistema inteligente y automatizado, cada persona recibe una atención cercana, rápida y efectiva."}
 
               </p>
 
@@ -599,18 +748,14 @@ export default function Home() {
 
       <section className="py-28 bg-white">
 
-        {/* TÍTULO */}
-
         <div className="max-w-7xl mx-auto px-6 lg:px-10 pt-8 mb-6">
 
           <p className="text-red-500 font-bold tracking-[0.25em] text-sm">
-            03 · LOYALTY
+            03 · {isEnglish ? "LOYALTY" : "FIDELIZACIÓN"}
           </p>
 
         </div>
 
-
-        {/* IMAGEN */}
 
         <div className="relative w-full h-[600px] overflow-hidden">
 
@@ -623,18 +768,25 @@ export default function Home() {
           />
 
 
-          {/* TÍTULO SOBRE IMAGEN */}
-
           <div className="absolute inset-x-0 bottom-0 z-10 px-6 lg:px-10 pb-10">
 
             <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-
             <h2 className="text-5xl md:text-6xl font-black leading-tight text-white">
 
-              Make your customers
-              <br />
-              come back.
+              {isEnglish ? (
+                <>
+                  Make your customers
+                  <br />
+                  come back.
+                </>
+              ) : (
+                <>
+                  Haz que tus clientes
+                  <br />
+                  regresen.
+                </>
+              )}
 
             </h2>
 
@@ -643,38 +795,37 @@ export default function Home() {
         </div>
 
 
-        {/* CONTENIDO */}
-
         <div className="max-w-7xl mx-auto px-6 lg:px-10 mt-12">
 
           <p className="text-lg leading-8 text-gray-600">
 
-            Every customer who arrives through the system represents
-            an opportunity to build a long-term commercial relationship.
+            {isEnglish
+              ? "Every customer who enters through the system represents an opportunity to build a long-term commercial relationship."
+              : "Cada cliente que llega a través del sistema representa una oportunidad para construir una relación comercial de largo plazo."}
 
           </p>
-
 
           <p className="mt-5 text-lg leading-8 text-gray-600">
 
-            We use email, phone communication, and automation
-            to send promotions, discounts, news, and loyalty campaigns.
+            {isEnglish
+              ? "We use email, phone, and automation to send promotions, discounts, news, and loyalty campaigns."
+              : "Utilizamos correo electrónico, teléfono y automatización para enviar promociones, descuentos, novedades y campañas de fidelización."}
 
           </p>
 
-
-          {/* TARJETAS */}
 
           <div className="mt-8 grid sm:grid-cols-3 gap-4">
 
             <div className="border border-gray-200 rounded-xl p-5 bg-white">
 
               <p className="font-black text-red-600">
-                Promotions
+                {isEnglish ? "Promotions" : "Promociones"}
               </p>
 
               <p className="text-sm text-gray-500 mt-2">
-                Personalized offers.
+                {isEnglish
+                  ? "Personalized offers."
+                  : "Ofertas personalizadas."}
               </p>
 
             </div>
@@ -683,11 +834,13 @@ export default function Home() {
             <div className="border border-gray-200 rounded-xl p-5 bg-white">
 
               <p className="font-black text-red-600">
-                Follow-up
+                {isEnglish ? "Follow-up" : "Seguimiento"}
               </p>
 
               <p className="text-sm text-gray-500 mt-2">
-                Stay connected.
+                {isEnglish
+                  ? "Stay connected."
+                  : "Mantén el contacto."}
               </p>
 
             </div>
@@ -696,11 +849,13 @@ export default function Home() {
             <div className="border border-gray-200 rounded-xl p-5 bg-white">
 
               <p className="font-black text-red-600">
-                Return
+                {isEnglish ? "Return" : "Regreso"}
               </p>
 
               <p className="text-sm text-gray-500 mt-2">
-                Repeat customers.
+                {isEnglish
+                  ? "Recurring customers."
+                  : "Clientes recurrentes."}
               </p>
 
             </div>
@@ -722,53 +877,63 @@ export default function Home() {
 
           <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-            {/* TEXTO */}
-
-            <div className="order-2 lg:order-1">
+            <div>
 
               <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
-                04 · BUSINESS INTELLIGENCE
+                04 · {isEnglish
+                  ? "BUSINESS INTELLIGENCE"
+                  : "INTELIGENCIA EMPRESARIAL"}
               </p>
 
 
               <h2 className="mt-5 text-5xl md:text-6xl font-black leading-tight text-gray-950">
 
-                Know
-                <br />
-                your
-                <br />
-                results.
+                {isEnglish ? (
+                  <>
+                    Know
+                    <br />
+                    your
+                    <br />
+                    results.
+                  </>
+                ) : (
+                  <>
+                    Conoce
+                    <br />
+                    tus
+                    <br />
+                    resultados.
+                  </>
+                )}
 
               </h2>
 
 
               <p className="mt-7 text-lg leading-8 text-gray-600">
 
-                We turn your business information into clear data
-                so you can understand what is working and where
-                new growth opportunities exist.
+                {isEnglish
+                  ? "We turn your business information into clear data so you can understand what is working and where new growth opportunities exist."
+                  : "Convertimos la información de tu negocio en datos claros para que puedas entender qué está funcionando y dónde existen nuevas oportunidades de crecimiento."}
 
               </p>
 
 
               <p className="mt-5 text-lg leading-8 text-gray-600">
 
-                Receive information about customers, sales,
-                products, and results to make better decisions
-                and grow your business.
+                {isEnglish
+                  ? "Receive information about customers, sales, products, and results to make better decisions and grow your business."
+                  : "Recibe información sobre clientes, ventas, productos y resultados para tomar mejores decisiones y hacer crecer tu negocio."}
 
               </p>
 
             </div>
 
 
-            {/* IMAGEN */}
-
-            <div className="order-1 lg:order-2 relative w-full h-[600px] overflow-hidden">
+            <div className="relative w-full h-[600px] overflow-hidden">
 
               <Image
                 src="/image/inteligencia.jpg"
-                alt="Business intelligence and results analysis"
+                alt="Business intelligence"
                 fill
                 sizes="100vw"
                 className="object-cover"
@@ -804,31 +969,41 @@ export default function Home() {
 
         </div>
 
-
         <div className="absolute inset-0 bg-white/90" />
-
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
 
           <p className="text-red-600 font-bold tracking-[0.25em] text-sm">
-            BUSINESS ASSESSMENT
+            {isEnglish
+              ? "FREE BUSINESS ASSESSMENT"
+              : "DIAGNÓSTICO EMPRESARIAL"}
           </p>
 
 
           <h2 className="mt-5 text-5xl md:text-7xl font-black text-gray-950">
 
-            How prepared is
-            <br />
-            your business?
+            {isEnglish ? (
+              <>
+                How prepared is
+                <br />
+                your business?
+              </>
+            ) : (
+              <>
+                ¿Qué tan preparado está
+                <br />
+                tu negocio?
+              </>
+            )}
 
           </h2>
 
 
           <p className="mt-7 text-xl leading-8 text-gray-600">
 
-            Take our free business assessment and discover how
-            prepared your company is for Artificial Intelligence,
-            automation, and digital growth.
+            {isEnglish
+              ? "Take our free business assessment and discover how your company is positioned in Artificial Intelligence, automation, and digital growth."
+              : "Realiza nuestro diagnóstico gratuito y descubre cómo se encuentra tu empresa frente a la Inteligencia Artificial, automatización y crecimiento digital."}
 
           </p>
 
@@ -838,7 +1013,9 @@ export default function Home() {
             className="inline-flex items-center gap-5 mt-10 bg-red-600 hover:bg-red-700 text-white px-10 py-5 rounded-lg font-black shadow-xl transition"
           >
 
-            START ASSESSMENT
+            {isEnglish
+              ? "START FREE ASSESSMENT"
+              : "COMENZAR EVALUACIÓN"}
 
             <span className="text-xl">
               →
@@ -849,7 +1026,9 @@ export default function Home() {
 
           <p className="mt-5 text-sm text-gray-500">
 
-            Free · Less than 3 minutes · Personalized results
+            {isEnglish
+              ? "Free · Less than 3 minutes · Personalized result"
+              : "Gratis · Menos de 3 minutos · Resultado personalizado"}
 
           </p>
 
@@ -877,13 +1056,23 @@ export default function Home() {
 
               <h2 className="text-4xl md:text-5xl font-black mt-3">
 
-                We Attract.
-                <br className="md:hidden" />
-
-                We Serve.
-                <br className="md:hidden" />
-
-                We Build Loyalty.
+                {isEnglish ? (
+                  <>
+                    Attract.
+                    <br className="md:hidden" />
+                    Serve.
+                    <br className="md:hidden" />
+                    Build Loyalty.
+                  </>
+                ) : (
+                  <>
+                    Atraemos.
+                    <br className="md:hidden" />
+                    Atendemos.
+                    <br className="md:hidden" />
+                    Fidelizamos.
+                  </>
+                )}
 
               </h2>
 
@@ -894,7 +1083,9 @@ export default function Home() {
               href="/diagnostico"
               className="bg-white text-red-600 hover:bg-gray-100 px-8 py-4 rounded-lg font-black transition shadow-xl"
             >
-              DISCOVER YOUR BUSINESS
+              {isEnglish
+                ? "ASSESS MY BUSINESS"
+                : "CONOCER MI NEGOCIO"}
             </Link>
 
           </div>
@@ -920,11 +1111,13 @@ export default function Home() {
             className="w-[160px] h-auto"
           />
 
-
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-400 text-center">
 
             © {new Date().getFullYear()} ShortBizAI.
-            All rights reserved.
+            {" "}
+            {isEnglish
+              ? "All rights reserved."
+              : "Todos los derechos reservados."}
 
           </p>
 
