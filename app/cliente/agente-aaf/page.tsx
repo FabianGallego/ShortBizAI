@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
-import NotificacionesObligatorias from "@/app/components/NotificacionesObligatorias";
 
 type Empresa = {
   id: number | string;
@@ -74,7 +73,49 @@ function convertirHora(hora: string) {
   return `${h}:${minutos} ${periodo}`;
 }
 
+function fechaEsValida(fecha: string) {
+  const partes = fecha.split("-");
+
+  if (partes.length !== 3) return false;
+
+  const [anioTexto, mesTexto, diaTexto] = partes;
+
+  const anio = Number(anioTexto);
+  const mes = Number(mesTexto);
+  const dia = Number(diaTexto);
+
+  if (
+    !Number.isInteger(anio) ||
+    !Number.isInteger(mes) ||
+    !Number.isInteger(dia)
+  ) {
+    return false;
+  }
+
+  if (mes < 1 || mes > 12) return false;
+
+  if (dia < 1 || dia > 31) return false;
+
+  const fechaObjeto = new Date(
+    anio,
+    mes - 1,
+    dia
+  );
+
+  return (
+    fechaObjeto.getFullYear() === anio &&
+    fechaObjeto.getMonth() === mes - 1 &&
+    fechaObjeto.getDate() === dia
+  );
+}
+
 export default function AgenteAAFPage() {
+  /*
+   * ============================================================
+   * EMPRESA
+   * ============================================================
+   */
+
   const [empresaId, setEmpresaId] =
     useState<string | null>(null);
 
@@ -84,8 +125,20 @@ export default function AgenteAAFPage() {
   const [cargandoEmpresa, setCargandoEmpresa] =
     useState(true);
 
+  /*
+   * ============================================================
+   * IDIOMA
+   * ============================================================
+   */
+
   const [idioma, setIdioma] =
     useState<"es" | "en">("es");
+
+  /*
+   * ============================================================
+   * CHATBOT
+   * ============================================================
+   */
 
   const [mensajes, setMensajes] =
     useState<Mensaje[]>([]);
@@ -104,6 +157,12 @@ export default function AgenteAAFPage() {
     | "finalizado"
   >("inicio");
 
+  /*
+   * ============================================================
+   * DATOS DE RESERVA
+   * ============================================================
+   */
+
   const [nombre, setNombre] =
     useState("");
 
@@ -119,6 +178,12 @@ export default function AgenteAAFPage() {
   const [personas, setPersonas] =
     useState("");
 
+  /*
+   * ============================================================
+   * ESTADOS DE RESERVA
+   * ============================================================
+   */
+
   const [guardando, setGuardando] =
     useState(false);
 
@@ -127,6 +192,15 @@ export default function AgenteAAFPage() {
 
   const [errorReserva, setErrorReserva] =
     useState("");
+
+  const [reservaCreada, setReservaCreada] =
+    useState(false);
+
+  /*
+   * ============================================================
+   * PUSH / NOTIFICACIONES
+   * ============================================================
+   */
 
   const [pushEndpoint, setPushEndpoint] =
     useState<string | null>(null);
@@ -140,24 +214,40 @@ export default function AgenteAAFPage() {
   const [errorNotificaciones, setErrorNotificaciones] =
     useState("");
 
-  const [reservaCreada, setReservaCreada] =
-    useState(false);
+  /*
+   * ============================================================
+   * REFERENCIA CHAT
+   * ============================================================
+   */
 
   const mensajesRef =
     useRef<HTMLDivElement>(null);
 
+  /*
+   * ============================================================
+   * TEXTOS
+   * ============================================================
+   */
+
   const textos = {
     es: {
-      cargando: "Cargando...",
+      cargando:
+        "Cargando...",
 
       bienvenida:
-        "🍽️ ShortBizAI te da la bienvenida a",
+        "Bienvenidos a",
 
       descripcion:
         "Disfruta de nuestro exquisito menú y reserva tu mesa de manera rápida y sencilla.",
 
-      completa:
-        "Simplemente completa el formulario.",
+      reservarTitulo:
+        "Para reservar, activa las notificaciones.",
+
+      activarBoton:
+        "🔔 Activar notificaciones",
+
+      activando:
+        "Activando...",
 
       saludo:
         "¡Hola! 👋 Será un placer ayudarte a reservar tu mesa.",
@@ -225,21 +315,6 @@ export default function AgenteAAFPage() {
       nuevaReserva:
         "Hacer otra reserva",
 
-      notificacionesTitulo:
-        "Activa las notificaciones",
-
-      notificacionesTexto:
-        "Para recibir directamente en este dispositivo la confirmación o cancelación de tu reserva, debes activar las notificaciones.",
-
-      soloAvisos:
-        "Solo recibirás avisos relacionados con tu reserva.",
-
-      activarBoton:
-        "🔔 Activar notificaciones",
-
-      activando:
-        "Activando...",
-
       notificacionesActivadas:
         "Notificaciones activadas",
 
@@ -269,9 +344,6 @@ export default function AgenteAAFPage() {
 
       errorGuardar:
         "No pude guardar la reserva. Por favor inténtalo nuevamente.",
-
-      errorTelegram:
-        "La reserva fue guardada, pero no pudimos enviar el aviso al restaurante.",
     },
 
     en: {
@@ -279,13 +351,19 @@ export default function AgenteAAFPage() {
         "Loading...",
 
       bienvenida:
-        "🍽️ ShortBizAI welcomes you to",
+        "Welcome to",
 
       descripcion:
         "Enjoy our exquisite menu and reserve your table quickly and easily.",
 
-      completa:
-        "Simply complete the form.",
+      reservarTitulo:
+        "To make a reservation, enable notifications.",
+
+      activarBoton:
+        "🔔 Enable notifications",
+
+      activando:
+        "Activating...",
 
       saludo:
         "Hello! 👋 I'll be happy to help you reserve your table.",
@@ -353,21 +431,6 @@ export default function AgenteAAFPage() {
       nuevaReserva:
         "Make another reservation",
 
-      notificacionesTitulo:
-        "Enable notifications",
-
-      notificacionesTexto:
-        "To receive your reservation confirmation or cancellation directly on this device, you must enable notifications.",
-
-      soloAvisos:
-        "You will only receive notifications related to your reservation.",
-
-      activarBoton:
-        "🔔 Enable notifications",
-
-      activando:
-        "Activating...",
-
       notificacionesActivadas:
         "Notifications enabled",
 
@@ -390,32 +453,32 @@ export default function AgenteAAFPage() {
         "We could not enable notifications. Please try again.",
 
       errorNotificaciones:
-        "You must allow notifications to receive the confirmation or cancellation of your reservation.",
+        "You must allow notifications to receive your reservation confirmation or cancellation.",
 
       empresaNoIdentificada:
         "We could not identify the restaurant.",
 
       errorGuardar:
         "We could not save the reservation. Please try again.",
-
-      errorTelegram:
-        "The reservation was saved, but we could not notify the restaurant.",
     },
   };
 
   const t = textos[idioma];
 
   /*
-   * OBTENER EMPRESA DESDE LA URL
+   * ============================================================
+   * OBTENER EMPRESA ID DESDE LA URL
    *
-   * Ya no usamos useSearchParams().
-   * Esto evita el problema de prerender/build
-   * que estaba teniendo Vercel con Next.js.
+   * NO usamos useSearchParams().
+   * Esto evita el problema de prerenderizado de Next.js.
+   * ============================================================
    */
+
   useEffect(() => {
-    const params = new URLSearchParams(
-      window.location.search
-    );
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
 
     const id =
       params.get("empresaId");
@@ -424,17 +487,25 @@ export default function AgenteAAFPage() {
   }, []);
 
   /*
-   * CARGAR EMPRESA
+   * ============================================================
+   * BUSCAR EMPRESA EN SUPABASE
+   * ============================================================
    */
+
   useEffect(() => {
     async function cargarEmpresa() {
       if (!empresaId) {
+        setEmpresa(null);
+        setCargandoEmpresa(false);
         return;
       }
 
       setCargandoEmpresa(true);
 
-      const { data, error } =
+      const {
+        data,
+        error,
+      } =
         await supabase
           .from("empresas")
           .select("id, nombre")
@@ -459,8 +530,11 @@ export default function AgenteAAFPage() {
   }, [empresaId]);
 
   /*
+   * ============================================================
    * INICIAR CHATBOT
+   * ============================================================
    */
+
   useEffect(() => {
     if (!empresa) return;
 
@@ -469,7 +543,8 @@ export default function AgenteAAFPage() {
         id: Date.now(),
         tipo: "ia",
         texto:
-          `${t.saludo}\n\n${t.preguntaNombre}`,
+          `${t.saludo}\n\n` +
+          `${t.preguntaNombre}`,
       },
     ]);
 
@@ -477,42 +552,64 @@ export default function AgenteAAFPage() {
   }, [empresa, idioma]);
 
   /*
+   * ============================================================
    * AUTO SCROLL DEL CHAT
+   * ============================================================
    */
+
   useEffect(() => {
-    if (mensajesRef.current) {
-      mensajesRef.current.scrollTo({
-        top:
-          mensajesRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
+    if (!mensajesRef.current) return;
+
+    mensajesRef.current.scrollTo({
+      top:
+        mensajesRef.current.scrollHeight,
+      behavior: "smooth",
+    });
   }, [mensajes]);
+
+  /*
+   * ============================================================
+   * AGREGAR MENSAJE
+   * ============================================================
+   */
 
   function agregarMensaje(
     tipo: "ia" | "usuario",
     texto: string
   ) {
-    setMensajes((actuales) => [
-      ...actuales,
-      {
-        id:
-          Date.now() +
-          Math.random(),
-        tipo,
-        texto,
-      },
-    ]);
+    setMensajes(
+      (actuales) => [
+        ...actuales,
+        {
+          id:
+            Date.now() +
+            Math.random(),
+          tipo,
+          texto,
+        },
+      ]
+    );
   }
 
   /*
-   * REGISTRAR NOTIFICACIONES PUSH
+   * ============================================================
+   * ACTIVAR NOTIFICACIONES PUSH
+   * ============================================================
    */
+
   async function registrarNotificaciones() {
+    if (activandoNotificaciones) {
+      return;
+    }
+
     setActivandoNotificaciones(true);
     setErrorNotificaciones("");
 
     try {
+      /*
+       * SERVICE WORKER
+       */
+
       if (!("serviceWorker" in navigator)) {
         setErrorNotificaciones(
           t.navegadorNoSoporta
@@ -520,6 +617,10 @@ export default function AgenteAAFPage() {
 
         return;
       }
+
+      /*
+       * PUSH
+       */
 
       if (!("PushManager" in window)) {
         setErrorNotificaciones(
@@ -529,6 +630,10 @@ export default function AgenteAAFPage() {
         return;
       }
 
+      /*
+       * NOTIFICACIONES
+       */
+
       if (!("Notification" in window)) {
         setErrorNotificaciones(
           t.navegadorNoSoporta
@@ -536,6 +641,10 @@ export default function AgenteAAFPage() {
 
         return;
       }
+
+      /*
+       * PERMISO
+       */
 
       let permiso =
         Notification.permission;
@@ -555,6 +664,10 @@ export default function AgenteAAFPage() {
         return;
       }
 
+      /*
+       * REGISTRAR SERVICE WORKER
+       */
+
       const registro =
         await navigator.serviceWorker.register(
           "/sw.js"
@@ -562,8 +675,16 @@ export default function AgenteAAFPage() {
 
       await navigator.serviceWorker.ready;
 
+      /*
+       * BUSCAR SUSCRIPCIÓN EXISTENTE
+       */
+
       let subscription =
         await registro.pushManager.getSubscription();
+
+      /*
+       * CREAR SUSCRIPCIÓN
+       */
 
       if (!subscription) {
         const vapidKey =
@@ -593,24 +714,35 @@ export default function AgenteAAFPage() {
           });
       }
 
+      /*
+       * ENDPOINT
+       */
+
       const endpoint =
         subscription.endpoint;
 
       setPushEndpoint(endpoint);
 
+      /*
+       * GUARDAR SUSCRIPCIÓN
+       */
+
       const respuesta =
-        await fetch("/api/push", {
-          method: "POST",
+        await fetch(
+          "/api/push",
+          {
+            method: "POST",
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
 
-          body: JSON.stringify({
-            subscription,
-          }),
-        });
+            body: JSON.stringify({
+              subscription,
+            }),
+          }
+        );
 
       const resultado =
         await respuesta.json();
@@ -629,6 +761,10 @@ export default function AgenteAAFPage() {
 
         return;
       }
+
+      /*
+       * TODO CORRECTO
+       */
 
       setNotificacionesActivas(true);
       setErrorNotificaciones("");
@@ -649,17 +785,24 @@ export default function AgenteAAFPage() {
   }
 
   /*
-   * REINICIAR CONVERSACIÓN
+   * ============================================================
+   * REINICIAR CHATBOT
+   * ============================================================
    */
+
   function reiniciarConversacion() {
     setNombre("");
     setTelefono("");
     setFecha("");
     setHora("");
     setPersonas("");
+
     setEntrada("");
+
     setMensajeExito("");
+
     setErrorReserva("");
+
     setReservaCreada(false);
 
     setMensajes([
@@ -667,7 +810,8 @@ export default function AgenteAAFPage() {
         id: Date.now(),
         tipo: "ia",
         texto:
-          `${t.saludo}\n\n${t.preguntaNombre}`,
+          `${t.saludo}\n\n` +
+          `${t.preguntaNombre}`,
       },
     ]);
 
@@ -675,8 +819,11 @@ export default function AgenteAAFPage() {
   }
 
   /*
-   * ENVIAR MENSAJE DEL CHATBOT
+   * ============================================================
+   * PROCESAR MENSAJE DEL CLIENTE
+   * ============================================================
    */
+
   async function enviarMensaje() {
     const texto =
       entrada.trim();
@@ -695,8 +842,11 @@ export default function AgenteAAFPage() {
     setErrorReserva("");
 
     /*
+     * ========================================================
      * NOMBRE
+     * ========================================================
      */
+
     if (paso === "nombre") {
       if (texto.length < 2) {
         agregarMensaje(
@@ -720,8 +870,11 @@ export default function AgenteAAFPage() {
     }
 
     /*
+     * ========================================================
      * TELÉFONO
+     * ========================================================
      */
+
     if (paso === "telefono") {
       const telefonoLimpio =
         texto.replace(
@@ -756,8 +909,11 @@ export default function AgenteAAFPage() {
     }
 
     /*
+     * ========================================================
      * FECHA
+     * ========================================================
      */
+
     if (paso === "fecha") {
       let fechaValida =
         texto;
@@ -767,6 +923,10 @@ export default function AgenteAAFPage() {
 
       const formatoFechaLatino =
         /^\d{1,2}\/\d{1,2}\/\d{4}$/;
+
+      /*
+       * ACEPTAR DD/MM/YYYY
+       */
 
       if (
         formatoFechaLatino.test(
@@ -795,27 +955,16 @@ export default function AgenteAAFPage() {
           `${anio}-${mes}-${dia}`;
       }
 
+      /*
+       * VALIDAR FECHA
+       */
+
       if (
         !formatoFecha.test(
           fechaValida
-        )
-      ) {
-        agregarMensaje(
-          "ia",
-          t.fechaInvalida
-        );
-
-        return;
-      }
-
-      const fechaObjeto =
-        new Date(
-          `${fechaValida}T00:00:00`
-        );
-
-      if (
-        Number.isNaN(
-          fechaObjeto.getTime()
+        ) ||
+        !fechaEsValida(
+          fechaValida
         )
       ) {
         agregarMensaje(
@@ -841,8 +990,11 @@ export default function AgenteAAFPage() {
     }
 
     /*
+     * ========================================================
      * HORA
+     * ========================================================
      */
+
     if (paso === "hora") {
       const formatoHora =
         /^\d{1,2}:\d{2}$/;
@@ -911,8 +1063,11 @@ export default function AgenteAAFPage() {
     }
 
     /*
+     * ========================================================
      * PERSONAS
+     * ========================================================
      */
+
     if (paso === "personas") {
       const numero =
         Number(
@@ -976,11 +1131,13 @@ export default function AgenteAAFPage() {
     }
 
     /*
+     * ========================================================
      * CONFIRMACIÓN
+     * ========================================================
      */
+
     if (
-      paso ===
-      "confirmacion"
+      paso === "confirmacion"
     ) {
       const respuesta =
         texto.toLowerCase();
@@ -1048,10 +1205,17 @@ export default function AgenteAAFPage() {
   }
 
   /*
+   * ============================================================
    * CREAR RESERVA
+   * ============================================================
    */
+
   async function crearReserva() {
     if (guardando) return;
+
+    /*
+     * EMPRESA
+     */
 
     if (
       !empresaId ||
@@ -1069,6 +1233,10 @@ export default function AgenteAAFPage() {
       return;
     }
 
+    /*
+     * DATOS
+     */
+
     if (
       !nombre ||
       !telefono ||
@@ -1082,6 +1250,13 @@ export default function AgenteAAFPage() {
 
       return;
     }
+
+    /*
+     * NOTIFICACIONES
+     *
+     * Son necesarias para poder recibir
+     * la respuesta del restaurante.
+     */
 
     if (
       !notificacionesActivas ||
@@ -1104,6 +1279,12 @@ export default function AgenteAAFPage() {
     try {
       const numeroPersonas =
         Number(personas);
+
+      /*
+       * ========================================================
+       * GUARDAR RESERVA EN SUPABASE
+       * ========================================================
+       */
 
       const {
         data,
@@ -1138,6 +1319,10 @@ export default function AgenteAAFPage() {
           .select()
           .single();
 
+      /*
+       * ERROR SUPABASE
+       */
+
       if (error) {
         console.error(
           "ERROR AL GUARDAR RESERVA:",
@@ -1162,9 +1347,11 @@ export default function AgenteAAFPage() {
       );
 
       /*
-       * NOTIFICAR AL RESTAURANTE
-       * POR TELEGRAM
+       * ========================================================
+       * NOTIFICAR AL RESTAURANTE POR TELEGRAM
+       * ========================================================
        */
+
       try {
         const respuestaTelegram =
           await fetch(
@@ -1226,9 +1413,13 @@ export default function AgenteAAFPage() {
         );
       }
 
-      setReservaCreada(
-        true
-      );
+      /*
+       * ========================================================
+       * RESERVA ENVIADA
+       * ========================================================
+       */
+
+      setReservaCreada(true);
 
       setMensajeExito(
         t.reservaEnviada
@@ -1260,8 +1451,11 @@ export default function AgenteAAFPage() {
   }
 
   /*
-   * ENTER PARA ENVIAR
+   * ============================================================
+   * ENTER
+   * ============================================================
    */
+
   function manejarTecla(
     e: React.KeyboardEvent<HTMLInputElement>
   ) {
@@ -1273,468 +1467,11 @@ export default function AgenteAAFPage() {
   }
 
   /*
-   * CARGANDO EMPRESA
-   */
-  if (cargandoEmpresa) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-        <div className="text-center">
-
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
-
-          <p className="font-medium text-gray-600">
-            {t.cargando}
-          </p>
-
-        </div>
-      </main>
-    );
-  }
-
-  /*
-   * EMPRESA NO ENCONTRADA
-   */
-  if (!empresa) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-
-        <div className="w-full max-w-lg rounded-3xl bg-white p-8 text-center shadow-xl">
-
-          <div className="mb-4 text-5xl">
-            🍽️
-          </div>
-
-          <h1 className="text-2xl font-black text-gray-950">
-            {t.empresaNoIdentificada}
-          </h1>
-
-        </div>
-
-      </main>
-    );
-  }
-
-  return (
-    <NotificacionesObligatorias>
-
-      <main className="min-h-screen bg-gray-50 text-gray-900">
-
-        <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-8">
-
-          {/* IDIOMA */}
-          <div className="mb-5 flex justify-end">
-
-            <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-
-              <button
-                type="button"
-                onClick={() =>
-                  setIdioma("es")
-                }
-                className={`px-4 py-2 text-sm font-bold transition ${
-                  idioma === "es"
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                🇪🇸 Español
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setIdioma("en")
-                }
-                className={`px-4 py-2 text-sm font-bold transition ${
-                  idioma === "en"
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                🇺🇸 English
-              </button>
-
-            </div>
-
-          </div>
-
-          <section className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl">
-
-            {/* ENCABEZADO */}
-            <div className="px-5 pb-6 pt-7 sm:px-8 sm:pb-7 sm:pt-8">
-
-              <div className="mb-6 flex justify-center">
-
-                <Image
-                  src="/logo-foodshortai.png"
-                  alt="ShortBizAI"
-                  width={210}
-                  height={210}
-                  priority
-                  className="h-auto w-[170px] object-contain sm:w-[210px]"
-                />
-
-              </div>
-
-              <div className="text-center">
-
-                <h1 className="text-2xl font-black leading-tight tracking-tight text-gray-950 sm:text-4xl">
-
-                  {t.bienvenida}
-
-                  <span className="mt-1 block text-blue-600">
-                    {empresa.nombre}
-                  </span>
-
-                </h1>
-
-                <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
-                  {t.descripcion}
-                </p>
-
-                <p className="mt-2 text-base font-semibold text-gray-900 sm:text-lg">
-                  {t.completa}
-                </p>
-
-              </div>
-
-            </div>
-
-            {/* NOTIFICACIONES */}
-            <div className="border-y border-gray-200 bg-gray-50 px-5 py-5 sm:px-8">
-
-              {!notificacionesActivas ? (
-
-                <div>
-
-                  <div className="flex items-start gap-3">
-
-                    <div className="text-2xl">
-                      🔔
-                    </div>
-
-                    <div className="flex-1">
-
-                      <h2 className="font-bold text-gray-950">
-                        {t.notificacionesTitulo}
-                      </h2>
-
-                      <p className="mt-1 text-sm leading-6 text-gray-600">
-                        {t.notificacionesTexto}
-                      </p>
-
-                      <p className="mt-1 text-xs text-gray-500">
-                        {t.soloAvisos}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={
-                      registrarNotificaciones
-                    }
-                    disabled={
-                      activandoNotificaciones
-                    }
-                    className="mt-4 min-h-[52px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-                  >
-                    {activandoNotificaciones
-                      ? t.activando
-                      : t.activarBoton}
-                  </button>
-
-                  {errorNotificaciones && (
-                    <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium leading-6 text-red-700">
-                      {errorNotificaciones}
-                    </div>
-                  )}
-
-                </div>
-
-              ) : (
-
-                <div className="flex items-start gap-3">
-
-                  <div className="text-xl">
-                    🔔
-                  </div>
-
-                  <div>
-
-                    <p className="font-bold text-green-700">
-                      {t.notificacionesActivadas}
-                    </p>
-
-                    <p className="mt-1 text-sm leading-6 text-green-700">
-                      {t.dispositivoListo}
-                    </p>
-
-                  </div>
-
-                </div>
-
-              )}
-
-            </div>
-
-            {/* CHATBOT */}
-            <div className="flex flex-col">
-
-              {/* CABECERA DEL CHAT */}
-              <div className="flex items-center gap-3 border-b border-gray-200 px-5 py-4 sm:px-7">
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-xl shadow-sm">
-                  🤖
-                </div>
-
-                <div>
-
-                  <p className="font-black text-gray-950">
-                    ShortBizAI
-                  </p>
-
-                  <p className="text-xs text-green-600">
-                    ●{" "}
-                    {idioma === "es"
-                      ? "Asistente disponible"
-                      : "Assistant available"}
-                  </p>
-
-                </div>
-
-              </div>
-
-              {/* MENSAJES */}
-              <div
-                ref={mensajesRef}
-                className="max-h-[500px] min-h-[380px] space-y-4 overflow-y-auto bg-gray-50 px-4 py-5 sm:px-6"
-              >
-
-                {mensajes.map(
-                  (mensaje) => (
-
-                    <div
-                      key={mensaje.id}
-                      className={`flex ${
-                        mensaje.tipo ===
-                        "usuario"
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
-                    >
-
-                      <div
-                        className={`max-w-[85%] whitespace-pre-line rounded-2xl px-4 py-3 text-[15px] leading-6 shadow-sm ${
-                          mensaje.tipo ===
-                          "usuario"
-                            ? "rounded-br-md bg-blue-600 text-white"
-                            : "rounded-bl-md border border-gray-200 bg-white text-gray-800"
-                        }`}
-                      >
-                        {mensaje.texto}
-                      </div>
-
-                    </div>
-
-                  )
-                )}
-
-                {guardando && (
-
-                  <div className="flex justify-start">
-
-                    <div className="rounded-2xl rounded-bl-md border border-gray-200 bg-white px-4 py-3 shadow-sm">
-
-                      <div className="flex items-center gap-1">
-
-                        <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
-
-                        <span
-                          className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
-                          style={{
-                            animationDelay:
-                              "150ms",
-                          }}
-                        />
-
-                        <span
-                          className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
-                          style={{
-                            animationDelay:
-                              "300ms",
-                          }}
-                        />
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-              </div>
-
-              {/* BOTONES DE CONFIRMACIÓN */}
-              {paso ===
-                "confirmacion" &&
-                !guardando && (
-
-                  <div className="border-t border-gray-200 bg-white px-4 py-4 sm:px-6">
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          enviarMensajeDirecto(
-                            idioma === "es"
-                              ? "Sí, enviar reserva"
-                              : "Yes, send reservation"
-                          )
-                        }
-                        className="min-h-[52px] rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700"
-                      >
-                        ✅ {t.si}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          enviarMensajeDirecto(
-                            idioma === "es"
-                              ? "No, quiero corregir"
-                              : "No, I want to correct it"
-                          )
-                        }
-                        className="min-h-[52px] rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-100"
-                      >
-                        ✏️ {t.no}
-                      </button>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-              {/* INPUT DEL CHAT */}
-              {paso !==
-                "finalizado" &&
-                paso !==
-                "confirmacion" && (
-
-                  <div className="border-t border-gray-200 bg-white p-4 sm:p-5">
-
-                    <div className="flex items-end gap-3">
-
-                      <input
-                        type={
-                          paso ===
-                          "telefono"
-                            ? "tel"
-                            : "text"
-                        }
-                        value={entrada}
-                        onChange={(e) =>
-                          setEntrada(
-                            e.target.value
-                          )
-                        }
-                        onKeyDown={
-                          manejarTecla
-                        }
-                        placeholder={
-                          idioma === "es"
-                            ? "Escribe tu respuesta..."
-                            : "Type your answer..."
-                        }
-                        disabled={
-                          guardando
-                        }
-                        autoComplete="off"
-                        inputMode={
-                          paso ===
-                          "telefono"
-                            ? "tel"
-                            : "text"
-                        }
-                        className="min-h-[52px] flex-1 rounded-2xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100"
-                      />
-
-                      <button
-                        type="button"
-                        onClick={
-                          enviarMensaje
-                        }
-                        disabled={
-                          guardando ||
-                          !entrada.trim()
-                        }
-                        className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-xl text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-                      >
-                        ➤
-                      </button>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-              {/* RESERVA FINALIZADA */}
-              {paso ===
-                "finalizado" && (
-
-                <div className="border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
-
-                  {mensajeExito && (
-
-                    <div className="mb-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-4 text-sm font-semibold leading-6 text-green-800">
-                      {mensajeExito}
-                    </div>
-
-                  )}
-
-                  {errorReserva && (
-
-                    <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold leading-6 text-red-700">
-                      {errorReserva}
-                    </div>
-
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={
-                      reiniciarConversacion
-                    }
-                    className="min-h-[52px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white transition hover:bg-blue-700"
-                  >
-                    {t.nuevaReserva}
-                  </button>
-
-                </div>
-
-              )}
-
-            </div>
-
-          </section>
-
-        </div>
-
-      </main>
-
-    </NotificacionesObligatorias>
-  );
-
-  /*
+   * ============================================================
    * BOTONES DE CONFIRMACIÓN
+   * ============================================================
    */
+
   async function enviarMensajeDirecto(
     texto: string
   ) {
@@ -1746,10 +1483,8 @@ export default function AgenteAAFPage() {
     );
 
     if (
-      paso ===
-      "confirmacion"
+      paso === "confirmacion"
     ) {
-
       const respuesta =
         texto.toLowerCase();
 
@@ -1776,6 +1511,10 @@ export default function AgenteAAFPage() {
         return;
       }
 
+      /*
+       * CORREGIR
+       */
+
       agregarMensaje(
         "ia",
         t.preguntaNombre
@@ -1790,4 +1529,494 @@ export default function AgenteAAFPage() {
       setPaso("nombre");
     }
   }
+
+  /*
+   * ============================================================
+   * CARGANDO
+   * ============================================================
+   */
+
+  if (cargandoEmpresa) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+
+        <div className="text-center">
+
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
+
+          <p className="font-medium text-gray-600">
+            {t.cargando}
+          </p>
+
+        </div>
+
+      </main>
+    );
+  }
+
+  /*
+   * ============================================================
+   * EMPRESA NO ENCONTRADA
+   * ============================================================
+   */
+
+  if (!empresa) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+
+        <div className="w-full max-w-lg rounded-3xl bg-white p-8 text-center shadow-xl">
+
+          <div className="mb-4 text-5xl">
+            🍽️
+          </div>
+
+          <h1 className="text-2xl font-black text-gray-950">
+            {t.empresaNoIdentificada}
+          </h1>
+
+        </div>
+
+      </main>
+    );
+  }
+
+  /*
+   * ============================================================
+   * PÁGINA PRINCIPAL
+   * ============================================================
+   */
+
+  return (
+    <main className="min-h-screen bg-gray-50 text-gray-900">
+
+      <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-8">
+
+        {/* =====================================================
+            IDIOMA
+        ====================================================== */}
+
+        <div className="mb-5 flex justify-end">
+
+          <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+
+            <button
+              type="button"
+              onClick={() =>
+                setIdioma("es")
+              }
+              className={`px-4 py-2 text-sm font-bold transition ${
+                idioma === "es"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              🇪🇸 Español
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setIdioma("en")
+              }
+              className={`px-4 py-2 text-sm font-bold transition ${
+                idioma === "en"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              🇺🇸 English
+            </button>
+
+          </div>
+
+        </div>
+
+        {/* =====================================================
+            CONTENEDOR PRINCIPAL
+        ====================================================== */}
+
+        <section className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl">
+
+          {/* ===================================================
+              ENCABEZADO
+          ==================================================== */}
+
+          <div className="px-5 pb-6 pt-6 sm:px-8 sm:pb-7 sm:pt-7">
+
+            {/* LOGO MÁS PEQUEÑO */}
+
+            <div className="mb-4 flex justify-center">
+
+              <Image
+                src="/logo-foodshortai.png"
+                alt="ShortBizAI"
+                width={130}
+                height={130}
+                priority
+                className="h-auto w-[110px] object-contain sm:w-[130px]"
+              />
+
+            </div>
+
+            {/* BIENVENIDA */}
+
+            <div className="text-center">
+
+              <h1 className="text-3xl font-black leading-tight tracking-tight text-gray-950 sm:text-4xl">
+
+                {t.bienvenida}
+
+                <span className="mt-1 block text-blue-600">
+                  {empresa.nombre}
+                </span>
+
+              </h1>
+
+              <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
+                {t.descripcion}
+              </p>
+
+            </div>
+
+          </div>
+
+          {/* ===================================================
+              NOTIFICACIONES
+          ==================================================== */}
+
+          <div className="border-y border-gray-200 bg-gray-50 px-5 py-5 sm:px-8">
+
+            {!notificacionesActivas ? (
+
+              <div>
+
+                <p className="text-center text-lg font-bold text-gray-950 sm:text-xl">
+                  {t.reservarTitulo}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={
+                    registrarNotificaciones
+                  }
+                  disabled={
+                    activandoNotificaciones
+                  }
+                  className="mt-4 min-h-[54px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                >
+
+                  {activandoNotificaciones
+                    ? t.activando
+                    : t.activarBoton}
+
+                </button>
+
+                {errorNotificaciones && (
+
+                  <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium leading-6 text-red-700">
+
+                    {errorNotificaciones}
+
+                  </div>
+
+                )}
+
+              </div>
+
+            ) : (
+
+              <div className="flex items-center gap-3">
+
+                <div className="text-2xl">
+                  🔔
+                </div>
+
+                <div>
+
+                  <p className="font-bold text-green-700">
+                    {t.notificacionesActivadas}
+                  </p>
+
+                  <p className="mt-1 text-sm leading-6 text-green-700">
+                    {t.dispositivoListo}
+                  </p>
+
+                </div>
+
+              </div>
+
+            )}
+
+          </div>
+
+          {/* ===================================================
+              CHATBOT
+          ==================================================== */}
+
+          <div className="flex flex-col">
+
+            {/* CABECERA DEL CHAT */}
+
+            <div className="flex items-center gap-3 border-b border-gray-200 px-5 py-4 sm:px-7">
+
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-xl shadow-sm">
+                🤖
+              </div>
+
+              <div>
+
+                <p className="font-black text-gray-950">
+                  ShortBizAI
+                </p>
+
+                <p className="text-xs text-green-600">
+
+                  ●{" "}
+
+                  {idioma === "es"
+                    ? "Asistente disponible"
+                    : "Assistant available"}
+
+                </p>
+
+              </div>
+
+            </div>
+
+            {/* =================================================
+                MENSAJES
+            ================================================== */}
+
+            <div
+              ref={mensajesRef}
+              className="max-h-[500px] min-h-[380px] space-y-4 overflow-y-auto bg-gray-50 px-4 py-5 sm:px-6"
+            >
+
+              {mensajes.map(
+                (mensaje) => (
+
+                  <div
+                    key={mensaje.id}
+                    className={`flex ${
+                      mensaje.tipo ===
+                      "usuario"
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
+                  >
+
+                    <div
+                      className={`max-w-[85%] whitespace-pre-line rounded-2xl px-4 py-3 text-[15px] leading-6 shadow-sm ${
+                        mensaje.tipo ===
+                        "usuario"
+                          ? "rounded-br-md bg-blue-600 text-white"
+                          : "rounded-bl-md border border-gray-200 bg-white text-gray-800"
+                      }`}
+                    >
+
+                      {mensaje.texto}
+
+                    </div>
+
+                  </div>
+
+                )
+              )}
+
+              {/* INDICADOR DE PROCESAMIENTO */}
+
+              {guardando && (
+
+                <div className="flex justify-start">
+
+                  <div className="rounded-2xl rounded-bl-md border border-gray-200 bg-white px-4 py-3 shadow-sm">
+
+                    <div className="flex items-center gap-1">
+
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
+
+                      <span
+                        className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                        style={{
+                          animationDelay:
+                            "150ms",
+                        }}
+                      />
+
+                      <span
+                        className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                        style={{
+                          animationDelay:
+                            "300ms",
+                        }}
+                      />
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              )}
+
+            </div>
+
+            {/* =================================================
+                BOTONES DE CONFIRMACIÓN
+            ================================================== */}
+
+            {paso === "confirmacion" &&
+              !guardando && (
+
+                <div className="border-t border-gray-200 bg-white px-4 py-4 sm:px-6">
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        enviarMensajeDirecto(
+                          idioma === "es"
+                            ? "Sí, enviar reserva"
+                            : "Yes, send reservation"
+                        )
+                      }
+                      className="min-h-[52px] rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700"
+                    >
+                      ✅ {t.si}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        enviarMensajeDirecto(
+                          idioma === "es"
+                            ? "No, quiero corregir"
+                            : "No, I want to correct it"
+                        )
+                      }
+                      className="min-h-[52px] rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-100"
+                    >
+                      ✏️ {t.no}
+                    </button>
+
+                  </div>
+
+                </div>
+
+              )}
+
+            {/* =================================================
+                INPUT DEL CHATBOT
+            ================================================== */}
+
+            {paso !== "finalizado" &&
+              paso !== "confirmacion" && (
+
+                <div className="border-t border-gray-200 bg-white p-4 sm:p-5">
+
+                  <div className="flex items-end gap-3">
+
+                    <input
+                      type={
+                        paso === "telefono"
+                          ? "tel"
+                          : "text"
+                      }
+                      value={entrada}
+                      onChange={(e) =>
+                        setEntrada(
+                          e.target.value
+                        )
+                      }
+                      onKeyDown={
+                        manejarTecla
+                      }
+                      placeholder={
+                        idioma === "es"
+                          ? "Escribe tu respuesta..."
+                          : "Type your answer..."
+                      }
+                      disabled={guardando}
+                      autoComplete="off"
+                      inputMode={
+                        paso === "telefono"
+                          ? "tel"
+                          : "text"
+                      }
+                      className="min-h-[52px] flex-1 rounded-2xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={
+                        enviarMensaje
+                      }
+                      disabled={
+                        guardando ||
+                        !entrada.trim()
+                      }
+                      className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-xl text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                    >
+                      ➤
+                    </button>
+
+                  </div>
+
+                </div>
+
+              )}
+
+            {/* =================================================
+                RESERVA FINALIZADA
+            ================================================== */}
+
+            {paso === "finalizado" && (
+
+              <div className="border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
+
+                {mensajeExito && (
+
+                  <div className="mb-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-4 text-sm font-semibold leading-6 text-green-800">
+
+                    {mensajeExito}
+
+                  </div>
+
+                )}
+
+                {errorReserva && (
+
+                  <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold leading-6 text-red-700">
+
+                    {errorReserva}
+
+                  </div>
+
+                )}
+
+                <button
+                  type="button"
+                  onClick={
+                    reiniciarConversacion
+                  }
+                  className="min-h-[52px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white transition hover:bg-blue-700"
+                >
+
+                  {t.nuevaReserva}
+
+                </button>
+
+              </div>
+
+            )}
+
+          </div>
+
+        </section>
+
+      </div>
+
+    </main>
+  );
 }
