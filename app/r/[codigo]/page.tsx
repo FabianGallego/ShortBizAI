@@ -1,121 +1,172 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
+type Props = {
+  params: Promise<{
+    codigo: string;
+  }>;
+};
 
 export default async function EmpresaPorCodigoPage({
   params,
-}: {
-  params: Promise<{ codigo: string }>;
-}) {
+}: Props) {
   const { codigo } = await params;
 
-  const codigoLimpio = decodeURIComponent(codigo).trim();
+  // =====================================================
+  // BUSCAR EMPRESA POR CÓDIGO PÚBLICO
+  // =====================================================
 
   const { data: empresa, error } = await supabaseAdmin
     .from("empresas")
     .select(
-      "id, nombre, tipo, ciudad, pais, codigo_publico"
+      "id, nombre, tipo, ciudad, codigo_publico"
     )
-    .eq("codigo_publico", codigoLimpio)
+    .eq("codigo_publico", codigo)
     .maybeSingle();
+
+  // =====================================================
+  // EMPRESA NO ENCONTRADA
+  // =====================================================
 
   if (error) {
     console.error(
-      "ERROR BUSCANDO EMPRESA POR CÓDIGO:",
+      "ERROR BUSCANDO EMPRESA:",
       error
     );
 
-    throw new Error(
-      "No se pudo consultar la empresa"
-    );
+    notFound();
   }
 
   if (!empresa) {
     notFound();
   }
 
+  // =====================================================
+  // URL DEL AGENTE
+  // =====================================================
+
+  const urlReserva =
+    `/cliente/agente-aaf?empresaId=${encodeURIComponent(
+      String(empresa.id)
+    )}&codigo=${encodeURIComponent(
+      empresa.codigo_publico
+    )}`;
+
+  // =====================================================
+  // PÁGINA
+  // =====================================================
+
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px",
-        background: "#f5f5f5",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "600px",
-          background: "#ffffff",
-          borderRadius: "20px",
-          padding: "32px",
-          boxShadow:
-            "0 10px 30px rgba(0,0,0,0.08)",
-        }}
-      >
-        <h1
-          style={{
-            fontSize: "32px",
-            fontWeight: 700,
-            marginBottom: "12px",
-          }}
-        >
-          {empresa.nombre}
-        </h1>
+    <main className="min-h-screen bg-gray-100 px-4 py-10">
 
-        <p
-          style={{
-            fontSize: "18px",
-            marginBottom: "8px",
-          }}
-        >
-          {empresa.tipo || "Restaurante"}
-        </p>
+      <div className="mx-auto max-w-xl">
 
-        <p
-          style={{
-            color: "#666",
-            marginBottom: "24px",
-          }}
-        >
-          {empresa.ciudad}
-          {empresa.pais
-            ? `, ${empresa.pais}`
-            : ""}
-        </p>
+        <div className="overflow-hidden rounded-3xl bg-white shadow-xl">
 
-        <div
-          style={{
-            padding: "16px",
-            borderRadius: "12px",
-            background: "#f0f0f0",
-            marginBottom: "20px",
-          }}
-        >
-          <strong>Código detectado:</strong>
+          {/* =================================================
+              CABECERA
+          ================================================= */}
 
-          <div
-            style={{
-              marginTop: "6px",
-              fontFamily: "monospace",
-              fontSize: "18px",
-            }}
-          >
-            {empresa.codigo_publico}
+          <div className="bg-gray-950 px-6 py-8 text-white">
+
+            <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-green-400">
+              ShortBizAI
+            </p>
+
+            <h1 className="text-3xl font-black sm:text-4xl">
+              {empresa.nombre}
+            </h1>
+
+            <p className="mt-2 text-lg text-gray-300">
+              {empresa.tipo || "Business"}
+            </p>
+
+            {empresa.ciudad && (
+              <p className="mt-1 text-gray-400">
+                📍 {empresa.ciudad}
+              </p>
+            )}
+
           </div>
+
+          {/* =================================================
+              IDENTIFICACIÓN
+          ================================================= */}
+
+          <div className="px-6 py-8">
+
+            <div className="rounded-2xl border border-green-200 bg-green-50 p-5">
+
+              <div className="flex items-start gap-3">
+
+                <div className="text-2xl">
+                  ✅
+                </div>
+
+                <div>
+
+                  <h2 className="text-lg font-bold text-green-900">
+                    Empresa identificada
+                  </h2>
+
+                  <p className="mt-1 leading-6 text-green-800">
+                    ShortBizAI identificó correctamente
+                    esta empresa.
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* =================================================
+                CÓDIGO
+            ================================================= */}
+
+            <div className="mt-6 rounded-2xl bg-gray-100 p-5">
+
+              <p className="text-sm font-semibold text-gray-500">
+                Código de empresa
+              </p>
+
+              <p className="mt-2 font-mono text-xl font-bold text-gray-900">
+                {empresa.codigo_publico}
+              </p>
+
+            </div>
+
+            {/* =================================================
+                RESERVA
+            ================================================= */}
+
+            <div className="mt-8">
+
+              <h2 className="text-2xl font-black text-gray-950">
+                ¿Quieres hacer una reserva?
+              </h2>
+
+              <p className="mt-2 leading-6 text-gray-600">
+                Nuestro asistente puede ayudarte a
+                solicitar tu reserva.
+              </p>
+
+              <Link
+                href={urlReserva}
+                className="mt-6 flex min-h-[58px] w-full items-center justify-center rounded-2xl bg-blue-600 px-6 text-lg font-bold text-white shadow-lg transition hover:bg-blue-700"
+              >
+                🍽️ Reservar ahora
+              </Link>
+
+            </div>
+
+          </div>
+
         </div>
 
-        <p
-          style={{
-            color: "#555",
-          }}
-        >
-          ✅ ShortBizAI identificó correctamente esta
-          empresa.
-        </p>
       </div>
+
     </main>
   );
 }
