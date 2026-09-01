@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import NotificacionesObligatorias from "@/app/components/NotificacionesObligatorias";
@@ -76,9 +75,8 @@ function convertirHora(hora: string) {
 }
 
 export default function AgenteAAFPage() {
-  const searchParams = useSearchParams();
-
-  const empresaId = searchParams.get("empresaId");
+  const [empresaId, setEmpresaId] =
+    useState<string | null>(null);
 
   const [empresa, setEmpresa] =
     useState<Empresa | null>(null);
@@ -151,89 +149,127 @@ export default function AgenteAAFPage() {
   const textos = {
     es: {
       cargando: "Cargando...",
+
       bienvenida:
         "🍽️ ShortBizAI te da la bienvenida a",
+
       descripcion:
         "Disfruta de nuestro exquisito menú y reserva tu mesa de manera rápida y sencilla.",
+
       completa:
         "Simplemente completa el formulario.",
 
       saludo:
         "¡Hola! 👋 Será un placer ayudarte a reservar tu mesa.",
+
       preguntaNombre:
         "¿A nombre de quién deseas hacer la reserva?",
+
       preguntaTelefono:
         "Perfecto. ¿Cuál es tu número de teléfono?",
+
       preguntaFecha:
         "Gracias. ¿Para qué fecha deseas reservar?",
+
       preguntaHora:
         "Perfecto. ¿A qué hora deseas reservar?",
+
       preguntaPersonas:
         "¿Para cuántas personas será la reserva?",
 
       fechaInvalida:
         "Por favor indícame una fecha válida.",
+
       horaInvalida:
         "Por favor indícame una hora válida.",
+
       personasInvalidas:
         "Por favor indícame un número válido de personas.",
+
       telefonoInvalido:
         "El número de teléfono debe tener 10 dígitos.",
 
       resumen:
         "Perfecto. Tengo todos los datos de tu reserva:",
-      resumenNombre: "Nombre",
-      resumenTelefono: "Teléfono",
-      resumenFecha: "Fecha",
-      resumenHora: "Hora",
-      resumenPersonas: "Personas",
+
+      resumenNombre:
+        "Nombre",
+
+      resumenTelefono:
+        "Teléfono",
+
+      resumenFecha:
+        "Fecha",
+
+      resumenHora:
+        "Hora",
+
+      resumenPersonas:
+        "Personas",
 
       confirmar:
         "¿Deseas que envíe esta solicitud al restaurante?",
+
       si:
         "Sí, enviar reserva",
+
       no:
         "No, quiero corregir",
 
       reservaEnviada:
         "🎉 ¡Listo! Tu solicitud de reserva fue enviada al restaurante.",
+
       esperando:
         "El restaurante debe confirmar o cancelar tu solicitud. Te avisaremos directamente en este dispositivo.",
+
       nuevaReserva:
         "Hacer otra reserva",
 
       notificacionesTitulo:
         "Activa las notificaciones",
+
       notificacionesTexto:
         "Para recibir directamente en este dispositivo la confirmación o cancelación de tu reserva, debes activar las notificaciones.",
+
       soloAvisos:
         "Solo recibirás avisos relacionados con tu reserva.",
+
       activarBoton:
         "🔔 Activar notificaciones",
+
       activando:
         "Activando...",
+
       notificacionesActivadas:
         "Notificaciones activadas",
+
       dispositivoListo:
         "Este dispositivo está listo para recibir la confirmación o cancelación de tu reserva.",
 
       navegadorNoSoporta:
         "Este navegador no soporta notificaciones.",
+
       pushNoSoporta:
         "Este navegador no soporta notificaciones Push.",
+
       configuracionFaltante:
         "No se encontró la configuración de notificaciones.",
+
       registrarError:
         "No pudimos registrar este dispositivo. Inténtalo nuevamente.",
+
       activarError:
         "No pudimos activar las notificaciones. Inténtalo nuevamente.",
+
       errorNotificaciones:
         "Debes permitir las notificaciones para recibir la confirmación o cancelación de tu reserva.",
 
       empresaNoIdentificada:
         "No pudimos identificar el restaurante.",
+
       errorGuardar:
         "No pude guardar la reserva. Por favor inténtalo nuevamente.",
+
       errorTelegram:
         "La reserva fue guardada, pero no pudimos enviar el aviso al restaurante.",
     },
@@ -241,94 +277,127 @@ export default function AgenteAAFPage() {
     en: {
       cargando:
         "Loading...",
+
       bienvenida:
         "🍽️ ShortBizAI welcomes you to",
+
       descripcion:
         "Enjoy our exquisite menu and reserve your table quickly and easily.",
+
       completa:
         "Simply complete the form.",
 
       saludo:
         "Hello! 👋 I'll be happy to help you reserve your table.",
+
       preguntaNombre:
         "What name should I put the reservation under?",
+
       preguntaTelefono:
         "Perfect. What is your phone number?",
+
       preguntaFecha:
         "Thank you. What date would you like to reserve?",
+
       preguntaHora:
         "Perfect. What time would you like to reserve?",
+
       preguntaPersonas:
         "How many people will be joining?",
 
       fechaInvalida:
         "Please provide a valid date.",
+
       horaInvalida:
         "Please provide a valid time.",
+
       personasInvalidas:
         "Please provide a valid number of people.",
+
       telefonoInvalido:
         "The phone number must have 10 digits.",
 
       resumen:
         "Perfect. I have all the details for your reservation:",
+
       resumenNombre:
         "Name",
+
       resumenTelefono:
         "Phone",
+
       resumenFecha:
         "Date",
+
       resumenHora:
         "Time",
+
       resumenPersonas:
         "People",
 
       confirmar:
         "Would you like me to send this request to the restaurant?",
+
       si:
         "Yes, send reservation",
+
       no:
         "No, I want to correct it",
 
       reservaEnviada:
         "🎉 Done! Your reservation request has been sent to the restaurant.",
+
       esperando:
         "The restaurant must confirm or cancel your request. We will notify you directly on this device.",
+
       nuevaReserva:
         "Make another reservation",
 
       notificacionesTitulo:
         "Enable notifications",
+
       notificacionesTexto:
         "To receive your reservation confirmation or cancellation directly on this device, you must enable notifications.",
+
       soloAvisos:
         "You will only receive notifications related to your reservation.",
+
       activarBoton:
         "🔔 Enable notifications",
+
       activando:
         "Activating...",
+
       notificacionesActivadas:
         "Notifications enabled",
+
       dispositivoListo:
         "This device is ready to receive your reservation confirmation or cancellation.",
 
       navegadorNoSoporta:
         "This browser does not support notifications.",
+
       pushNoSoporta:
         "This browser does not support Push notifications.",
+
       configuracionFaltante:
         "Notification configuration was not found.",
+
       registrarError:
         "We could not register this device. Please try again.",
+
       activarError:
         "We could not enable notifications. Please try again.",
+
       errorNotificaciones:
-        "You must allow notifications to receive your reservation confirmation or cancellation.",
+        "You must allow notifications to receive the confirmation or cancellation of your reservation.",
 
       empresaNoIdentificada:
         "We could not identify the restaurant.",
+
       errorGuardar:
         "We could not save the reservation. Please try again.",
+
       errorTelegram:
         "The reservation was saved, but we could not notify the restaurant.",
     },
@@ -336,13 +405,34 @@ export default function AgenteAAFPage() {
 
   const t = textos[idioma];
 
+  /*
+   * OBTENER EMPRESA DESDE LA URL
+   *
+   * Ya no usamos useSearchParams().
+   * Esto evita el problema de prerender/build
+   * que estaba teniendo Vercel con Next.js.
+   */
+  useEffect(() => {
+    const params = new URLSearchParams(
+      window.location.search
+    );
+
+    const id =
+      params.get("empresaId");
+
+    setEmpresaId(id);
+  }, []);
+
+  /*
+   * CARGAR EMPRESA
+   */
   useEffect(() => {
     async function cargarEmpresa() {
       if (!empresaId) {
-        setEmpresa(null);
-        setCargandoEmpresa(false);
         return;
       }
+
+      setCargandoEmpresa(true);
 
       const { data, error } =
         await supabase
@@ -356,6 +446,7 @@ export default function AgenteAAFPage() {
           "ERROR BUSCANDO EMPRESA:",
           error
         );
+
         setEmpresa(null);
       } else {
         setEmpresa(data);
@@ -367,6 +458,9 @@ export default function AgenteAAFPage() {
     cargarEmpresa();
   }, [empresaId]);
 
+  /*
+   * INICIAR CHATBOT
+   */
   useEffect(() => {
     if (!empresa) return;
 
@@ -374,17 +468,22 @@ export default function AgenteAAFPage() {
       {
         id: Date.now(),
         tipo: "ia",
-        texto: `${t.saludo}\n\n${t.preguntaNombre}`,
+        texto:
+          `${t.saludo}\n\n${t.preguntaNombre}`,
       },
     ]);
 
     setPaso("nombre");
   }, [empresa, idioma]);
 
+  /*
+   * AUTO SCROLL DEL CHAT
+   */
   useEffect(() => {
     if (mensajesRef.current) {
       mensajesRef.current.scrollTo({
-        top: mensajesRef.current.scrollHeight,
+        top:
+          mensajesRef.current.scrollHeight,
         behavior: "smooth",
       });
     }
@@ -406,6 +505,9 @@ export default function AgenteAAFPage() {
     ]);
   }
 
+  /*
+   * REGISTRAR NOTIFICACIONES PUSH
+   */
   async function registrarNotificaciones() {
     setActivandoNotificaciones(true);
     setErrorNotificaciones("");
@@ -415,6 +517,7 @@ export default function AgenteAAFPage() {
         setErrorNotificaciones(
           t.navegadorNoSoporta
         );
+
         return;
       }
 
@@ -422,6 +525,7 @@ export default function AgenteAAFPage() {
         setErrorNotificaciones(
           t.pushNoSoporta
         );
+
         return;
       }
 
@@ -429,6 +533,7 @@ export default function AgenteAAFPage() {
         setErrorNotificaciones(
           t.navegadorNoSoporta
         );
+
         return;
       }
 
@@ -442,9 +547,11 @@ export default function AgenteAAFPage() {
 
       if (permiso !== "granted") {
         setNotificacionesActivas(false);
+
         setErrorNotificaciones(
           t.errorNotificaciones
         );
+
         return;
       }
 
@@ -478,6 +585,7 @@ export default function AgenteAAFPage() {
         subscription =
           await registro.pushManager.subscribe({
             userVisibleOnly: true,
+
             applicationServerKey:
               urlBase64ToUint8Array(
                 vapidKey
@@ -493,10 +601,12 @@ export default function AgenteAAFPage() {
       const respuesta =
         await fetch("/api/push", {
           method: "POST",
+
           headers: {
             "Content-Type":
               "application/json",
           },
+
           body: JSON.stringify({
             subscription,
           }),
@@ -512,6 +622,7 @@ export default function AgenteAAFPage() {
         );
 
         setNotificacionesActivas(false);
+
         setErrorNotificaciones(
           t.registrarError
         );
@@ -528,6 +639,7 @@ export default function AgenteAAFPage() {
       );
 
       setNotificacionesActivas(false);
+
       setErrorNotificaciones(
         t.activarError
       );
@@ -536,6 +648,9 @@ export default function AgenteAAFPage() {
     }
   }
 
+  /*
+   * REINICIAR CONVERSACIÓN
+   */
   function reiniciarConversacion() {
     setNombre("");
     setTelefono("");
@@ -551,15 +666,20 @@ export default function AgenteAAFPage() {
       {
         id: Date.now(),
         tipo: "ia",
-        texto: `${t.saludo}\n\n${t.preguntaNombre}`,
+        texto:
+          `${t.saludo}\n\n${t.preguntaNombre}`,
       },
     ]);
 
     setPaso("nombre");
   }
 
+  /*
+   * ENVIAR MENSAJE DEL CHATBOT
+   */
   async function enviarMensaje() {
-    const texto = entrada.trim();
+    const texto =
+      entrada.trim();
 
     if (!texto) return;
 
@@ -567,16 +687,23 @@ export default function AgenteAAFPage() {
 
     setEntrada("");
 
-    agregarMensaje("usuario", texto);
+    agregarMensaje(
+      "usuario",
+      texto
+    );
 
     setErrorReserva("");
 
+    /*
+     * NOMBRE
+     */
     if (paso === "nombre") {
       if (texto.length < 2) {
         agregarMensaje(
           "ia",
           t.preguntaNombre
         );
+
         return;
       }
 
@@ -592,17 +719,25 @@ export default function AgenteAAFPage() {
       return;
     }
 
+    /*
+     * TELÉFONO
+     */
     if (paso === "telefono") {
       const telefonoLimpio =
-        texto.replace(/\D/g, "");
+        texto.replace(
+          /\D/g,
+          ""
+        );
 
       if (
-        telefonoLimpio.length !== 10
+        telefonoLimpio.length !==
+        10
       ) {
         agregarMensaje(
           "ia",
           t.telefonoInvalido
         );
+
         return;
       }
 
@@ -620,8 +755,12 @@ export default function AgenteAAFPage() {
       return;
     }
 
+    /*
+     * FECHA
+     */
     if (paso === "fecha") {
-      let fechaValida = texto;
+      let fechaValida =
+        texto;
 
       const formatoFecha =
         /^\d{4}-\d{2}-\d{2}$/;
@@ -638,10 +777,16 @@ export default function AgenteAAFPage() {
           texto.split("/");
 
         const dia =
-          partes[0].padStart(2, "0");
+          partes[0].padStart(
+            2,
+            "0"
+          );
 
         const mes =
-          partes[1].padStart(2, "0");
+          partes[1].padStart(
+            2,
+            "0"
+          );
 
         const anio =
           partes[2];
@@ -659,6 +804,7 @@ export default function AgenteAAFPage() {
           "ia",
           t.fechaInvalida
         );
+
         return;
       }
 
@@ -676,14 +822,17 @@ export default function AgenteAAFPage() {
           "ia",
           t.fechaInvalida
         );
+
         return;
       }
 
-      setFecha(fechaValida);
+      setFecha(
+        fechaValida
+      );
 
       agregarMensaje(
         "ia",
-        `${t.preguntaHora}`
+        t.preguntaHora
       );
 
       setPaso("hora");
@@ -691,21 +840,27 @@ export default function AgenteAAFPage() {
       return;
     }
 
+    /*
+     * HORA
+     */
     if (paso === "hora") {
       const formatoHora =
         /^\d{1,2}:\d{2}$/;
 
       if (
-        !formatoHora.test(texto)
+        !formatoHora.test(
+          texto
+        )
       ) {
         agregarMensaje(
           "ia",
           t.horaInvalida
         );
+
         return;
       }
 
-      let [h, m] =
+      const [h, m] =
         texto.split(":");
 
       const horas =
@@ -724,14 +879,19 @@ export default function AgenteAAFPage() {
           "ia",
           t.horaInvalida
         );
+
         return;
       }
 
       const horaFormateada =
-        `${String(horas).padStart(
+        `${String(
+          horas
+        ).padStart(
           2,
           "0"
-        )}:${String(minutos).padStart(
+        )}:${String(
+          minutos
+        ).padStart(
           2,
           "0"
         )}`;
@@ -750,6 +910,9 @@ export default function AgenteAAFPage() {
       return;
     }
 
+    /*
+     * PERSONAS
+     */
     if (paso === "personas") {
       const numero =
         Number(
@@ -770,6 +933,7 @@ export default function AgenteAAFPage() {
           "ia",
           t.personasInvalidas
         );
+
         return;
       }
 
@@ -787,7 +951,9 @@ export default function AgenteAAFPage() {
             );
 
       const horaTexto =
-        convertirHora(hora);
+        convertirHora(
+          hora
+        );
 
       const resumen =
         `${t.resumen}\n\n` +
@@ -809,8 +975,12 @@ export default function AgenteAAFPage() {
       return;
     }
 
+    /*
+     * CONFIRMACIÓN
+     */
     if (
-      paso === "confirmacion"
+      paso ===
+      "confirmacion"
     ) {
       const respuesta =
         texto.toLowerCase();
@@ -825,10 +995,11 @@ export default function AgenteAAFPage() {
           "confirmo",
           "dale",
           "correcto",
-        ].some((palabra) =>
-          respuesta.includes(
-            palabra
-          )
+        ].some(
+          (palabra) =>
+            respuesta.includes(
+              palabra
+            )
         );
 
       const negativo =
@@ -837,10 +1008,11 @@ export default function AgenteAAFPage() {
           "corregir",
           "cambiar",
           "change",
-        ].some((palabra) =>
-          respuesta.includes(
-            palabra
-          )
+        ].some(
+          (palabra) =>
+            respuesta.includes(
+              palabra
+            )
         );
 
       if (afirmativo) {
@@ -875,6 +1047,9 @@ export default function AgenteAAFPage() {
     }
   }
 
+  /*
+   * CREAR RESERVA
+   */
   async function crearReserva() {
     if (guardando) return;
 
@@ -940,16 +1115,22 @@ export default function AgenteAAFPage() {
             {
               empresa_id:
                 empresaId,
+
               cliente_nombre:
                 nombre.trim(),
+
               telefono:
                 telefono,
+
               fecha,
+
               hora,
+
               personas:
                 String(
                   numeroPersonas
                 ),
+
               push_endpoint:
                 pushEndpoint,
             },
@@ -980,33 +1161,47 @@ export default function AgenteAAFPage() {
         data
       );
 
+      /*
+       * NOTIFICAR AL RESTAURANTE
+       * POR TELEGRAM
+       */
       try {
         const respuestaTelegram =
           await fetch(
             "/api/reservas/notificar",
             {
               method: "POST",
+
               headers: {
                 "Content-Type":
                   "application/json",
               },
+
               body: JSON.stringify({
                 reservaId:
                   data.id,
+
                 empresaId:
                   empresaId,
+
                 empresaNombre:
                   empresa.nombre,
+
                 cliente_nombre:
                   nombre.trim(),
+
                 telefono:
                   telefono,
+
                 fecha,
+
                 hora,
+
                 personas:
                   String(
                     numeroPersonas
                   ),
+
                 pushEndpoint:
                   pushEndpoint,
               }),
@@ -1031,7 +1226,10 @@ export default function AgenteAAFPage() {
         );
       }
 
-      setReservaCreada(true);
+      setReservaCreada(
+        true
+      );
+
       setMensajeExito(
         t.reservaEnviada
       );
@@ -1061,33 +1259,47 @@ export default function AgenteAAFPage() {
     }
   }
 
+  /*
+   * ENTER PARA ENVIAR
+   */
   function manejarTecla(
     e: React.KeyboardEvent<HTMLInputElement>
   ) {
     if (e.key === "Enter") {
       e.preventDefault();
+
       enviarMensaje();
     }
   }
 
+  /*
+   * CARGANDO EMPRESA
+   */
   if (cargandoEmpresa) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
         <div className="text-center">
+
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
 
           <p className="font-medium text-gray-600">
             {t.cargando}
           </p>
+
         </div>
       </main>
     );
   }
 
+  /*
+   * EMPRESA NO ENCONTRADA
+   */
   if (!empresa) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+
         <div className="w-full max-w-lg rounded-3xl bg-white p-8 text-center shadow-xl">
+
           <div className="mb-4 text-5xl">
             🍽️
           </div>
@@ -1095,18 +1307,23 @@ export default function AgenteAAFPage() {
           <h1 className="text-2xl font-black text-gray-950">
             {t.empresaNoIdentificada}
           </h1>
+
         </div>
+
       </main>
     );
   }
 
   return (
     <NotificacionesObligatorias>
+
       <main className="min-h-screen bg-gray-50 text-gray-900">
+
         <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-8">
 
           {/* IDIOMA */}
           <div className="mb-5 flex justify-end">
+
             <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
 
               <button
@@ -1138,6 +1355,7 @@ export default function AgenteAAFPage() {
               </button>
 
             </div>
+
           </div>
 
           <section className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl">
@@ -1146,6 +1364,7 @@ export default function AgenteAAFPage() {
             <div className="px-5 pb-6 pt-7 sm:px-8 sm:pb-7 sm:pt-8">
 
               <div className="mb-6 flex justify-center">
+
                 <Image
                   src="/logo-foodshortai.png"
                   alt="ShortBizAI"
@@ -1154,6 +1373,7 @@ export default function AgenteAAFPage() {
                   priority
                   className="h-auto w-[170px] object-contain sm:w-[210px]"
                 />
+
               </div>
 
               <div className="text-center">
@@ -1177,6 +1397,7 @@ export default function AgenteAAFPage() {
                 </p>
 
               </div>
+
             </div>
 
             {/* NOTIFICACIONES */}
@@ -1270,15 +1491,18 @@ export default function AgenteAAFPage() {
                 </div>
 
                 <div>
+
                   <p className="font-black text-gray-950">
                     ShortBizAI
                   </p>
 
                   <p className="text-xs text-green-600">
-                    ● {idioma === "es"
+                    ●{" "}
+                    {idioma === "es"
                       ? "Asistente disponible"
                       : "Assistant available"}
                   </p>
+
                 </div>
 
               </div>
@@ -1319,12 +1543,15 @@ export default function AgenteAAFPage() {
                 )}
 
                 {guardando && (
+
                   <div className="flex justify-start">
 
                     <div className="rounded-2xl rounded-bl-md border border-gray-200 bg-white px-4 py-3 shadow-sm">
 
                       <div className="flex items-center gap-1">
+
                         <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
+
                         <span
                           className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
                           style={{
@@ -1332,6 +1559,7 @@ export default function AgenteAAFPage() {
                               "150ms",
                           }}
                         />
+
                         <span
                           className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
                           style={{
@@ -1339,18 +1567,22 @@ export default function AgenteAAFPage() {
                               "300ms",
                           }}
                         />
+
                       </div>
 
                     </div>
 
                   </div>
+
                 )}
 
               </div>
 
               {/* BOTONES DE CONFIRMACIÓN */}
-              {paso === "confirmacion" &&
+              {paso ===
+                "confirmacion" &&
                 !guardando && (
+
                   <div className="border-t border-gray-200 bg-white px-4 py-4 sm:px-6">
 
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -1386,18 +1618,23 @@ export default function AgenteAAFPage() {
                     </div>
 
                   </div>
+
                 )}
 
               {/* INPUT DEL CHAT */}
-              {paso !== "finalizado" &&
-                paso !== "confirmacion" && (
+              {paso !==
+                "finalizado" &&
+                paso !==
+                "confirmacion" && (
+
                   <div className="border-t border-gray-200 bg-white p-4 sm:p-5">
 
                     <div className="flex items-end gap-3">
 
                       <input
                         type={
-                          paso === "telefono"
+                          paso ===
+                          "telefono"
                             ? "tel"
                             : "text"
                         }
@@ -1415,10 +1652,13 @@ export default function AgenteAAFPage() {
                             ? "Escribe tu respuesta..."
                             : "Type your answer..."
                         }
-                        disabled={guardando}
+                        disabled={
+                          guardando
+                        }
                         autoComplete="off"
                         inputMode={
-                          paso === "telefono"
+                          paso ===
+                          "telefono"
                             ? "tel"
                             : "text"
                         }
@@ -1442,22 +1682,29 @@ export default function AgenteAAFPage() {
                     </div>
 
                   </div>
+
                 )}
 
               {/* RESERVA FINALIZADA */}
-              {paso === "finalizado" && (
+              {paso ===
+                "finalizado" && (
+
                 <div className="border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
 
                   {mensajeExito && (
+
                     <div className="mb-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-4 text-sm font-semibold leading-6 text-green-800">
                       {mensajeExito}
                     </div>
+
                   )}
 
                   {errorReserva && (
+
                     <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold leading-6 text-red-700">
                       {errorReserva}
                     </div>
+
                   )}
 
                   <button
@@ -1471,6 +1718,7 @@ export default function AgenteAAFPage() {
                   </button>
 
                 </div>
+
               )}
 
             </div>
@@ -1478,10 +1726,15 @@ export default function AgenteAAFPage() {
           </section>
 
         </div>
+
       </main>
+
     </NotificacionesObligatorias>
   );
 
+  /*
+   * BOTONES DE CONFIRMACIÓN
+   */
   async function enviarMensajeDirecto(
     texto: string
   ) {
@@ -1493,8 +1746,10 @@ export default function AgenteAAFPage() {
     );
 
     if (
-      paso === "confirmacion"
+      paso ===
+      "confirmacion"
     ) {
+
       const respuesta =
         texto.toLowerCase();
 
@@ -1508,14 +1763,16 @@ export default function AgenteAAFPage() {
           "confirmo",
           "dale",
           "correcto",
-        ].some((palabra) =>
-          respuesta.includes(
-            palabra
-          )
+        ].some(
+          (palabra) =>
+            respuesta.includes(
+              palabra
+            )
         );
 
       if (afirmativo) {
         await crearReserva();
+
         return;
       }
 
