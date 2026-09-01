@@ -1,148 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import NotificacionesObligatorias from "@/app/components/NotificacionesObligatorias";
 
-function convertirFecha(fecha: string): string | null {
-  const meses: Record<string, string> = {
-    enero: "01",
-    febrero: "02",
-    marzo: "03",
-    abril: "04",
-    mayo: "05",
-    junio: "06",
-    julio: "07",
-    agosto: "08",
-    septiembre: "09",
-    octubre: "10",
-    noviembre: "11",
-    diciembre: "12",
-  };
-
-  const texto = fecha.toLowerCase().trim();
-
-  let m = texto.match(
-    /^([a-zñ]+)\s+(\d{1,2})\s+de\s+(\d{4})$/
-  );
-
-  if (m) {
-    const mes = meses[m[1]];
-
-    if (!mes) return null;
-
-    return `${m[3]}-${mes}-${m[2].padStart(2, "0")}`;
-  }
-
-  m = texto.match(
-    /^(\d{1,2})\s+de\s+([a-zñ]+)\s+de\s+(\d{4})$/
-  );
-
-  if (m) {
-    const mes = meses[m[2]];
-
-    if (!mes) return null;
-
-    return `${m[3]}-${mes}-${m[1].padStart(2, "0")}`;
-  }
-
-  return null;
-}
-
-function convertirFechaIngles(fecha: string): string | null {
-  const meses: Record<string, string> = {
-    january: "01",
-    february: "02",
-    march: "03",
-    april: "04",
-    may: "05",
-    june: "06",
-    july: "07",
-    august: "08",
-    september: "09",
-    october: "10",
-    november: "11",
-    december: "12",
-  };
-
-  const texto = fecha.toLowerCase().trim();
-
-  let m = texto.match(
-    /^([a-z]+)\s+(\d{1,2}),?\s+(\d{4})$/
-  );
-
-  if (m) {
-    const mes = meses[m[1]];
-
-    if (!mes) return null;
-
-    return `${m[3]}-${mes}-${m[2].padStart(2, "0")}`;
-  }
-
-  m = texto.match(
-    /^(\d{1,2})\s+([a-z]+)\s+(\d{4})$/
-  );
-
-  if (m) {
-    const mes = meses[m[2]];
-
-    if (!mes) return null;
-
-    return `${m[3]}-${mes}-${m[1].padStart(2, "0")}`;
-  }
-
-  return null;
-}
-
-function convertirHora(hora: string): string | null {
-  const texto = hora.toLowerCase().trim();
-
-  let m = texto.match(/^(\d{1,2})\s*(am|pm)$/);
-
-  if (m) {
-    let h = parseInt(m[1], 10);
-    const periodo = m[2];
-
-    if (h < 1 || h > 12) return null;
-
-    if (periodo === "pm" && h !== 12) h += 12;
-    if (periodo === "am" && h === 12) h = 0;
-
-    return `${String(h).padStart(2, "0")}:00`;
-  }
-
-  m = texto.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
-
-  if (m) {
-    let h = parseInt(m[1], 10);
-    const minutos = m[2];
-    const periodo = m[3];
-
-    if (h < 1 || h > 12) return null;
-
-    if (periodo === "pm" && h !== 12) h += 12;
-    if (periodo === "am" && h === 12) h = 0;
-
-    return `${String(h).padStart(2, "0")}:${minutos}`;
-  }
-
-  m = texto.match(/^(\d{1,2}):(\d{2})$/);
-
-  if (m) {
-    const h = parseInt(m[1], 10);
-    const minutos = m[2];
-
-    if (h < 0 || h > 23) return null;
-
-    return `${String(h).padStart(2, "0")}:${minutos}`;
-  }
-
-  return null;
-}
+type Empresa = {
+  id: number | string;
+  nombre: string;
+};
 
 type Mensaje = {
-  autor: string;
+  id: number;
+  tipo: "ia" | "usuario";
   texto: string;
 };
 
@@ -162,281 +33,102 @@ function urlBase64ToUint8Array(base64String: string) {
   );
 }
 
+function convertirFecha(fecha: string) {
+  if (!fecha) return "";
+
+  const partes = fecha.split("-");
+
+  if (partes.length !== 3) return fecha;
+
+  const [anio, mes, dia] = partes;
+
+  return `${dia}/${mes}/${anio}`;
+}
+
+function convertirFechaIngles(fecha: string) {
+  if (!fecha) return "";
+
+  const partes = fecha.split("-");
+
+  if (partes.length !== 3) return fecha;
+
+  const [anio, mes, dia] = partes;
+
+  return `${mes}/${dia}/${anio}`;
+}
+
+function convertirHora(hora: string) {
+  if (!hora) return "";
+
+  const [horas, minutos] = hora.split(":");
+
+  if (!horas || !minutos) return hora;
+
+  let h = Number(horas);
+
+  const periodo = h >= 12 ? "PM" : "AM";
+
+  h = h % 12;
+
+  if (h === 0) h = 12;
+
+  return `${h}:${minutos} ${periodo}`;
+}
+
 export default function AgenteAAFPage() {
-  // =====================================================
-  // IDIOMA
-  // =====================================================
+  const searchParams = useSearchParams();
 
-  // INGLÉS ES EL IDIOMA POR DEFECTO
+  const empresaId = searchParams.get("empresaId");
+
+  const [empresa, setEmpresa] =
+    useState<Empresa | null>(null);
+
+  const [cargandoEmpresa, setCargandoEmpresa] =
+    useState(true);
+
   const [idioma, setIdioma] =
-    useState<"es" | "en">("en");
+    useState<"es" | "en">("es");
 
-  // =====================================================
-  // RESERVA
-  // =====================================================
-
-  const [mensaje, setMensaje] = useState("");
-  const [paso, setPaso] = useState("inicio");
-
-  const [nombre, setNombre] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [fecha, setFecha] = useState("");
-  const [hora, setHora] = useState("");
-  const [personas, setPersonas] = useState("");
-
-  const [conversacion, setConversacion] =
+  const [mensajes, setMensajes] =
     useState<Mensaje[]>([]);
+
+  const [entrada, setEntrada] =
+    useState("");
+
+  const [paso, setPaso] = useState<
+    | "inicio"
+    | "nombre"
+    | "telefono"
+    | "fecha"
+    | "hora"
+    | "personas"
+    | "confirmacion"
+    | "finalizado"
+  >("inicio");
+
+  const [nombre, setNombre] =
+    useState("");
+
+  const [telefono, setTelefono] =
+    useState("");
+
+  const [fecha, setFecha] =
+    useState("");
+
+  const [hora, setHora] =
+    useState("");
+
+  const [personas, setPersonas] =
+    useState("");
 
   const [guardando, setGuardando] =
     useState(false);
 
-  // =====================================================
-  // TEXTOS
-  // =====================================================
-
-  const textos = {
-    en: {
-      titulo: "Reservation Center",
-
-      disponible:
-        "Smart assistant available 24/7",
-
-      activarTitulo:
-        "Enable notifications",
-
-      activarTexto:
-        "To receive the confirmation or cancellation of your reservation directly on this device, you must enable notifications.",
-
-      soloAvisos:
-        "You will only receive notifications related to your reservation.",
-
-      activarBoton:
-        "🔔 Enable notifications",
-
-      activando:
-        "Activating...",
-
-      notificacionesActivadas:
-        "Notifications enabled",
-
-      dispositivoListo:
-        "This device is ready to receive your reservation confirmation or cancellation.",
-
-      asistente:
-        "Reservation and Availability Assistant",
-
-      bienvenida:
-        "Welcome to the reservation and availability system. How can I help you?",
-
-      activarPrimero:
-        "🔔 Enable notifications to start your reservation.",
-
-      placeholder:
-        "Write your reservation request",
-
-      placeholderBloqueado:
-        "Enable notifications first",
-
-      consultar:
-        "Check Availability",
-
-      guardando:
-        "Saving...",
-
-      cliente:
-        "Customer",
-
-      asistenteNombre:
-        "Assistant",
-
-      reservaPregunta:
-        "Of course! What name should I put the reservation under?",
-
-      telefonoPregunta:
-        "What is your phone number?",
-
-      fechaPregunta:
-        "What date would you like the reservation for?",
-
-      horaPregunta:
-        "What time would you like the reservation for?",
-
-      personasPregunta:
-        "How many people will the reservation be for?",
-
-      inicioAyuda:
-        "I can help you make a reservation. Type “I want a reservation” to get started.",
-
-      telefonoInvalido:
-        "❌ The phone number must have 10 digits. Please try again.",
-
-      fechaInvalida:
-        "❌ Invalid date. Example: August 28, 2026.",
-
-      horaInvalida:
-        "❌ Invalid time. For example: 2 pm, 2:30 pm, or 14:00.",
-
-      guardandoReserva:
-        "✅ Saving your reservation...",
-
-      sinEndpoint:
-        "❌ The reservation cannot be saved because notifications are not enabled.",
-
-      errorGuardar:
-        "❌ I couldn't save the reservation. Please try again.",
-
-      reservaRegistrada:
-        "🎉 Reservation registered successfully! You will receive confirmation shortly.",
-
-      errorNotificaciones:
-        "You must allow notifications to receive your reservation confirmation or cancellation.",
-
-      navegadorNoSoporta:
-        "This browser does not support notifications.",
-
-      pushNoSoporta:
-        "This browser does not support Push notifications.",
-
-      configuracionFaltante:
-        "Notification configuration was not found.",
-
-      registrarError:
-        "We could not register this device. Please try again.",
-
-      activarError:
-        "We could not enable notifications. Please try again.",
-
-      español:
-        "Español",
-
-      ingles:
-        "English",
-    },
-
-    es: {
-      titulo: "Centro de Reservas",
-
-      disponible:
-        "Asistente inteligente disponible 24/7",
-
-      activarTitulo:
-        "Activa las notificaciones",
-
-      activarTexto:
-        "Para recibir directamente en este dispositivo la confirmación o cancelación de tu reserva, debes activar las notificaciones.",
-
-      soloAvisos:
-        "Solo recibirás avisos relacionados con tu reserva.",
-
-      activarBoton:
-        "🔔 Activar notificaciones",
-
-      activando:
-        "Activando...",
-
-      notificacionesActivadas:
-        "Notificaciones activadas",
-
-      dispositivoListo:
-        "Este dispositivo está listo para recibir la confirmación o cancelación de tu reserva.",
-
-      asistente:
-        "Asistente de reservas y disponibilidad",
-
-      bienvenida:
-        "Bienvenido al sistema de reservas y disponibilidad, ¿en qué puedo ayudar?",
-
-      activarPrimero:
-        "🔔 Activa las notificaciones para comenzar tu reserva.",
-
-      placeholder:
-        "Escribe tu solicitud de reserva",
-
-      placeholderBloqueado:
-        "Activa primero las notificaciones",
-
-      consultar:
-        "Consultar Disponibilidad",
-
-      guardando:
-        "Guardando...",
-
-      cliente:
-        "Cliente",
-
-      asistenteNombre:
-        "Asistente",
-
-      reservaPregunta:
-        "¡Con mucho gusto! ¿A nombre de quién hago la reserva?",
-
-      telefonoPregunta:
-        "¿Cuál es tu número de teléfono?",
-
-      fechaPregunta:
-        "¿Para qué fecha deseas la reserva?",
-
-      horaPregunta:
-        "¿A qué hora deseas la reserva?",
-
-      personasPregunta:
-        "¿Para cuántas personas será la reserva?",
-
-      inicioAyuda:
-        "Puedo ayudarte a realizar una reserva. Escribe “quiero una reserva” para comenzar.",
-
-      telefonoInvalido:
-        "❌ El teléfono debe tener 10 dígitos. Inténtalo nuevamente.",
-
-      fechaInvalida:
-        "❌ Fecha inválida. Ejemplo: 28 de agosto de 2026.",
-
-      horaInvalida:
-        "❌ Hora inválida. Escribe, por ejemplo: 2 pm, 2:30 pm o 14:00.",
-
-      guardandoReserva:
-        "✅ Guardando tu reserva...",
-
-      sinEndpoint:
-        "❌ No se puede guardar la reserva porque las notificaciones no están activadas.",
-
-      errorGuardar:
-        "❌ No pude guardar la reserva. Por favor, inténtalo nuevamente.",
-
-      reservaRegistrada:
-        "🎉 ¡Reserva registrada correctamente! En unos minutos recibirás la confirmación.",
-
-      errorNotificaciones:
-        "Debes permitir las notificaciones para recibir la confirmación o cancelación de tu reserva.",
-
-      navegadorNoSoporta:
-        "Este navegador no soporta notificaciones.",
-
-      pushNoSoporta:
-        "Este navegador no soporta notificaciones Push.",
-
-      configuracionFaltante:
-        "No se encontró la configuración de notificaciones.",
-
-      registrarError:
-        "No pudimos registrar este dispositivo. Inténtalo nuevamente.",
-
-      activarError:
-        "No pudimos activar las notificaciones. Inténtalo nuevamente.",
-
-      español:
-        "Español",
-
-      ingles:
-        "English",
-    },
-  };
-
-  const t = textos[idioma];
-
-  // =====================================================
-  // PUSH
-  // =====================================================
+  const [mensajeExito, setMensajeExito] =
+    useState("");
+
+  const [errorReserva, setErrorReserva] =
+    useState("");
 
   const [pushEndpoint, setPushEndpoint] =
     useState<string | null>(null);
@@ -450,115 +142,311 @@ export default function AgenteAAFPage() {
   const [errorNotificaciones, setErrorNotificaciones] =
     useState("");
 
-  // =====================================================
-  // AUTOSCROLL
-  // =====================================================
+  const [reservaCreada, setReservaCreada] =
+    useState(false);
 
-  const finalConversacionRef =
+  const mensajesRef =
     useRef<HTMLDivElement>(null);
 
-  // =====================================================
-  // REGISTRAR NOTIFICACIONES PUSH
-  // =====================================================
+  const textos = {
+    es: {
+      cargando: "Cargando...",
+      bienvenida:
+        "🍽️ ShortBizAI te da la bienvenida a",
+      descripcion:
+        "Disfruta de nuestro exquisito menú y reserva tu mesa de manera rápida y sencilla.",
+      completa:
+        "Simplemente completa el formulario.",
+
+      saludo:
+        "¡Hola! 👋 Será un placer ayudarte a reservar tu mesa.",
+      preguntaNombre:
+        "¿A nombre de quién deseas hacer la reserva?",
+      preguntaTelefono:
+        "Perfecto. ¿Cuál es tu número de teléfono?",
+      preguntaFecha:
+        "Gracias. ¿Para qué fecha deseas reservar?",
+      preguntaHora:
+        "Perfecto. ¿A qué hora deseas reservar?",
+      preguntaPersonas:
+        "¿Para cuántas personas será la reserva?",
+
+      fechaInvalida:
+        "Por favor indícame una fecha válida.",
+      horaInvalida:
+        "Por favor indícame una hora válida.",
+      personasInvalidas:
+        "Por favor indícame un número válido de personas.",
+      telefonoInvalido:
+        "El número de teléfono debe tener 10 dígitos.",
+
+      resumen:
+        "Perfecto. Tengo todos los datos de tu reserva:",
+      resumenNombre: "Nombre",
+      resumenTelefono: "Teléfono",
+      resumenFecha: "Fecha",
+      resumenHora: "Hora",
+      resumenPersonas: "Personas",
+
+      confirmar:
+        "¿Deseas que envíe esta solicitud al restaurante?",
+      si:
+        "Sí, enviar reserva",
+      no:
+        "No, quiero corregir",
+
+      reservaEnviada:
+        "🎉 ¡Listo! Tu solicitud de reserva fue enviada al restaurante.",
+      esperando:
+        "El restaurante debe confirmar o cancelar tu solicitud. Te avisaremos directamente en este dispositivo.",
+      nuevaReserva:
+        "Hacer otra reserva",
+
+      notificacionesTitulo:
+        "Activa las notificaciones",
+      notificacionesTexto:
+        "Para recibir directamente en este dispositivo la confirmación o cancelación de tu reserva, debes activar las notificaciones.",
+      soloAvisos:
+        "Solo recibirás avisos relacionados con tu reserva.",
+      activarBoton:
+        "🔔 Activar notificaciones",
+      activando:
+        "Activando...",
+      notificacionesActivadas:
+        "Notificaciones activadas",
+      dispositivoListo:
+        "Este dispositivo está listo para recibir la confirmación o cancelación de tu reserva.",
+
+      navegadorNoSoporta:
+        "Este navegador no soporta notificaciones.",
+      pushNoSoporta:
+        "Este navegador no soporta notificaciones Push.",
+      configuracionFaltante:
+        "No se encontró la configuración de notificaciones.",
+      registrarError:
+        "No pudimos registrar este dispositivo. Inténtalo nuevamente.",
+      activarError:
+        "No pudimos activar las notificaciones. Inténtalo nuevamente.",
+      errorNotificaciones:
+        "Debes permitir las notificaciones para recibir la confirmación o cancelación de tu reserva.",
+
+      empresaNoIdentificada:
+        "No pudimos identificar el restaurante.",
+      errorGuardar:
+        "No pude guardar la reserva. Por favor inténtalo nuevamente.",
+      errorTelegram:
+        "La reserva fue guardada, pero no pudimos enviar el aviso al restaurante.",
+    },
+
+    en: {
+      cargando:
+        "Loading...",
+      bienvenida:
+        "🍽️ ShortBizAI welcomes you to",
+      descripcion:
+        "Enjoy our exquisite menu and reserve your table quickly and easily.",
+      completa:
+        "Simply complete the form.",
+
+      saludo:
+        "Hello! 👋 I'll be happy to help you reserve your table.",
+      preguntaNombre:
+        "What name should I put the reservation under?",
+      preguntaTelefono:
+        "Perfect. What is your phone number?",
+      preguntaFecha:
+        "Thank you. What date would you like to reserve?",
+      preguntaHora:
+        "Perfect. What time would you like to reserve?",
+      preguntaPersonas:
+        "How many people will be joining?",
+
+      fechaInvalida:
+        "Please provide a valid date.",
+      horaInvalida:
+        "Please provide a valid time.",
+      personasInvalidas:
+        "Please provide a valid number of people.",
+      telefonoInvalido:
+        "The phone number must have 10 digits.",
+
+      resumen:
+        "Perfect. I have all the details for your reservation:",
+      resumenNombre:
+        "Name",
+      resumenTelefono:
+        "Phone",
+      resumenFecha:
+        "Date",
+      resumenHora:
+        "Time",
+      resumenPersonas:
+        "People",
+
+      confirmar:
+        "Would you like me to send this request to the restaurant?",
+      si:
+        "Yes, send reservation",
+      no:
+        "No, I want to correct it",
+
+      reservaEnviada:
+        "🎉 Done! Your reservation request has been sent to the restaurant.",
+      esperando:
+        "The restaurant must confirm or cancel your request. We will notify you directly on this device.",
+      nuevaReserva:
+        "Make another reservation",
+
+      notificacionesTitulo:
+        "Enable notifications",
+      notificacionesTexto:
+        "To receive your reservation confirmation or cancellation directly on this device, you must enable notifications.",
+      soloAvisos:
+        "You will only receive notifications related to your reservation.",
+      activarBoton:
+        "🔔 Enable notifications",
+      activando:
+        "Activating...",
+      notificacionesActivadas:
+        "Notifications enabled",
+      dispositivoListo:
+        "This device is ready to receive your reservation confirmation or cancellation.",
+
+      navegadorNoSoporta:
+        "This browser does not support notifications.",
+      pushNoSoporta:
+        "This browser does not support Push notifications.",
+      configuracionFaltante:
+        "Notification configuration was not found.",
+      registrarError:
+        "We could not register this device. Please try again.",
+      activarError:
+        "We could not enable notifications. Please try again.",
+      errorNotificaciones:
+        "You must allow notifications to receive your reservation confirmation or cancellation.",
+
+      empresaNoIdentificada:
+        "We could not identify the restaurant.",
+      errorGuardar:
+        "We could not save the reservation. Please try again.",
+      errorTelegram:
+        "The reservation was saved, but we could not notify the restaurant.",
+    },
+  };
+
+  const t = textos[idioma];
+
+  useEffect(() => {
+    async function cargarEmpresa() {
+      if (!empresaId) {
+        setEmpresa(null);
+        setCargandoEmpresa(false);
+        return;
+      }
+
+      const { data, error } =
+        await supabase
+          .from("empresas")
+          .select("id, nombre")
+          .eq("id", empresaId)
+          .maybeSingle();
+
+      if (error) {
+        console.error(
+          "ERROR BUSCANDO EMPRESA:",
+          error
+        );
+        setEmpresa(null);
+      } else {
+        setEmpresa(data);
+      }
+
+      setCargandoEmpresa(false);
+    }
+
+    cargarEmpresa();
+  }, [empresaId]);
+
+  useEffect(() => {
+    if (!empresa) return;
+
+    setMensajes([
+      {
+        id: Date.now(),
+        tipo: "ia",
+        texto: `${t.saludo}\n\n${t.preguntaNombre}`,
+      },
+    ]);
+
+    setPaso("nombre");
+  }, [empresa, idioma]);
+
+  useEffect(() => {
+    if (mensajesRef.current) {
+      mensajesRef.current.scrollTo({
+        top: mensajesRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [mensajes]);
+
+  function agregarMensaje(
+    tipo: "ia" | "usuario",
+    texto: string
+  ) {
+    setMensajes((actuales) => [
+      ...actuales,
+      {
+        id:
+          Date.now() +
+          Math.random(),
+        tipo,
+        texto,
+      },
+    ]);
+  }
 
   async function registrarNotificaciones() {
-    console.log("PUSH: iniciando registro");
-
     setActivandoNotificaciones(true);
     setErrorNotificaciones("");
 
     try {
-      // =================================================
-      // SERVICE WORKER
-      // =================================================
-
       if (!("serviceWorker" in navigator)) {
         setErrorNotificaciones(
           t.navegadorNoSoporta
         );
-
-        console.log(
-          "Este navegador no soporta Service Worker"
-        );
-
         return;
       }
-
-      // =================================================
-      // PUSH MANAGER
-      // =================================================
 
       if (!("PushManager" in window)) {
         setErrorNotificaciones(
           t.pushNoSoporta
         );
-
-        console.log(
-          "Este navegador no soporta Push"
-        );
-
         return;
       }
-
-      // =================================================
-      // NOTIFICATION API
-      // =================================================
 
       if (!("Notification" in window)) {
         setErrorNotificaciones(
           t.navegadorNoSoporta
         );
-
         return;
       }
-
-      // =================================================
-      // PEDIR PERMISO
-      // =================================================
 
       let permiso =
         Notification.permission;
 
-      console.log(
-        "PUSH: permiso actual:",
-        permiso
-      );
-
       if (permiso === "default") {
         permiso =
           await Notification.requestPermission();
-
-        console.log(
-          "PUSH: nuevo permiso:",
-          permiso
-        );
       }
-
-      // =================================================
-      // PERMISO DENEGADO
-      // =================================================
 
       if (permiso !== "granted") {
         setNotificacionesActivas(false);
-
         setErrorNotificaciones(
           t.errorNotificaciones
         );
-
-        console.log(
-          "PUSH: permiso no concedido"
-        );
-
         return;
       }
-
-      // =================================================
-      // REGISTRAR SERVICE WORKER
-      // =================================================
-
-      console.log(
-        "PUSH: registrando /sw.js"
-      );
 
       const registro =
         await navigator.serviceWorker.register(
@@ -567,37 +455,21 @@ export default function AgenteAAFPage() {
 
       await navigator.serviceWorker.ready;
 
-      console.log(
-        "PUSH: Service Worker listo"
-      );
-
-      // =================================================
-      // BUSCAR SUSCRIPCIÓN EXISTENTE
-      // =================================================
-
       let subscription =
         await registro.pushManager.getSubscription();
 
-      // =================================================
-      // CREAR SUSCRIPCIÓN
-      // =================================================
-
       if (!subscription) {
-        console.log(
-          "PUSH: no existe suscripción, creando nueva"
-        );
-
         const vapidKey =
           process.env
             .NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
         if (!vapidKey) {
-          setErrorNotificaciones(
-            t.configuracionFaltante
-          );
-
           console.error(
             "Falta NEXT_PUBLIC_VAPID_PUBLIC_KEY"
+          );
+
+          setErrorNotificaciones(
+            t.configuracionFaltante
           );
 
           return;
@@ -606,53 +478,25 @@ export default function AgenteAAFPage() {
         subscription =
           await registro.pushManager.subscribe({
             userVisibleOnly: true,
-
             applicationServerKey:
               urlBase64ToUint8Array(
                 vapidKey
               ),
           });
-
-        console.log(
-          "PUSH: nueva suscripción creada"
-        );
-      } else {
-        console.log(
-          "PUSH: usando suscripción existente"
-        );
       }
-
-      // =================================================
-      // ENDPOINT
-      // =================================================
 
       const endpoint =
         subscription.endpoint;
 
-      console.log(
-        "PUSH ENDPOINT:",
-        endpoint
-      );
-
       setPushEndpoint(endpoint);
-
-      // =================================================
-      // GUARDAR SUSCRIPCIÓN
-      // =================================================
-
-      console.log(
-        "PUSH: registrando dispositivo en /api/push"
-      );
 
       const respuesta =
         await fetch("/api/push", {
           method: "POST",
-
           headers: {
             "Content-Type":
               "application/json",
           },
-
           body: JSON.stringify({
             subscription,
           }),
@@ -661,36 +505,22 @@ export default function AgenteAAFPage() {
       const resultado =
         await respuesta.json();
 
-      console.log(
-        "PUSH: respuesta /api/push:",
-        resultado
-      );
-
       if (!respuesta.ok) {
-        setNotificacionesActivas(false);
-
-        setErrorNotificaciones(
-          t.registrarError
-        );
-
         console.error(
           "ERROR REGISTRANDO PUSH:",
           resultado
         );
 
+        setNotificacionesActivas(false);
+        setErrorNotificaciones(
+          t.registrarError
+        );
+
         return;
       }
 
-      // =================================================
-      // TODO CORRECTO
-      // =================================================
-
       setNotificacionesActivas(true);
       setErrorNotificaciones("");
-
-      console.log(
-        "PUSH: dispositivo registrado correctamente"
-      );
     } catch (error) {
       console.error(
         "ERROR REGISTRANDO PUSH:",
@@ -698,7 +528,6 @@ export default function AgenteAAFPage() {
       );
 
       setNotificacionesActivas(false);
-
       setErrorNotificaciones(
         t.activarError
       );
@@ -707,156 +536,61 @@ export default function AgenteAAFPage() {
     }
   }
 
-  // =====================================================
-  // AUTOSCROLL
-  // =====================================================
+  function reiniciarConversacion() {
+    setNombre("");
+    setTelefono("");
+    setFecha("");
+    setHora("");
+    setPersonas("");
+    setEntrada("");
+    setMensajeExito("");
+    setErrorReserva("");
+    setReservaCreada(false);
 
-  useEffect(() => {
-    finalConversacionRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
-  }, [conversacion, guardando]);
-
-  // =====================================================
-  // CAMBIAR IDIOMA
-  // =====================================================
-
-  function cambiarIdioma(
-    nuevoIdioma: "es" | "en"
-  ) {
-    setIdioma(nuevoIdioma);
-
-    setErrorNotificaciones("");
-  }
-
-  // =====================================================
-  // ENVIAR MENSAJE
-  // =====================================================
-
-  async function enviarMensaje() {
-    if (!mensaje.trim() || guardando) return;
-
-    // =================================================
-    // PROTECCIÓN PUSH
-    // =================================================
-
-    if (
-      !notificacionesActivas ||
-      !pushEndpoint
-    ) {
-      setConversacion((anterior) => [
-        ...anterior,
-        {
-          autor:
-            t.asistenteNombre,
-
-          texto:
-            t.activarPrimero,
-        },
-      ]);
-
-      setErrorNotificaciones(
-        t.errorNotificaciones
-      );
-
-      return;
-    }
-
-    const texto =
-      mensaje.trim();
-
-    setConversacion((anterior) => [
-      ...anterior,
+    setMensajes([
       {
-        autor: t.cliente,
-        texto,
+        id: Date.now(),
+        tipo: "ia",
+        texto: `${t.saludo}\n\n${t.preguntaNombre}`,
       },
     ]);
 
-    setMensaje("");
+    setPaso("nombre");
+  }
 
-    // =====================================================
-    // INICIO
-    // =====================================================
+  async function enviarMensaje() {
+    const texto = entrada.trim();
 
-    if (paso === "inicio") {
-      const textoMinuscula =
-        texto.toLowerCase();
+    if (!texto) return;
 
-      const quiereReserva =
-        idioma === "en"
-          ? textoMinuscula.includes(
-              "reservation"
-            ) ||
-            textoMinuscula.includes(
-              "table"
-            ) ||
-            textoMinuscula.includes(
-              "reserve"
-            )
-          : textoMinuscula.includes(
-              "reserva"
-            ) ||
-            textoMinuscula.includes(
-              "mesa"
-            );
+    if (guardando) return;
 
-      if (quiereReserva) {
-        setConversacion((anterior) => [
-          ...anterior,
-          {
-            autor:
-              t.asistenteNombre,
+    setEntrada("");
 
-            texto:
-              t.reservaPregunta,
-          },
-        ]);
+    agregarMensaje("usuario", texto);
 
-        setPaso("nombre");
-      } else {
-        setConversacion((anterior) => [
-          ...anterior,
-          {
-            autor:
-              t.asistenteNombre,
-
-            texto:
-              t.inicioAyuda,
-          },
-        ]);
-      }
-
-      return;
-    }
-
-    // =====================================================
-    // NOMBRE
-    // =====================================================
+    setErrorReserva("");
 
     if (paso === "nombre") {
+      if (texto.length < 2) {
+        agregarMensaje(
+          "ia",
+          t.preguntaNombre
+        );
+        return;
+      }
+
       setNombre(texto);
 
-      setConversacion((anterior) => [
-        ...anterior,
-        {
-          autor:
-            t.asistenteNombre,
-
-          texto:
-            t.telefonoPregunta,
-        },
-      ]);
+      agregarMensaje(
+        "ia",
+        t.preguntaTelefono
+      );
 
       setPaso("telefono");
 
       return;
     }
-
-    // =====================================================
-    // TELÉFONO
-    // =====================================================
 
     if (paso === "telefono") {
       const telefonoLimpio =
@@ -865,17 +599,10 @@ export default function AgenteAAFPage() {
       if (
         telefonoLimpio.length !== 10
       ) {
-        setConversacion((anterior) => [
-          ...anterior,
-          {
-            autor:
-              t.asistenteNombre,
-
-            texto:
-              t.telefonoInvalido,
-          },
-        ]);
-
+        agregarMensaje(
+          "ia",
+          t.telefonoInvalido
+        );
         return;
       }
 
@@ -883,190 +610,346 @@ export default function AgenteAAFPage() {
         telefonoLimpio
       );
 
-      setConversacion((anterior) => [
-        ...anterior,
-        {
-          autor:
-            t.asistenteNombre,
-
-          texto:
-            t.fechaPregunta,
-        },
-      ]);
+      agregarMensaje(
+        "ia",
+        t.preguntaFecha
+      );
 
       setPaso("fecha");
 
       return;
     }
 
-    // =====================================================
-    // FECHA
-    // =====================================================
-
     if (paso === "fecha") {
-      const fechaConvertida =
-        idioma === "en"
-          ? convertirFechaIngles(texto)
-          : convertirFecha(texto);
+      let fechaValida = texto;
 
-      if (!fechaConvertida) {
-        setConversacion((anterior) => [
-          ...anterior,
-          {
-            autor:
-              t.asistenteNombre,
+      const formatoFecha =
+        /^\d{4}-\d{2}-\d{2}$/;
 
-            texto:
-              t.fechaInvalida,
-          },
-        ]);
+      const formatoFechaLatino =
+        /^\d{1,2}\/\d{1,2}\/\d{4}$/;
 
+      if (
+        formatoFechaLatino.test(
+          texto
+        )
+      ) {
+        const partes =
+          texto.split("/");
+
+        const dia =
+          partes[0].padStart(2, "0");
+
+        const mes =
+          partes[1].padStart(2, "0");
+
+        const anio =
+          partes[2];
+
+        fechaValida =
+          `${anio}-${mes}-${dia}`;
+      }
+
+      if (
+        !formatoFecha.test(
+          fechaValida
+        )
+      ) {
+        agregarMensaje(
+          "ia",
+          t.fechaInvalida
+        );
         return;
       }
 
-      setFecha(texto);
+      const fechaObjeto =
+        new Date(
+          `${fechaValida}T00:00:00`
+        );
 
-      setConversacion((anterior) => [
-        ...anterior,
-        {
-          autor:
-            t.asistenteNombre,
+      if (
+        Number.isNaN(
+          fechaObjeto.getTime()
+        )
+      ) {
+        agregarMensaje(
+          "ia",
+          t.fechaInvalida
+        );
+        return;
+      }
 
-          texto:
-            t.horaPregunta,
-        },
-      ]);
+      setFecha(fechaValida);
+
+      agregarMensaje(
+        "ia",
+        `${t.preguntaHora}`
+      );
 
       setPaso("hora");
 
       return;
     }
 
-    // =====================================================
-    // HORA
-    // =====================================================
-
     if (paso === "hora") {
-      const horaConvertida =
-        convertirHora(texto);
+      const formatoHora =
+        /^\d{1,2}:\d{2}$/;
 
-      if (!horaConvertida) {
-        setConversacion((anterior) => [
-          ...anterior,
-          {
-            autor:
-              t.asistenteNombre,
-
-            texto:
-              t.horaInvalida,
-          },
-        ]);
-
+      if (
+        !formatoHora.test(texto)
+      ) {
+        agregarMensaje(
+          "ia",
+          t.horaInvalida
+        );
         return;
       }
 
-      setHora(texto);
+      let [h, m] =
+        texto.split(":");
 
-      setConversacion((anterior) => [
-        ...anterior,
-        {
-          autor:
-            t.asistenteNombre,
+      const horas =
+        Number(h);
 
-          texto:
-            t.personasPregunta,
-        },
-      ]);
+      const minutos =
+        Number(m);
+
+      if (
+        horas < 0 ||
+        horas > 23 ||
+        minutos < 0 ||
+        minutos > 59
+      ) {
+        agregarMensaje(
+          "ia",
+          t.horaInvalida
+        );
+        return;
+      }
+
+      const horaFormateada =
+        `${String(horas).padStart(
+          2,
+          "0"
+        )}:${String(minutos).padStart(
+          2,
+          "0"
+        )}`;
+
+      setHora(
+        horaFormateada
+      );
+
+      agregarMensaje(
+        "ia",
+        t.preguntaPersonas
+      );
 
       setPaso("personas");
 
       return;
     }
 
-    // =====================================================
-    // PERSONAS
-    // =====================================================
-
     if (paso === "personas") {
-      setPersonas(texto);
-
-      setPaso("confirmado");
-      setGuardando(true);
-
-      setConversacion((anterior) => [
-        ...anterior,
-        {
-          autor:
-            t.asistenteNombre,
-
-          texto:
-            t.guardandoReserva,
-        },
-      ]);
-
-      const fechaConvertida =
-        idioma === "en"
-          ? convertirFechaIngles(fecha)
-          : convertirFecha(fecha);
-
-      const horaConvertida =
-        convertirHora(hora);
-
-      // =================================================
-      // COMPROBAR ENDPOINT
-      // =================================================
-
-      if (!pushEndpoint) {
-        console.error(
-          "PUSH: no hay endpoint"
+      const numero =
+        Number(
+          texto.replace(
+            /\D/g,
+            ""
+          )
         );
 
-        setGuardando(false);
+      if (
+        !Number.isInteger(
+          numero
+        ) ||
+        numero < 1 ||
+        numero > 20
+      ) {
+        agregarMensaje(
+          "ia",
+          t.personasInvalidas
+        );
+        return;
+      }
 
-        setConversacion((anterior) => [
-          ...anterior,
-          {
-            autor:
-              t.asistenteNombre,
+      setPersonas(
+        String(numero)
+      );
 
-            texto:
-              t.sinEndpoint,
-          },
-        ]);
+      const fechaTexto =
+        idioma === "es"
+          ? convertirFecha(
+              fecha
+            )
+          : convertirFechaIngles(
+              fecha
+            );
 
-        setPaso("inicio");
+      const horaTexto =
+        convertirHora(hora);
+
+      const resumen =
+        `${t.resumen}\n\n` +
+        `👤 ${t.resumenNombre}: ${nombre}\n` +
+        `📞 ${t.resumenTelefono}: ${telefono}\n` +
+        `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
+        `🕐 ${t.resumenHora}: ${horaTexto}\n` +
+        `👥 ${t.resumenPersonas}: ${numero}`;
+
+      agregarMensaje(
+        "ia",
+        `${resumen}\n\n${t.confirmar}`
+      );
+
+      setPaso(
+        "confirmacion"
+      );
+
+      return;
+    }
+
+    if (
+      paso === "confirmacion"
+    ) {
+      const respuesta =
+        texto.toLowerCase();
+
+      const afirmativo =
+        [
+          "si",
+          "sí",
+          "yes",
+          "ok",
+          "confirmar",
+          "confirmo",
+          "dale",
+          "correcto",
+        ].some((palabra) =>
+          respuesta.includes(
+            palabra
+          )
+        );
+
+      const negativo =
+        [
+          "no",
+          "corregir",
+          "cambiar",
+          "change",
+        ].some((palabra) =>
+          respuesta.includes(
+            palabra
+          )
+        );
+
+      if (afirmativo) {
+        await crearReserva();
 
         return;
       }
 
-      console.log(
-        "PUSH: endpoint asociado:",
-        pushEndpoint
+      if (negativo) {
+        agregarMensaje(
+          "ia",
+          t.preguntaNombre
+        );
+
+        setNombre("");
+        setTelefono("");
+        setFecha("");
+        setHora("");
+        setPersonas("");
+
+        setPaso("nombre");
+
+        return;
+      }
+
+      agregarMensaje(
+        "ia",
+        t.confirmar
       );
 
-      // =================================================
-      // GUARDAR RESERVA EN SUPABASE
-      // =================================================
+      return;
+    }
+  }
 
-      const { data, error } =
+  async function crearReserva() {
+    if (guardando) return;
+
+    if (
+      !empresaId ||
+      !empresa
+    ) {
+      setErrorReserva(
+        t.empresaNoIdentificada
+      );
+
+      agregarMensaje(
+        "ia",
+        t.empresaNoIdentificada
+      );
+
+      return;
+    }
+
+    if (
+      !nombre ||
+      !telefono ||
+      !fecha ||
+      !hora ||
+      !personas
+    ) {
+      setErrorReserva(
+        t.errorGuardar
+      );
+
+      return;
+    }
+
+    if (
+      !notificacionesActivas ||
+      !pushEndpoint
+    ) {
+      setErrorReserva(
+        t.errorNotificaciones
+      );
+
+      agregarMensaje(
+        "ia",
+        t.errorNotificaciones
+      );
+
+      return;
+    }
+
+    setGuardando(true);
+
+    try {
+      const numeroPersonas =
+        Number(personas);
+
+      const {
+        data,
+        error,
+      } =
         await supabase
           .from("reservas")
           .insert([
             {
+              empresa_id:
+                empresaId,
               cliente_nombre:
-                nombre,
-
-              telefono,
-
-              fecha:
-                fechaConvertida,
-
-              hora:
-                horaConvertida,
-
+                nombre.trim(),
+              telefono:
+                telefono,
+              fecha,
+              hora,
               personas:
-                texto,
-
+                String(
+                  numeroPersonas
+                ),
               push_endpoint:
                 pushEndpoint,
             },
@@ -1074,30 +957,20 @@ export default function AgenteAAFPage() {
           .select()
           .single();
 
-      // =================================================
-      // ERROR SUPABASE
-      // =================================================
-
       if (error) {
         console.error(
           "ERROR AL GUARDAR RESERVA:",
           error
         );
 
-        setGuardando(false);
+        setErrorReserva(
+          t.errorGuardar
+        );
 
-        setConversacion((anterior) => [
-          ...anterior,
-          {
-            autor:
-              t.asistenteNombre,
-
-            texto:
-              t.errorGuardar,
-          },
-        ]);
-
-        setPaso("inicio");
+        agregarMensaje(
+          "ia",
+          t.errorGuardar
+        );
 
         return;
       }
@@ -1107,40 +980,33 @@ export default function AgenteAAFPage() {
         data
       );
 
-      // =================================================
-      // NOTIFICAR AL SERVIDOR
-      // =================================================
-
       try {
         const respuestaTelegram =
           await fetch(
             "/api/reservas/notificar",
             {
               method: "POST",
-
               headers: {
                 "Content-Type":
                   "application/json",
               },
-
               body: JSON.stringify({
                 reservaId:
                   data.id,
-
+                empresaId:
+                  empresaId,
+                empresaNombre:
+                  empresa.nombre,
                 cliente_nombre:
-                  nombre,
-
-                telefono,
-
-                fecha:
-                  fechaConvertida,
-
-                hora:
-                  horaConvertida,
-
+                  nombre.trim(),
+                telefono:
+                  telefono,
+                fecha,
+                hora,
                 personas:
-                  texto,
-
+                  String(
+                    numeroPersonas
+                  ),
                 pushEndpoint:
                   pushEndpoint,
               }),
@@ -1150,101 +1016,103 @@ export default function AgenteAAFPage() {
         const resultadoTelegram =
           await respuestaTelegram.json();
 
-        if (!respuestaTelegram.ok) {
+        if (
+          !respuestaTelegram.ok
+        ) {
           console.error(
-            "ERROR NOTIFICANDO RESERVA:",
-            JSON.stringify(
-              resultadoTelegram,
-              null,
-              2
-            )
-          );
-        } else {
-          console.log(
-            "RESERVA NOTIFICADA CORRECTAMENTE:",
+            "ERROR NOTIFICANDO:",
             resultadoTelegram
           );
         }
       } catch (error) {
         console.error(
-          "ERROR COMUNICANDO CON /api/reservas/notificar:",
+          "ERROR COMUNICANDO CON TELEGRAM:",
           error
         );
       }
 
+      setReservaCreada(true);
+      setMensajeExito(
+        t.reservaEnviada
+      );
+
+      agregarMensaje(
+        "ia",
+        `${t.reservaEnviada}\n\n${t.esperando}`
+      );
+
+      setPaso("finalizado");
+    } catch (error) {
+      console.error(
+        "ERROR GENERAL:",
+        error
+      );
+
+      setErrorReserva(
+        t.errorGuardar
+      );
+
+      agregarMensaje(
+        "ia",
+        t.errorGuardar
+      );
+    } finally {
       setGuardando(false);
-
-      // =================================================
-      // RESERVA REGISTRADA
-      // =================================================
-
-      setConversacion((anterior) => [
-        ...anterior,
-        {
-          autor:
-            t.asistenteNombre,
-
-          texto:
-            t.reservaRegistrada,
-        },
-      ]);
-
-      // =================================================
-      // REINICIAR CHAT
-      // =================================================
-
-      setTimeout(() => {
-        setConversacion([]);
-
-        setPaso("inicio");
-
-        setNombre("");
-        setTelefono("");
-        setFecha("");
-        setHora("");
-        setPersonas("");
-
-        setMensaje("");
-      }, 5000);
     }
+  }
+
+  function manejarTecla(
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      enviarMensaje();
+    }
+  }
+
+  if (cargandoEmpresa) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
+
+          <p className="font-medium text-gray-600">
+            {t.cargando}
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!empresa) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+        <div className="w-full max-w-lg rounded-3xl bg-white p-8 text-center shadow-xl">
+          <div className="mb-4 text-5xl">
+            🍽️
+          </div>
+
+          <h1 className="text-2xl font-black text-gray-950">
+            {t.empresaNoIdentificada}
+          </h1>
+        </div>
+      </main>
+    );
   }
 
   return (
     <NotificacionesObligatorias>
-      <main className="min-h-screen w-full bg-white text-gray-900">
+      <main className="min-h-screen bg-gray-50 text-gray-900">
+        <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-8">
 
-        <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-
-          {/* ==================================================
-              SELECTOR DE IDIOMA
-          ================================================== */}
-
+          {/* IDIOMA */}
           <div className="mb-5 flex justify-end">
-
-            <div className="flex overflow-hidden rounded-lg border border-gray-300 bg-white">
-
-              {/* ENGLISH PRIMERO */}
+            <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
 
               <button
                 type="button"
                 onClick={() =>
-                  cambiarIdioma("en")
-                }
-                className={`px-4 py-2 text-sm font-bold transition ${
-                  idioma === "en"
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                🇺🇸 English
-              </button>
-
-              {/* ESPAÑOL SEGUNDO */}
-
-              <button
-                type="button"
-                onClick={() =>
-                  cambiarIdioma("es")
+                  setIdioma("es")
                 }
                 className={`px-4 py-2 text-sm font-bold transition ${
                   idioma === "es"
@@ -1255,85 +1123,86 @@ export default function AgenteAAFPage() {
                 🇪🇸 Español
               </button>
 
-            </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setIdioma("en")
+                }
+                className={`px-4 py-2 text-sm font-bold transition ${
+                  idioma === "en"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                🇺🇸 English
+              </button>
 
+            </div>
           </div>
 
-          {/* ==================================================
-              ENCABEZADO
-          ================================================== */}
+          <section className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl">
 
-          <header className="mb-6 border-b border-gray-200 pb-5 sm:mb-8 sm:pb-6">
+            {/* ENCABEZADO */}
+            <div className="px-5 pb-6 pt-7 sm:px-8 sm:pb-7 sm:pt-8">
 
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-
-              <div className="min-w-0">
-
-                <h1 className="text-3xl font-black leading-tight tracking-tight text-gray-950 sm:text-4xl">
-                  {t.titulo}
-                </h1>
-
-                <div className="mt-2 flex items-center gap-2">
-
-                  <span className="h-3 w-3 shrink-0 rounded-full bg-green-500" />
-
-                  <p className="text-sm font-medium text-green-600 sm:text-base">
-                    {t.disponible}
-                  </p>
-
-                </div>
-
-              </div>
-
-              <div className="flex w-full justify-start sm:w-auto sm:justify-end">
-
+              <div className="mb-6 flex justify-center">
                 <Image
                   src="/logo-foodshortai.png"
                   alt="ShortBizAI"
-                  width={235}
-                  height={235}
+                  width={210}
+                  height={210}
                   priority
-                  className="h-auto w-[190px] max-w-full object-contain sm:w-[235px]"
+                  className="h-auto w-[170px] object-contain sm:w-[210px]"
                 />
-
               </div>
 
+              <div className="text-center">
+
+                <h1 className="text-2xl font-black leading-tight tracking-tight text-gray-950 sm:text-4xl">
+
+                  {t.bienvenida}
+
+                  <span className="mt-1 block text-blue-600">
+                    {empresa.nombre}
+                  </span>
+
+                </h1>
+
+                <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
+                  {t.descripcion}
+                </p>
+
+                <p className="mt-2 text-base font-semibold text-gray-900 sm:text-lg">
+                  {t.completa}
+                </p>
+
+              </div>
             </div>
 
-          </header>
+            {/* NOTIFICACIONES */}
+            <div className="border-y border-gray-200 bg-gray-50 px-5 py-5 sm:px-8">
 
-          {/* ==================================================
-              PANEL PRINCIPAL
-          ================================================== */}
+              {!notificacionesActivas ? (
 
-          <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-
-            {/* ==================================================
-                ACTIVAR NOTIFICACIONES
-            ================================================== */}
-
-            {!notificacionesActivas && (
-              <div className="border-b border-blue-200 bg-blue-50 px-4 py-5 sm:px-6">
-
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
 
                   <div className="flex items-start gap-3">
 
-                    <div className="mt-1 text-2xl">
+                    <div className="text-2xl">
                       🔔
                     </div>
 
-                    <div>
+                    <div className="flex-1">
 
-                      <h2 className="text-lg font-bold text-gray-950 sm:text-xl">
-                        {t.activarTitulo}
+                      <h2 className="font-bold text-gray-950">
+                        {t.notificacionesTitulo}
                       </h2>
 
-                      <p className="mt-1 text-sm leading-6 text-gray-600 sm:text-base">
-                        {t.activarTexto}
+                      <p className="mt-1 text-sm leading-6 text-gray-600">
+                        {t.notificacionesTexto}
                       </p>
 
-                      <p className="mt-1 text-xs text-gray-500 sm:text-sm">
+                      <p className="mt-1 text-xs text-gray-500">
                         {t.soloAvisos}
                       </p>
 
@@ -1342,50 +1211,43 @@ export default function AgenteAAFPage() {
                   </div>
 
                   <button
+                    type="button"
                     onClick={
                       registrarNotificaciones
                     }
                     disabled={
                       activandoNotificaciones
                     }
-                    className="min-h-[50px] w-full shrink-0 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400 sm:w-auto"
+                    className="mt-4 min-h-[52px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
                   >
                     {activandoNotificaciones
                       ? t.activando
                       : t.activarBoton}
                   </button>
 
+                  {errorNotificaciones && (
+                    <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium leading-6 text-red-700">
+                      {errorNotificaciones}
+                    </div>
+                  )}
+
                 </div>
 
-                {errorNotificaciones && (
-                  <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                    {errorNotificaciones}
+              ) : (
+
+                <div className="flex items-start gap-3">
+
+                  <div className="text-xl">
+                    🔔
                   </div>
-                )}
-
-              </div>
-            )}
-
-            {/* ==================================================
-                NOTIFICACIONES ACTIVADAS
-            ================================================== */}
-
-            {notificacionesActivas && (
-              <div className="border-b border-green-200 bg-green-50 px-4 py-4 sm:px-6">
-
-                <div className="flex items-center gap-3">
-
-                  <span className="text-xl">
-                    ✅
-                  </span>
 
                   <div>
 
-                    <p className="font-bold text-green-800">
+                    <p className="font-bold text-green-700">
                       {t.notificacionesActivadas}
                     </p>
 
-                    <p className="text-sm text-green-700">
+                    <p className="mt-1 text-sm leading-6 text-green-700">
                       {t.dispositivoListo}
                     </p>
 
@@ -1393,167 +1255,282 @@ export default function AgenteAAFPage() {
 
                 </div>
 
-              </div>
-            )}
-
-            {/* ==================================================
-                ENCABEZADO DEL ASISTENTE
-            ================================================== */}
-
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-5 sm:px-6">
-
-              <h2 className="text-xl font-bold leading-tight text-gray-950 sm:text-2xl">
-                {t.asistente}
-              </h2>
-
-              <p className="mt-2 text-base leading-6 text-gray-500 sm:text-lg">
-                {t.bienvenida}
-              </p>
+              )}
 
             </div>
 
-            {/* ==================================================
-                CONVERSACIÓN
-            ================================================== */}
+            {/* CHATBOT */}
+            <div className="flex flex-col">
 
-            <div className="max-h-[500px] min-h-[280px] overflow-y-auto bg-white p-4 sm:min-h-[320px] sm:p-6">
+              {/* CABECERA DEL CHAT */}
+              <div className="flex items-center gap-3 border-b border-gray-200 px-5 py-4 sm:px-7">
 
-              <div className="space-y-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-xl shadow-sm">
+                  🤖
+                </div>
 
-                {conversacion.map(
-                  (item, index) => {
+                <div>
+                  <p className="font-black text-gray-950">
+                    ShortBizAI
+                  </p>
 
-                    const esCliente =
-                      item.autor ===
-                      t.cliente;
+                  <p className="text-xs text-green-600">
+                    ● {idioma === "es"
+                      ? "Asistente disponible"
+                      : "Assistant available"}
+                  </p>
+                </div>
 
-                    return (
+              </div>
+
+              {/* MENSAJES */}
+              <div
+                ref={mensajesRef}
+                className="max-h-[500px] min-h-[380px] space-y-4 overflow-y-auto bg-gray-50 px-4 py-5 sm:px-6"
+              >
+
+                {mensajes.map(
+                  (mensaje) => (
+
+                    <div
+                      key={mensaje.id}
+                      className={`flex ${
+                        mensaje.tipo ===
+                        "usuario"
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
+                    >
+
                       <div
-                        key={index}
-                        className={`flex ${
-                          esCliente
-                            ? "justify-end"
-                            : "justify-start"
+                        className={`max-w-[85%] whitespace-pre-line rounded-2xl px-4 py-3 text-[15px] leading-6 shadow-sm ${
+                          mensaje.tipo ===
+                          "usuario"
+                            ? "rounded-br-md bg-blue-600 text-white"
+                            : "rounded-bl-md border border-gray-200 bg-white text-gray-800"
                         }`}
                       >
-
-                        <div
-                          className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[75%] ${
-                            esCliente
-                              ? "rounded-br-md bg-blue-600 text-white"
-                              : "rounded-bl-md bg-gray-100 text-gray-900"
-                          }`}
-                        >
-
-                          <p
-                            className={`mb-1 text-xs font-bold ${
-                              esCliente
-                                ? "text-blue-100"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {item.autor}
-                          </p>
-
-                          <p className="text-sm leading-6 sm:text-base">
-                            {item.texto}
-                          </p>
-
-                        </div>
-
+                        {mensaje.texto}
                       </div>
-                    );
-                  }
+
+                    </div>
+
+                  )
                 )}
 
                 {guardando && (
                   <div className="flex justify-start">
 
-                    <div className="rounded-2xl rounded-bl-md bg-gray-100 px-4 py-3 text-sm text-gray-500">
-                      {t.guardando}
+                    <div className="rounded-2xl rounded-bl-md border border-gray-200 bg-white px-4 py-3 shadow-sm">
+
+                      <div className="flex items-center gap-1">
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
+                        <span
+                          className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                          style={{
+                            animationDelay:
+                              "150ms",
+                          }}
+                        />
+                        <span
+                          className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                          style={{
+                            animationDelay:
+                              "300ms",
+                          }}
+                        />
+                      </div>
+
                     </div>
 
                   </div>
                 )}
 
-                <div
-                  ref={
-                    finalConversacionRef
-                  }
-                  className="h-px w-full"
-                />
-
               </div>
 
-            </div>
+              {/* BOTONES DE CONFIRMACIÓN */}
+              {paso === "confirmacion" &&
+                !guardando && (
+                  <div className="border-t border-gray-200 bg-white px-4 py-4 sm:px-6">
 
-            {/* ==================================================
-                CAMPO DE MENSAJE
-            ================================================== */}
+                    <div className="grid gap-3 sm:grid-cols-2">
 
-            <div className="border-t border-gray-200 bg-white p-4 sm:p-6">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          enviarMensajeDirecto(
+                            idioma === "es"
+                              ? "Sí, enviar reserva"
+                              : "Yes, send reservation"
+                          )
+                        }
+                        className="min-h-[52px] rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700"
+                      >
+                        ✅ {t.si}
+                      </button>
 
-              {!notificacionesActivas && (
-                <div className="mb-4 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          enviarMensajeDirecto(
+                            idioma === "es"
+                              ? "No, quiero corregir"
+                              : "No, I want to correct it"
+                          )
+                        }
+                        className="min-h-[52px] rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-100"
+                      >
+                        ✏️ {t.no}
+                      </button>
 
-                  <p className="text-sm font-semibold text-yellow-800">
-                    {t.activarPrimero}
-                  </p>
+                    </div>
+
+                  </div>
+                )}
+
+              {/* INPUT DEL CHAT */}
+              {paso !== "finalizado" &&
+                paso !== "confirmacion" && (
+                  <div className="border-t border-gray-200 bg-white p-4 sm:p-5">
+
+                    <div className="flex items-end gap-3">
+
+                      <input
+                        type={
+                          paso === "telefono"
+                            ? "tel"
+                            : "text"
+                        }
+                        value={entrada}
+                        onChange={(e) =>
+                          setEntrada(
+                            e.target.value
+                          )
+                        }
+                        onKeyDown={
+                          manejarTecla
+                        }
+                        placeholder={
+                          idioma === "es"
+                            ? "Escribe tu respuesta..."
+                            : "Type your answer..."
+                        }
+                        disabled={guardando}
+                        autoComplete="off"
+                        inputMode={
+                          paso === "telefono"
+                            ? "tel"
+                            : "text"
+                        }
+                        className="min-h-[52px] flex-1 rounded-2xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={
+                          enviarMensaje
+                        }
+                        disabled={
+                          guardando ||
+                          !entrada.trim()
+                        }
+                        className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-xl text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                      >
+                        ➤
+                      </button>
+
+                    </div>
+
+                  </div>
+                )}
+
+              {/* RESERVA FINALIZADA */}
+              {paso === "finalizado" && (
+                <div className="border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
+
+                  {mensajeExito && (
+                    <div className="mb-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-4 text-sm font-semibold leading-6 text-green-800">
+                      {mensajeExito}
+                    </div>
+                  )}
+
+                  {errorReserva && (
+                    <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold leading-6 text-red-700">
+                      {errorReserva}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={
+                      reiniciarConversacion
+                    }
+                    className="min-h-[52px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white transition hover:bg-blue-700"
+                  >
+                    {t.nuevaReserva}
+                  </button>
 
                 </div>
               )}
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-
-                <input
-                  value={mensaje}
-                  onChange={(e) =>
-                    setMensaje(
-                      e.target.value
-                    )
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      enviarMensaje();
-                    }
-                  }}
-                  disabled={
-                    guardando ||
-                    !notificacionesActivas
-                  }
-                  className="min-h-[54px] w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
-                  placeholder={
-                    notificacionesActivas
-                      ? t.placeholder
-                      : t.placeholderBloqueado
-                  }
-                />
-
-                <button
-                  onClick={
-                    enviarMensaje
-                  }
-                  disabled={
-                    guardando ||
-                    !mensaje.trim() ||
-                    !notificacionesActivas
-                  }
-                  className="min-h-[54px] w-full rounded-xl bg-blue-600 px-6 text-base font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 sm:w-auto"
-                >
-                  {guardando
-                    ? t.guardando
-                    : t.consultar}
-                </button>
-
-              </div>
 
             </div>
 
           </section>
 
         </div>
-
       </main>
     </NotificacionesObligatorias>
   );
+
+  async function enviarMensajeDirecto(
+    texto: string
+  ) {
+    if (guardando) return;
+
+    agregarMensaje(
+      "usuario",
+      texto
+    );
+
+    if (
+      paso === "confirmacion"
+    ) {
+      const respuesta =
+        texto.toLowerCase();
+
+      const afirmativo =
+        [
+          "si",
+          "sí",
+          "yes",
+          "ok",
+          "confirmar",
+          "confirmo",
+          "dale",
+          "correcto",
+        ].some((palabra) =>
+          respuesta.includes(
+            palabra
+          )
+        );
+
+      if (afirmativo) {
+        await crearReserva();
+        return;
+      }
+
+      agregarMensaje(
+        "ia",
+        t.preguntaNombre
+      );
+
+      setNombre("");
+      setTelefono("");
+      setFecha("");
+      setHora("");
+      setPersonas("");
+
+      setPaso("nombre");
+    }
+  }
 }
