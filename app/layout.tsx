@@ -55,8 +55,13 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-};
 
+  icons: {
+    icon: "/shortbizai-icon.png",
+    shortcut: "/shortbizai-icon.png",
+    apple: "/shortbizai-icon.png",
+  },
+};
 
 export default function RootLayout({
   children,
