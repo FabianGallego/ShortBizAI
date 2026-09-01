@@ -1230,15 +1230,25 @@ export default function Home() {
             className="w-[160px] h-auto"
           />
 
-          <p className="text-sm text-gray-400 text-center">
 
-            © {new Date().getFullYear()} ShortBizAI.{" "}
-
-            {isEnglish
-              ? "All rights reserved."
-              : "Todos los derechos reservados."}
-
-          </p>
+          <p className="text-sm text-gray-400 text-center leading-6">
+  © {new Date().getFullYear()} ShortBizAI.{" "}
+  {isEnglish ? (
+    <>
+      All rights reserved.{" "}
+      <span className="text-gray-500">
+        A Fagavisión Media company · Faga Hernandez
+      </span>
+    </>
+  ) : (
+    <>
+      Todos los derechos reservados.{" "}
+      <span className="text-gray-500">
+        Una empresa de Fagavisión Media · Faga Hernandez
+      </span>
+    </>
+  )}
+</p>
 
         </div>
 
