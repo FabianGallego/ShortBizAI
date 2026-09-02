@@ -23,6 +23,52 @@ type Mensaje = {
 };
 
 /* =========================================================
+   IMAGEN DE FONDO DE CADA RESTAURANTE
+========================================================= */
+
+function obtenerImagenRestaurante(
+  nombre: string
+) {
+  const nombreNormalizado =
+    nombre
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+
+  /*
+     EL FOGÓN
+     La imagen está en:
+
+     public/image/publicfogon-bg.jpg
+
+     Por eso desde el navegador se utiliza:
+
+     /image/publicfogon-bg.jpg
+  */
+
+  if (
+    nombreNormalizado === "el fogon" ||
+    nombreNormalizado.includes("el fogon")
+  ) {
+    return "/image/publicfogon-bg.jpg";
+  }
+
+  /*
+     Aquí podremos agregar fácilmente
+     los demás restaurantes.
+
+     Ejemplo:
+
+     if (nombreNormalizado.includes("nombre restaurante")) {
+       return "/image/nombre-restaurante-bg.jpg";
+     }
+  */
+
+  return null;
+}
+
+/* =========================================================
    UTILIDADES
 ========================================================= */
 
@@ -1804,6 +1850,15 @@ export default function AgenteAAFPage() {
   }
 
   /* =========================================================
+     IMAGEN DEL RESTAURANTE
+  ========================================================= */
+
+  const imagenRestaurante =
+    obtenerImagenRestaurante(
+      empresa.nombre
+    );
+
+  /* =========================================================
      PÁGINA PRINCIPAL
   ========================================================= */
 
@@ -1864,48 +1919,108 @@ export default function AgenteAAFPage() {
                 BIENVENIDA
             =============================================== */}
 
-            <div className="px-5 pb-6 pt-7 sm:px-8 sm:pb-7 sm:pt-8">
+            <div
+              className="relative overflow-hidden px-5 pb-9 pt-8 sm:px-8 sm:pb-11 sm:pt-10"
+              style={
+                imagenRestaurante
+                  ? {
+                      backgroundImage: `url("${imagenRestaurante}")`,
+                      backgroundSize: "cover",
+                      backgroundPosition:
+                        "center",
+                    }
+                  : undefined
+              }
+            >
 
-              {/* LOGO SHORTBIZAI */}
+              {/* ============================================
+                  CAPA OSCURA
+              ============================================ */}
 
-              <div className="mb-5 flex justify-center">
+              {imagenRestaurante && (
 
-                <Image
-                  src="/logo-foodshortai.png"
-                  alt="ShortBizAI"
-                  width={170}
-                  height={170}
-                  priority
-                  className="h-auto w-[125px] object-contain sm:w-[150px]"
-                />
+                <div className="absolute inset-0 bg-black/55" />
 
-              </div>
+              )}
 
-              {/* BIENVENIDA AL RESTAURANTE */}
+              {/* ============================================
+                  CONTENIDO BIENVENIDA
+              ============================================ */}
 
-              <div className="text-center">
+              <div className="relative z-10">
 
-                <h1 className="text-3xl font-black leading-tight tracking-tight text-gray-950 sm:text-5xl">
+                {/* LOGO SHORTBIZAI */}
 
-                  {idioma === "es"
-                    ? "Bienvenidos a"
-                    : "Welcome to"}
+                <div className="mb-6 flex justify-center">
 
-                  <span className="mt-2 block text-blue-600">
+                  <div className="rounded-2xl bg-white/95 px-5 py-3 shadow-xl backdrop-blur-sm">
+
+                    <Image
+                      src="/logo-foodshortai.png"
+                      alt="ShortBizAI"
+                      width={170}
+                      height={170}
+                      priority
+                      className="h-auto w-[125px] object-contain sm:w-[150px]"
+                    />
+
+                  </div>
+
+                </div>
+
+                {/* BIENVENIDA AL RESTAURANTE */}
+
+                <div className="text-center">
+
+                  <p
+                    className={`mb-2 text-sm font-semibold uppercase tracking-[0.28em] ${
+                      imagenRestaurante
+                        ? "text-white/90"
+                        : "text-gray-500"
+                    }`}
+                  >
+
+                    {idioma === "es"
+                      ? "Bienvenidos a"
+                      : "Welcome to"}
+
+                  </p>
+
+                  <h1
+                    className={`text-4xl font-black leading-tight tracking-tight sm:text-6xl ${
+                      imagenRestaurante
+                        ? "text-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.7)]"
+                        : "text-gray-950"
+                    }`}
+                  >
 
                     {empresa.nombre}
 
-                  </span>
+                  </h1>
 
-                </h1>
+                  <div
+                    className={`mx-auto mt-4 h-[2px] w-20 ${
+                      imagenRestaurante
+                        ? "bg-white"
+                        : "bg-blue-600"
+                    }`}
+                  />
 
-                <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
+                  <p
+                    className={`mx-auto mt-6 max-w-2xl text-base leading-7 sm:text-lg ${
+                      imagenRestaurante
+                        ? "text-white/95 drop-shadow-[0_2px_5px_rgba(0,0,0,0.7)]"
+                        : "text-gray-600"
+                    }`}
+                  >
 
-                  {idioma === "es"
-                    ? "Disfruta de nuestro exquisito menú y reserva tu mesa de manera rápida y sencilla."
-                    : "Enjoy our exquisite menu and reserve your table quickly and easily."}
+                    {idioma === "es"
+                      ? "Disfruta de nuestro exquisito menú y reserva tu mesa de manera rápida y sencilla."
+                      : "Enjoy our exquisite menu and reserve your table quickly and easily."}
 
-                </p>
+                  </p>
+
+                </div>
 
               </div>
 
