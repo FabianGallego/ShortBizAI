@@ -1,8 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
+
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
+import NotificacionesObligatorias from "@/app/components/NotificacionesObligatorias";
 
 type Empresa = {
   id: number | string;
@@ -15,74 +22,139 @@ type Mensaje = {
   texto: string;
 };
 
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = "=".repeat(
-    (4 - (base64String.length % 4)) % 4
-  );
+/* =========================================================
+   UTILIDADES
+========================================================= */
 
-  const base64 = (base64String + padding)
-    .replace(/-/g, "+")
-    .replace(/_/g, "/");
+function urlBase64ToUint8Array(
+  base64String: string
+) {
+  const padding =
+    "=".repeat(
+      (4 - (base64String.length % 4)) % 4
+    );
 
-  const rawData = window.atob(base64);
+  const base64 =
+    (base64String + padding)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+  const rawData =
+    window.atob(base64);
 
   return Uint8Array.from(
-    [...rawData].map((char) => char.charCodeAt(0))
+    [...rawData].map((char) =>
+      char.charCodeAt(0)
+    )
   );
 }
 
-function convertirFecha(fecha: string) {
+function convertirFecha(
+  fecha: string
+) {
   if (!fecha) return "";
 
-  const partes = fecha.split("-");
+  const partes =
+    fecha.split("-");
 
-  if (partes.length !== 3) return fecha;
+  if (partes.length !== 3) {
+    return fecha;
+  }
 
-  const [anio, mes, dia] = partes;
+  const [
+    anio,
+    mes,
+    dia,
+  ] = partes;
 
   return `${dia}/${mes}/${anio}`;
 }
 
-function convertirFechaIngles(fecha: string) {
+function convertirFechaIngles(
+  fecha: string
+) {
   if (!fecha) return "";
 
-  const partes = fecha.split("-");
+  const partes =
+    fecha.split("-");
 
-  if (partes.length !== 3) return fecha;
+  if (partes.length !== 3) {
+    return fecha;
+  }
 
-  const [anio, mes, dia] = partes;
+  const [
+    anio,
+    mes,
+    dia,
+  ] = partes;
 
   return `${mes}/${dia}/${anio}`;
 }
 
-function convertirHora(hora: string) {
+function convertirHora(
+  hora: string
+) {
   if (!hora) return "";
 
-  const [horas, minutos] = hora.split(":");
+  const [
+    horas,
+    minutos,
+  ] = hora.split(":");
 
-  if (!horas || !minutos) return hora;
+  if (!horas || !minutos) {
+    return hora;
+  }
 
   let h = Number(horas);
 
-  const periodo = h >= 12 ? "PM" : "AM";
+  const periodo =
+    h >= 12 ? "PM" : "AM";
 
   h = h % 12;
 
-  if (h === 0) h = 12;
+  if (h === 0) {
+    h = 12;
+  }
 
   return `${h}:${minutos} ${periodo}`;
 }
 
-function fechaEsValida(fecha: string) {
-  const partes = fecha.split("-");
+/* =========================================================
+   VALIDAR FECHA
+========================================================= */
 
-  if (partes.length !== 3) return false;
+function fechaEsValida(
+  fecha: string
+) {
+  const partes =
+    fecha.split("-");
 
-  const [anioTexto, mesTexto, diaTexto] = partes;
+  if (partes.length !== 3) {
+    return false;
+  }
 
-  const anio = Number(anioTexto);
-  const mes = Number(mesTexto);
-  const dia = Number(diaTexto);
+  const [
+    anioTexto,
+    mesTexto,
+    diaTexto,
+  ] = partes;
+
+  if (
+    !/^\d{4}$/.test(anioTexto) ||
+    !/^\d{2}$/.test(mesTexto) ||
+    !/^\d{2}$/.test(diaTexto)
+  ) {
+    return false;
+  }
+
+  const anio =
+    Number(anioTexto);
+
+  const mes =
+    Number(mesTexto);
+
+  const dia =
+    Number(diaTexto);
 
   if (
     !Number.isInteger(anio) ||
@@ -92,61 +164,99 @@ function fechaEsValida(fecha: string) {
     return false;
   }
 
-  if (mes < 1 || mes > 12) return false;
+  if (
+    mes < 1 ||
+    mes > 12
+  ) {
+    return false;
+  }
 
-  if (dia < 1 || dia > 31) return false;
+  const diasPorMes = [
+    31,
+    28,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+  ];
 
-  const fechaObjeto = new Date(
-    anio,
-    mes - 1,
-    dia
-  );
+  const esBisiesto =
+    (anio % 4 === 0 &&
+      anio % 100 !== 0) ||
+    anio % 400 === 0;
+
+  const diasDelMes =
+    mes === 2 &&
+    esBisiesto
+      ? 29
+      : diasPorMes[mes - 1];
 
   return (
-    fechaObjeto.getFullYear() === anio &&
-    fechaObjeto.getMonth() === mes - 1 &&
-    fechaObjeto.getDate() === dia
+    dia >= 1 &&
+    dia <= diasDelMes
   );
 }
 
+/* =========================================================
+   COMPONENTE
+========================================================= */
+
 export default function AgenteAAFPage() {
-  /*
-   * ============================================================
-   * EMPRESA
-   * ============================================================
-   */
 
-  const [empresaId, setEmpresaId] =
-    useState<string | null>(null);
+  /* =======================================================
+     EMPRESA
+  ======================================================= */
 
-  const [empresa, setEmpresa] =
-    useState<Empresa | null>(null);
+  const [
+    empresaId,
+    setEmpresaId,
+  ] = useState<string | null>(null);
 
-  const [cargandoEmpresa, setCargandoEmpresa] =
-    useState(true);
+  const [
+    empresa,
+    setEmpresa,
+  ] = useState<Empresa | null>(null);
 
-  /*
-   * ============================================================
-   * IDIOMA
-   * ============================================================
-   */
+  const [
+    cargandoEmpresa,
+    setCargandoEmpresa,
+  ] = useState(true);
 
-  const [idioma, setIdioma] =
-    useState<"es" | "en">("es");
+  /* =======================================================
+     IDIOMA
+  ======================================================= */
 
-  /*
-   * ============================================================
-   * CHATBOT
-   * ============================================================
-   */
+  const [
+    idioma,
+    setIdioma,
+  ] = useState<"es" | "en">(
+    "es"
+  );
 
-  const [mensajes, setMensajes] =
-    useState<Mensaje[]>([]);
+  /* =======================================================
+     CHATBOT
+  ======================================================= */
 
-  const [entrada, setEntrada] =
-    useState("");
+  const [
+    mensajes,
+    setMensajes,
+  ] = useState<Mensaje[]>([]);
 
-  const [paso, setPaso] = useState<
+  const [
+    entrada,
+    setEntrada,
+  ] = useState("");
+
+  const [
+    paso,
+    setPaso,
+  ] = useState<
     | "inicio"
     | "nombre"
     | "telefono"
@@ -157,97 +267,102 @@ export default function AgenteAAFPage() {
     | "finalizado"
   >("inicio");
 
-  /*
-   * ============================================================
-   * DATOS DE RESERVA
-   * ============================================================
-   */
+  /* =======================================================
+     DATOS RESERVA
+  ======================================================= */
 
-  const [nombre, setNombre] =
-    useState("");
+  const [
+    nombre,
+    setNombre,
+  ] = useState("");
 
-  const [telefono, setTelefono] =
-    useState("");
+  const [
+    telefono,
+    setTelefono,
+  ] = useState("");
 
-  const [fecha, setFecha] =
-    useState("");
+  const [
+    fecha,
+    setFecha,
+  ] = useState("");
 
-  const [hora, setHora] =
-    useState("");
+  const [
+    hora,
+    setHora,
+  ] = useState("");
 
-  const [personas, setPersonas] =
-    useState("");
+  const [
+    personas,
+    setPersonas,
+  ] = useState("");
 
-  /*
-   * ============================================================
-   * ESTADOS DE RESERVA
-   * ============================================================
-   */
+  /* =======================================================
+     ESTADO RESERVA
+  ======================================================= */
 
-  const [guardando, setGuardando] =
-    useState(false);
+  const [
+    guardando,
+    setGuardando,
+  ] = useState(false);
 
-  const [mensajeExito, setMensajeExito] =
-    useState("");
+  const [
+    mensajeExito,
+    setMensajeExito,
+  ] = useState("");
 
-  const [errorReserva, setErrorReserva] =
-    useState("");
+  const [
+    errorReserva,
+    setErrorReserva,
+  ] = useState("");
 
-  const [reservaCreada, setReservaCreada] =
-    useState(false);
+  const [
+    reservaCreada,
+    setReservaCreada,
+  ] = useState(false);
 
-  /*
-   * ============================================================
-   * PUSH / NOTIFICACIONES
-   * ============================================================
-   */
+  /* =======================================================
+     PUSH
+  ======================================================= */
 
-  const [pushEndpoint, setPushEndpoint] =
-    useState<string | null>(null);
+  const [
+    pushEndpoint,
+    setPushEndpoint,
+  ] = useState<string | null>(
+    null
+  );
 
-  const [notificacionesActivas, setNotificacionesActivas] =
-    useState(false);
+  const [
+    notificacionesActivas,
+    setNotificacionesActivas,
+  ] = useState(false);
 
-  const [activandoNotificaciones, setActivandoNotificaciones] =
-    useState(false);
+  const [
+    activandoNotificaciones,
+    setActivandoNotificaciones,
+  ] = useState(false);
 
-  const [errorNotificaciones, setErrorNotificaciones] =
-    useState("");
+  const [
+    errorNotificaciones,
+    setErrorNotificaciones,
+  ] = useState("");
 
-  /*
-   * ============================================================
-   * REFERENCIA CHAT
-   * ============================================================
-   */
+  /* =======================================================
+     REFERENCIA CHAT
+  ======================================================= */
 
   const mensajesRef =
     useRef<HTMLDivElement>(null);
 
-  /*
-   * ============================================================
-   * TEXTOS
-   * ============================================================
-   */
+  /* =========================================================
+     TEXTOS
+  ========================================================= */
 
   const textos = {
+
     es: {
+
       cargando:
         "Cargando...",
-
-      bienvenida:
-        "Bienvenidos a",
-
-      descripcion:
-        "Disfruta de nuestro exquisito menú y reserva tu mesa de manera rápida y sencilla.",
-
-      reservarTitulo:
-        "Para reservar, activa las notificaciones.",
-
-      activarBoton:
-        "🔔 Activar notificaciones",
-
-      activando:
-        "Activando...",
 
       saludo:
         "¡Hola! 👋 Será un placer ayudarte a reservar tu mesa.",
@@ -315,6 +430,15 @@ export default function AgenteAAFPage() {
       nuevaReserva:
         "Hacer otra reserva",
 
+      reservarTitulo:
+        "Para reservar, activa las notificaciones.",
+
+      activarBoton:
+        "🔔 Activar notificaciones",
+
+      activando:
+        "Activando...",
+
       notificacionesActivadas:
         "Notificaciones activadas",
 
@@ -344,26 +468,15 @@ export default function AgenteAAFPage() {
 
       errorGuardar:
         "No pude guardar la reserva. Por favor inténtalo nuevamente.",
+
+      errorTelegram:
+        "La reserva fue guardada, pero no pudimos enviar el aviso al restaurante.",
     },
 
     en: {
+
       cargando:
         "Loading...",
-
-      bienvenida:
-        "Welcome to",
-
-      descripcion:
-        "Enjoy our exquisite menu and reserve your table quickly and easily.",
-
-      reservarTitulo:
-        "To make a reservation, enable notifications.",
-
-      activarBoton:
-        "🔔 Enable notifications",
-
-      activando:
-        "Activating...",
 
       saludo:
         "Hello! 👋 I'll be happy to help you reserve your table.",
@@ -431,6 +544,15 @@ export default function AgenteAAFPage() {
       nuevaReserva:
         "Make another reservation",
 
+      reservarTitulo:
+        "To make a reservation, enable notifications.",
+
+      activarBoton:
+        "🔔 Enable notifications",
+
+      activando:
+        "Activating...",
+
       notificacionesActivadas:
         "Notifications enabled",
 
@@ -453,50 +575,55 @@ export default function AgenteAAFPage() {
         "We could not enable notifications. Please try again.",
 
       errorNotificaciones:
-        "You must allow notifications to receive your reservation confirmation or cancellation.",
+        "You must allow notifications to receive the confirmation or cancellation of your reservation.",
 
       empresaNoIdentificada:
         "We could not identify the restaurant.",
 
       errorGuardar:
         "We could not save the reservation. Please try again.",
+
+      errorTelegram:
+        "The reservation was saved, but we could not notify the restaurant.",
     },
   };
 
-  const t = textos[idioma];
+  const t =
+    textos[idioma];
 
-  /*
-   * ============================================================
-   * OBTENER EMPRESA ID DESDE LA URL
-   *
-   * NO usamos useSearchParams().
-   * Esto evita el problema de prerenderizado de Next.js.
-   * ============================================================
-   */
+  /* =========================================================
+     OBTENER EMPRESA ID DESDE URL
+  ========================================================= */
 
   useEffect(() => {
+
     const params =
       new URLSearchParams(
         window.location.search
       );
 
     const id =
-      params.get("empresaId");
+      params.get(
+        "empresaId"
+      );
 
     setEmpresaId(id);
+
   }, []);
 
-  /*
-   * ============================================================
-   * BUSCAR EMPRESA EN SUPABASE
-   * ============================================================
-   */
+  /* =========================================================
+     BUSCAR EMPRESA
+  ========================================================= */
 
   useEffect(() => {
+
     async function cargarEmpresa() {
+
       if (!empresaId) {
+
         setEmpresa(null);
         setCargandoEmpresa(false);
+
         return;
       }
 
@@ -508,109 +635,134 @@ export default function AgenteAAFPage() {
       } =
         await supabase
           .from("empresas")
-          .select("id, nombre")
-          .eq("id", empresaId)
+          .select(
+            "id, nombre"
+          )
+          .eq(
+            "id",
+            empresaId
+          )
           .maybeSingle();
 
       if (error) {
+
         console.error(
           "ERROR BUSCANDO EMPRESA:",
           error
         );
 
         setEmpresa(null);
+
       } else {
-        setEmpresa(data);
+
+        setEmpresa(
+          data as Empresa | null
+        );
       }
 
       setCargandoEmpresa(false);
     }
 
     cargarEmpresa();
+
   }, [empresaId]);
 
-  /*
-   * ============================================================
-   * INICIAR CHATBOT
-   * ============================================================
-   */
+  /* =========================================================
+     INICIAR CHATBOT
+  ========================================================= */
 
   useEffect(() => {
-    if (!empresa) return;
+
+    if (!empresa) {
+      return;
+    }
 
     setMensajes([
       {
-        id: Date.now(),
-        tipo: "ia",
+        id:
+          Date.now(),
+        tipo:
+          "ia",
         texto:
-          `${t.saludo}\n\n` +
-          `${t.preguntaNombre}`,
+          `${t.saludo}\n\n${t.preguntaNombre}`,
       },
     ]);
 
     setPaso("nombre");
+
   }, [empresa, idioma]);
 
-  /*
-   * ============================================================
-   * AUTO SCROLL DEL CHAT
-   * ============================================================
-   */
+  /* =========================================================
+     AUTO SCROLL CHAT
+  ========================================================= */
 
   useEffect(() => {
-    if (!mensajesRef.current) return;
 
-    mensajesRef.current.scrollTo({
-      top:
-        mensajesRef.current.scrollHeight,
-      behavior: "smooth",
-    });
+    if (
+      mensajesRef.current
+    ) {
+
+      mensajesRef.current.scrollTo({
+
+        top:
+          mensajesRef.current
+            .scrollHeight,
+
+        behavior:
+          "smooth",
+      });
+    }
+
   }, [mensajes]);
 
-  /*
-   * ============================================================
-   * AGREGAR MENSAJE
-   * ============================================================
-   */
+  /* =========================================================
+     AGREGAR MENSAJE
+  ========================================================= */
 
   function agregarMensaje(
-    tipo: "ia" | "usuario",
+    tipo:
+      | "ia"
+      | "usuario",
     texto: string
   ) {
+
     setMensajes(
       (actuales) => [
         ...actuales,
+
         {
           id:
             Date.now() +
             Math.random(),
+
           tipo,
+
           texto,
         },
       ]
     );
   }
 
-  /*
-   * ============================================================
-   * ACTIVAR NOTIFICACIONES PUSH
-   * ============================================================
-   */
+  /* =========================================================
+     ACTIVAR NOTIFICACIONES
+  ========================================================= */
 
   async function registrarNotificaciones() {
-    if (activandoNotificaciones) {
-      return;
-    }
 
-    setActivandoNotificaciones(true);
-    setErrorNotificaciones("");
+    setActivandoNotificaciones(
+      true
+    );
+
+    setErrorNotificaciones(
+      ""
+    );
 
     try {
-      /*
-       * SERVICE WORKER
-       */
 
-      if (!("serviceWorker" in navigator)) {
+      if (
+        !("serviceWorker" in navigator)
+      ) {
+
         setErrorNotificaciones(
           t.navegadorNoSoporta
         );
@@ -618,11 +770,10 @@ export default function AgenteAAFPage() {
         return;
       }
 
-      /*
-       * PUSH
-       */
+      if (
+        !("PushManager" in window)
+      ) {
 
-      if (!("PushManager" in window)) {
         setErrorNotificaciones(
           t.pushNoSoporta
         );
@@ -630,11 +781,10 @@ export default function AgenteAAFPage() {
         return;
       }
 
-      /*
-       * NOTIFICACIONES
-       */
+      if (
+        !("Notification" in window)
+      ) {
 
-      if (!("Notification" in window)) {
         setErrorNotificaciones(
           t.navegadorNoSoporta
         );
@@ -642,20 +792,26 @@ export default function AgenteAAFPage() {
         return;
       }
 
-      /*
-       * PERMISO
-       */
-
       let permiso =
         Notification.permission;
 
-      if (permiso === "default") {
+      if (
+        permiso ===
+        "default"
+      ) {
+
         permiso =
           await Notification.requestPermission();
       }
 
-      if (permiso !== "granted") {
-        setNotificacionesActivas(false);
+      if (
+        permiso !==
+        "granted"
+      ) {
+
+        setNotificacionesActivas(
+          false
+        );
 
         setErrorNotificaciones(
           t.errorNotificaciones
@@ -664,10 +820,6 @@ export default function AgenteAAFPage() {
         return;
       }
 
-      /*
-       * REGISTRAR SERVICE WORKER
-       */
-
       const registro =
         await navigator.serviceWorker.register(
           "/sw.js"
@@ -675,23 +827,17 @@ export default function AgenteAAFPage() {
 
       await navigator.serviceWorker.ready;
 
-      /*
-       * BUSCAR SUSCRIPCIÓN EXISTENTE
-       */
-
       let subscription =
         await registro.pushManager.getSubscription();
 
-      /*
-       * CREAR SUSCRIPCIÓN
-       */
-
       if (!subscription) {
+
         const vapidKey =
           process.env
             .NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
         if (!vapidKey) {
+
           console.error(
             "Falta NEXT_PUBLIC_VAPID_PUBLIC_KEY"
           );
@@ -705,7 +851,9 @@ export default function AgenteAAFPage() {
 
         subscription =
           await registro.pushManager.subscribe({
-            userVisibleOnly: true,
+
+            userVisibleOnly:
+              true,
 
             applicationServerKey:
               urlBase64ToUint8Array(
@@ -714,46 +862,47 @@ export default function AgenteAAFPage() {
           });
       }
 
-      /*
-       * ENDPOINT
-       */
-
       const endpoint =
         subscription.endpoint;
 
-      setPushEndpoint(endpoint);
-
-      /*
-       * GUARDAR SUSCRIPCIÓN
-       */
+      setPushEndpoint(
+        endpoint
+      );
 
       const respuesta =
         await fetch(
           "/api/push",
           {
-            method: "POST",
+            method:
+              "POST",
 
             headers: {
               "Content-Type":
                 "application/json",
             },
 
-            body: JSON.stringify({
-              subscription,
-            }),
+            body:
+              JSON.stringify({
+                subscription,
+              }),
           }
         );
 
       const resultado =
         await respuesta.json();
 
-      if (!respuesta.ok) {
+      if (
+        !respuesta.ok
+      ) {
+
         console.error(
           "ERROR REGISTRANDO PUSH:",
           resultado
         );
 
-        setNotificacionesActivas(false);
+        setNotificacionesActivas(
+          false
+        );
 
         setErrorNotificaciones(
           t.registrarError
@@ -762,35 +911,43 @@ export default function AgenteAAFPage() {
         return;
       }
 
-      /*
-       * TODO CORRECTO
-       */
+      setNotificacionesActivas(
+        true
+      );
 
-      setNotificacionesActivas(true);
-      setErrorNotificaciones("");
+      setErrorNotificaciones(
+        ""
+      );
+
     } catch (error) {
+
       console.error(
         "ERROR REGISTRANDO PUSH:",
         error
       );
 
-      setNotificacionesActivas(false);
+      setNotificacionesActivas(
+        false
+      );
 
       setErrorNotificaciones(
         t.activarError
       );
+
     } finally {
-      setActivandoNotificaciones(false);
+
+      setActivandoNotificaciones(
+        false
+      );
     }
   }
 
-  /*
-   * ============================================================
-   * REINICIAR CHATBOT
-   * ============================================================
-   */
+  /* =========================================================
+     REINICIAR CONVERSACIÓN
+  ========================================================= */
 
   function reiniciarConversacion() {
+
     setNombre("");
     setTelefono("");
     setFecha("");
@@ -799,38 +956,52 @@ export default function AgenteAAFPage() {
 
     setEntrada("");
 
-    setMensajeExito("");
+    setMensajeExito(
+      ""
+    );
 
-    setErrorReserva("");
+    setErrorReserva(
+      ""
+    );
 
-    setReservaCreada(false);
+    setReservaCreada(
+      false
+    );
 
     setMensajes([
       {
-        id: Date.now(),
-        tipo: "ia",
+        id:
+          Date.now(),
+
+        tipo:
+          "ia",
+
         texto:
-          `${t.saludo}\n\n` +
-          `${t.preguntaNombre}`,
+          `${t.saludo}\n\n${t.preguntaNombre}`,
       },
     ]);
 
-    setPaso("nombre");
+    setPaso(
+      "nombre"
+    );
   }
 
-  /*
-   * ============================================================
-   * PROCESAR MENSAJE DEL CLIENTE
-   * ============================================================
-   */
+  /* =========================================================
+     ENVIAR MENSAJE
+  ========================================================= */
 
   async function enviarMensaje() {
+
     const texto =
       entrada.trim();
 
-    if (!texto) return;
+    if (!texto) {
+      return;
+    }
 
-    if (guardando) return;
+    if (guardando) {
+      return;
+    }
 
     setEntrada("");
 
@@ -839,16 +1010,22 @@ export default function AgenteAAFPage() {
       texto
     );
 
-    setErrorReserva("");
+    setErrorReserva(
+      ""
+    );
 
-    /*
-     * ========================================================
-     * NOMBRE
-     * ========================================================
-     */
+    /* =====================================================
+       NOMBRE
+    ===================================================== */
 
-    if (paso === "nombre") {
-      if (texto.length < 2) {
+    if (
+      paso === "nombre"
+    ) {
+
+      if (
+        texto.length < 2
+      ) {
+
         agregarMensaje(
           "ia",
           t.preguntaNombre
@@ -857,25 +1034,30 @@ export default function AgenteAAFPage() {
         return;
       }
 
-      setNombre(texto);
+      setNombre(
+        texto
+      );
 
       agregarMensaje(
         "ia",
         t.preguntaTelefono
       );
 
-      setPaso("telefono");
+      setPaso(
+        "telefono"
+      );
 
       return;
     }
 
-    /*
-     * ========================================================
-     * TELÉFONO
-     * ========================================================
-     */
+    /* =====================================================
+       TELÉFONO
+    ===================================================== */
 
-    if (paso === "telefono") {
+    if (
+      paso === "telefono"
+    ) {
+
       const telefonoLimpio =
         texto.replace(
           /\D/g,
@@ -886,6 +1068,7 @@ export default function AgenteAAFPage() {
         telefonoLimpio.length !==
         10
       ) {
+
         agregarMensaje(
           "ia",
           t.telefonoInvalido
@@ -903,18 +1086,21 @@ export default function AgenteAAFPage() {
         t.preguntaFecha
       );
 
-      setPaso("fecha");
+      setPaso(
+        "fecha"
+      );
 
       return;
     }
 
-    /*
-     * ========================================================
-     * FECHA
-     * ========================================================
-     */
+    /* =====================================================
+       FECHA
+    ===================================================== */
 
-    if (paso === "fecha") {
+    if (
+      paso === "fecha"
+    ) {
+
       let fechaValida =
         texto;
 
@@ -924,17 +1110,16 @@ export default function AgenteAAFPage() {
       const formatoFechaLatino =
         /^\d{1,2}\/\d{1,2}\/\d{4}$/;
 
-      /*
-       * ACEPTAR DD/MM/YYYY
-       */
-
       if (
         formatoFechaLatino.test(
           texto
         )
       ) {
+
         const partes =
-          texto.split("/");
+          texto.split(
+            "/"
+          );
 
         const dia =
           partes[0].padStart(
@@ -955,10 +1140,6 @@ export default function AgenteAAFPage() {
           `${anio}-${mes}-${dia}`;
       }
 
-      /*
-       * VALIDAR FECHA
-       */
-
       if (
         !formatoFecha.test(
           fechaValida
@@ -967,6 +1148,7 @@ export default function AgenteAAFPage() {
           fechaValida
         )
       ) {
+
         agregarMensaje(
           "ia",
           t.fechaInvalida
@@ -984,18 +1166,21 @@ export default function AgenteAAFPage() {
         t.preguntaHora
       );
 
-      setPaso("hora");
+      setPaso(
+        "hora"
+      );
 
       return;
     }
 
-    /*
-     * ========================================================
-     * HORA
-     * ========================================================
-     */
+    /* =====================================================
+       HORA
+    ===================================================== */
 
-    if (paso === "hora") {
+    if (
+      paso === "hora"
+    ) {
+
       const formatoHora =
         /^\d{1,2}:\d{2}$/;
 
@@ -1004,6 +1189,7 @@ export default function AgenteAAFPage() {
           texto
         )
       ) {
+
         agregarMensaje(
           "ia",
           t.horaInvalida
@@ -1012,8 +1198,13 @@ export default function AgenteAAFPage() {
         return;
       }
 
-      const [h, m] =
-        texto.split(":");
+      const [
+        h,
+        m,
+      ] =
+        texto.split(
+          ":"
+        );
 
       const horas =
         Number(h);
@@ -1027,6 +1218,7 @@ export default function AgenteAAFPage() {
         minutos < 0 ||
         minutos > 59
       ) {
+
         agregarMensaje(
           "ia",
           t.horaInvalida
@@ -1057,18 +1249,21 @@ export default function AgenteAAFPage() {
         t.preguntaPersonas
       );
 
-      setPaso("personas");
+      setPaso(
+        "personas"
+      );
 
       return;
     }
 
-    /*
-     * ========================================================
-     * PERSONAS
-     * ========================================================
-     */
+    /* =====================================================
+       PERSONAS
+    ===================================================== */
 
-    if (paso === "personas") {
+    if (
+      paso === "personas"
+    ) {
+
       const numero =
         Number(
           texto.replace(
@@ -1084,6 +1279,7 @@ export default function AgenteAAFPage() {
         numero < 1 ||
         numero > 20
       ) {
+
         agregarMensaje(
           "ia",
           t.personasInvalidas
@@ -1130,15 +1326,15 @@ export default function AgenteAAFPage() {
       return;
     }
 
-    /*
-     * ========================================================
-     * CONFIRMACIÓN
-     * ========================================================
-     */
+    /* =====================================================
+       CONFIRMACIÓN
+    ===================================================== */
 
     if (
-      paso === "confirmacion"
+      paso ===
+      "confirmacion"
     ) {
+
       const respuesta =
         texto.toLowerCase();
 
@@ -1172,13 +1368,19 @@ export default function AgenteAAFPage() {
             )
         );
 
-      if (afirmativo) {
+      if (
+        afirmativo
+      ) {
+
         await crearReserva();
 
         return;
       }
 
-      if (negativo) {
+      if (
+        negativo
+      ) {
+
         agregarMensaje(
           "ia",
           t.preguntaNombre
@@ -1190,7 +1392,9 @@ export default function AgenteAAFPage() {
         setHora("");
         setPersonas("");
 
-        setPaso("nombre");
+        setPaso(
+          "nombre"
+        );
 
         return;
       }
@@ -1204,23 +1408,21 @@ export default function AgenteAAFPage() {
     }
   }
 
-  /*
-   * ============================================================
-   * CREAR RESERVA
-   * ============================================================
-   */
+  /* =========================================================
+     CREAR RESERVA
+  ========================================================= */
 
   async function crearReserva() {
-    if (guardando) return;
 
-    /*
-     * EMPRESA
-     */
+    if (guardando) {
+      return;
+    }
 
     if (
       !empresaId ||
       !empresa
     ) {
+
       setErrorReserva(
         t.empresaNoIdentificada
       );
@@ -1232,10 +1434,6 @@ export default function AgenteAAFPage() {
 
       return;
     }
-
-    /*
-     * DATOS
-     */
 
     if (
       !nombre ||
@@ -1244,24 +1442,28 @@ export default function AgenteAAFPage() {
       !hora ||
       !personas
     ) {
+
       setErrorReserva(
+        t.errorGuardar
+      );
+
+      agregarMensaje(
+        "ia",
         t.errorGuardar
       );
 
       return;
     }
 
-    /*
-     * NOTIFICACIONES
-     *
-     * Son necesarias para poder recibir
-     * la respuesta del restaurante.
-     */
+    /* =====================================================
+       NOTIFICACIONES OBLIGATORIAS
+    ===================================================== */
 
     if (
       !notificacionesActivas ||
       !pushEndpoint
     ) {
+
       setErrorReserva(
         t.errorNotificaciones
       );
@@ -1274,17 +1476,18 @@ export default function AgenteAAFPage() {
       return;
     }
 
-    setGuardando(true);
+    setGuardando(
+      true
+    );
 
     try {
+
       const numeroPersonas =
         Number(personas);
 
-      /*
-       * ========================================================
-       * GUARDAR RESERVA EN SUPABASE
-       * ========================================================
-       */
+      /* ===================================================
+         GUARDAR RESERVA
+      =================================================== */
 
       const {
         data,
@@ -1303,9 +1506,11 @@ export default function AgenteAAFPage() {
               telefono:
                 telefono,
 
-              fecha,
+              fecha:
+                fecha,
 
-              hora,
+              hora:
+                hora,
 
               personas:
                 String(
@@ -1319,11 +1524,8 @@ export default function AgenteAAFPage() {
           .select()
           .single();
 
-      /*
-       * ERROR SUPABASE
-       */
-
       if (error) {
+
         console.error(
           "ERROR AL GUARDAR RESERVA:",
           error
@@ -1346,52 +1548,55 @@ export default function AgenteAAFPage() {
         data
       );
 
-      /*
-       * ========================================================
-       * NOTIFICAR AL RESTAURANTE POR TELEGRAM
-       * ========================================================
-       */
+      /* ===================================================
+         TELEGRAM
+      =================================================== */
 
       try {
+
         const respuestaTelegram =
           await fetch(
             "/api/reservas/notificar",
             {
-              method: "POST",
+              method:
+                "POST",
 
               headers: {
                 "Content-Type":
                   "application/json",
               },
 
-              body: JSON.stringify({
-                reservaId:
-                  data.id,
+              body:
+                JSON.stringify({
+                  reservaId:
+                    data.id,
 
-                empresaId:
-                  empresaId,
+                  empresaId:
+                    empresaId,
 
-                empresaNombre:
-                  empresa.nombre,
+                  empresaNombre:
+                    empresa.nombre,
 
-                cliente_nombre:
-                  nombre.trim(),
+                  cliente_nombre:
+                    nombre.trim(),
 
-                telefono:
-                  telefono,
+                  telefono:
+                    telefono,
 
-                fecha,
+                  fecha:
+                    fecha,
 
-                hora,
+                  hora:
+                    hora,
 
-                personas:
-                  String(
-                    numeroPersonas
-                  ),
+                  personas:
+                    String(
+                      numeroPersonas
+                    ),
 
-                pushEndpoint:
-                  pushEndpoint,
-              }),
+                  pushEndpoint:
+                    pushEndpoint,
+                }),
             }
           );
 
@@ -1401,25 +1606,28 @@ export default function AgenteAAFPage() {
         if (
           !respuestaTelegram.ok
         ) {
+
           console.error(
             "ERROR NOTIFICANDO:",
             resultadoTelegram
           );
         }
+
       } catch (error) {
+
         console.error(
           "ERROR COMUNICANDO CON TELEGRAM:",
           error
         );
       }
 
-      /*
-       * ========================================================
-       * RESERVA ENVIADA
-       * ========================================================
-       */
+      /* ===================================================
+         FINALIZAR
+      =================================================== */
 
-      setReservaCreada(true);
+      setReservaCreada(
+        true
+      );
 
       setMensajeExito(
         t.reservaEnviada
@@ -1430,8 +1638,12 @@ export default function AgenteAAFPage() {
         `${t.reservaEnviada}\n\n${t.esperando}`
       );
 
-      setPaso("finalizado");
+      setPaso(
+        "finalizado"
+      );
+
     } catch (error) {
+
       console.error(
         "ERROR GENERAL:",
         error
@@ -1445,37 +1657,45 @@ export default function AgenteAAFPage() {
         "ia",
         t.errorGuardar
       );
+
     } finally {
-      setGuardando(false);
+
+      setGuardando(
+        false
+      );
     }
   }
 
-  /*
-   * ============================================================
-   * ENTER
-   * ============================================================
-   */
+  /* =========================================================
+     ENTER
+  ========================================================= */
 
   function manejarTecla(
-    e: React.KeyboardEvent<HTMLInputElement>
+    e: KeyboardEvent<HTMLInputElement>
   ) {
-    if (e.key === "Enter") {
+
+    if (
+      e.key ===
+      "Enter"
+    ) {
+
       e.preventDefault();
 
       enviarMensaje();
     }
   }
 
-  /*
-   * ============================================================
-   * BOTONES DE CONFIRMACIÓN
-   * ============================================================
-   */
+  /* =========================================================
+     BOTONES DE CONFIRMACIÓN
+  ========================================================= */
 
   async function enviarMensajeDirecto(
     texto: string
   ) {
-    if (guardando) return;
+
+    if (guardando) {
+      return;
+    }
 
     agregarMensaje(
       "usuario",
@@ -1483,8 +1703,10 @@ export default function AgenteAAFPage() {
     );
 
     if (
-      paso === "confirmacion"
+      paso ===
+      "confirmacion"
     ) {
+
       const respuesta =
         texto.toLowerCase();
 
@@ -1505,15 +1727,14 @@ export default function AgenteAAFPage() {
             )
         );
 
-      if (afirmativo) {
+      if (
+        afirmativo
+      ) {
+
         await crearReserva();
 
         return;
       }
-
-      /*
-       * CORREGIR
-       */
 
       agregarMensaje(
         "ia",
@@ -1526,17 +1747,20 @@ export default function AgenteAAFPage() {
       setHora("");
       setPersonas("");
 
-      setPaso("nombre");
+      setPaso(
+        "nombre"
+      );
     }
   }
 
-  /*
-   * ============================================================
-   * CARGANDO
-   * ============================================================
-   */
+  /* =========================================================
+     CARGANDO EMPRESA
+  ========================================================= */
 
-  if (cargandoEmpresa) {
+  if (
+    cargandoEmpresa
+  ) {
+
     return (
       <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
 
@@ -1554,13 +1778,12 @@ export default function AgenteAAFPage() {
     );
   }
 
-  /*
-   * ============================================================
-   * EMPRESA NO ENCONTRADA
-   * ============================================================
-   */
+  /* =========================================================
+     EMPRESA NO ENCONTRADA
+  ========================================================= */
 
   if (!empresa) {
+
     return (
       <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
 
@@ -1580,280 +1803,477 @@ export default function AgenteAAFPage() {
     );
   }
 
-  /*
-   * ============================================================
-   * PÁGINA PRINCIPAL
-   * ============================================================
-   */
+  /* =========================================================
+     PÁGINA PRINCIPAL
+  ========================================================= */
 
   return (
-    <main className="min-h-screen bg-gray-50 text-gray-900">
+    <NotificacionesObligatorias>
 
-      <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-8">
+      <main className="min-h-screen bg-gray-50 text-gray-900">
 
-        {/* =====================================================
-            IDIOMA
-        ====================================================== */}
+        <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-8">
 
-        <div className="mb-5 flex justify-end">
+          {/* =================================================
+              IDIOMA
+          ================================================= */}
 
-          <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="mb-5 flex justify-end">
 
-            <button
-              type="button"
-              onClick={() =>
-                setIdioma("es")
-              }
-              className={`px-4 py-2 text-sm font-bold transition ${
-                idioma === "es"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              🇪🇸 Español
-            </button>
+            <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
 
-            <button
-              type="button"
-              onClick={() =>
-                setIdioma("en")
-              }
-              className={`px-4 py-2 text-sm font-bold transition ${
-                idioma === "en"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              🇺🇸 English
-            </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setIdioma("es")
+                }
+                className={`px-4 py-2 text-sm font-bold transition ${
+                  idioma === "es"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                🇪🇸 Español
+              </button>
 
-          </div>
-
-        </div>
-
-        {/* =====================================================
-            CONTENEDOR PRINCIPAL
-        ====================================================== */}
-
-        <section className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl">
-
-          {/* ===================================================
-              ENCABEZADO
-          ==================================================== */}
-
-          <div className="px-5 pb-6 pt-6 sm:px-8 sm:pb-7 sm:pt-7">
-
-            {/* LOGO MÁS PEQUEÑO */}
-
-            <div className="mb-4 flex justify-center">
-
-              <Image
-                src="/logo-foodshortai.png"
-                alt="ShortBizAI"
-                width={130}
-                height={130}
-                priority
-                className="h-auto w-[110px] object-contain sm:w-[130px]"
-              />
-
-            </div>
-
-            {/* BIENVENIDA */}
-
-            <div className="text-center">
-
-              <h1 className="text-3xl font-black leading-tight tracking-tight text-gray-950 sm:text-4xl">
-
-                {t.bienvenida}
-
-                <span className="mt-1 block text-blue-600">
-                  {empresa.nombre}
-                </span>
-
-              </h1>
-
-              <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
-                {t.descripcion}
-              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  setIdioma("en")
+                }
+                className={`px-4 py-2 text-sm font-bold transition ${
+                  idioma === "en"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                🇺🇸 English
+              </button>
 
             </div>
 
           </div>
 
-          {/* ===================================================
-              NOTIFICACIONES
-          ==================================================== */}
+          {/* =================================================
+              TARJETA PRINCIPAL
+          ================================================= */}
 
-          <div className="border-y border-gray-200 bg-gray-50 px-5 py-5 sm:px-8">
+          <section className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl">
 
-            {!notificacionesActivas ? (
+            {/* ===============================================
+                BIENVENIDA
+            =============================================== */}
 
-              <div>
+            <div className="px-5 pb-6 pt-7 sm:px-8 sm:pb-7 sm:pt-8">
 
-                <p className="text-center text-lg font-bold text-gray-950 sm:text-xl">
-                  {t.reservarTitulo}
-                </p>
+              {/* LOGO SHORTBIZAI */}
 
-                <button
-                  type="button"
-                  onClick={
-                    registrarNotificaciones
-                  }
-                  disabled={
-                    activandoNotificaciones
-                  }
-                  className="mt-4 min-h-[54px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-                >
+              <div className="mb-5 flex justify-center">
 
-                  {activandoNotificaciones
-                    ? t.activando
-                    : t.activarBoton}
-
-                </button>
-
-                {errorNotificaciones && (
-
-                  <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium leading-6 text-red-700">
-
-                    {errorNotificaciones}
-
-                  </div>
-
-                )}
+                <Image
+                  src="/logo-foodshortai.png"
+                  alt="ShortBizAI"
+                  width={170}
+                  height={170}
+                  priority
+                  className="h-auto w-[125px] object-contain sm:w-[150px]"
+                />
 
               </div>
 
-            ) : (
+              {/* BIENVENIDA AL RESTAURANTE */}
 
-              <div className="flex items-center gap-3">
+              <div className="text-center">
 
-                <div className="text-2xl">
-                  🔔
+                <h1 className="text-3xl font-black leading-tight tracking-tight text-gray-950 sm:text-5xl">
+
+                  {idioma === "es"
+                    ? "Bienvenidos a"
+                    : "Welcome to"}
+
+                  <span className="mt-2 block text-blue-600">
+
+                    {empresa.nombre}
+
+                  </span>
+
+                </h1>
+
+                <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
+
+                  {idioma === "es"
+                    ? "Disfruta de nuestro exquisito menú y reserva tu mesa de manera rápida y sencilla."
+                    : "Enjoy our exquisite menu and reserve your table quickly and easily."}
+
+                </p>
+
+              </div>
+
+            </div>
+
+            {/* ===============================================
+                NOTIFICACIONES
+            =============================================== */}
+
+            <div className="border-y border-gray-200 bg-gray-50 px-5 py-5 sm:px-8">
+
+              {!notificacionesActivas ? (
+
+                <div>
+
+                  <div className="flex items-center gap-3">
+
+                    <div className="text-2xl">
+                      🔔
+                    </div>
+
+                    <h2 className="font-bold text-gray-950">
+
+                      {t.reservarTitulo}
+
+                    </h2>
+
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={
+                      registrarNotificaciones
+                    }
+                    disabled={
+                      activandoNotificaciones
+                    }
+                    className="mt-4 min-h-[52px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                  >
+
+                    {activandoNotificaciones
+                      ? t.activando
+                      : t.activarBoton}
+
+                  </button>
+
+                  {errorNotificaciones && (
+
+                    <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium leading-6 text-red-700">
+
+                      {errorNotificaciones}
+
+                    </div>
+
+                  )}
+
+                </div>
+
+              ) : (
+
+                <div className="flex items-start gap-3">
+
+                  <div className="text-xl">
+                    🔔
+                  </div>
+
+                  <div>
+
+                    <p className="font-bold text-green-700">
+                      {t.notificacionesActivadas}
+                    </p>
+
+                    <p className="mt-1 text-sm leading-6 text-green-700">
+                      {t.dispositivoListo}
+                    </p>
+
+                  </div>
+
+                </div>
+
+              )}
+
+            </div>
+
+            {/* ===============================================
+                CHATBOT
+            =============================================== */}
+
+            <div className="flex flex-col">
+
+              {/* CABECERA */}
+
+              <div className="flex items-center gap-3 border-b border-gray-200 px-5 py-4 sm:px-7">
+
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-xl shadow-sm">
+                  🤖
                 </div>
 
                 <div>
 
-                  <p className="font-bold text-green-700">
-                    {t.notificacionesActivadas}
+                  <p className="font-black text-gray-950">
+                    ShortBizAI
                   </p>
 
-                  <p className="mt-1 text-sm leading-6 text-green-700">
-                    {t.dispositivoListo}
+                  <p className="text-xs text-green-600">
+
+                    ●{" "}
+
+                    {idioma === "es"
+                      ? "Asistente disponible"
+                      : "Assistant available"}
+
                   </p>
 
                 </div>
 
               </div>
 
-            )}
+              {/* MENSAJES */}
 
-          </div>
+              <div
+                ref={mensajesRef}
+                className="max-h-[500px] min-h-[380px] space-y-4 overflow-y-auto bg-gray-50 px-4 py-5 sm:px-6"
+              >
 
-          {/* ===================================================
-              CHATBOT
-          ==================================================== */}
-
-          <div className="flex flex-col">
-
-            {/* CABECERA DEL CHAT */}
-
-            <div className="flex items-center gap-3 border-b border-gray-200 px-5 py-4 sm:px-7">
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-xl shadow-sm">
-                🤖
-              </div>
-
-              <div>
-
-                <p className="font-black text-gray-950">
-                  ShortBizAI
-                </p>
-
-                <p className="text-xs text-green-600">
-
-                  ●{" "}
-
-                  {idioma === "es"
-                    ? "Asistente disponible"
-                    : "Assistant available"}
-
-                </p>
-
-              </div>
-
-            </div>
-
-            {/* =================================================
-                MENSAJES
-            ================================================== */}
-
-            <div
-              ref={mensajesRef}
-              className="max-h-[500px] min-h-[380px] space-y-4 overflow-y-auto bg-gray-50 px-4 py-5 sm:px-6"
-            >
-
-              {mensajes.map(
-                (mensaje) => (
-
-                  <div
-                    key={mensaje.id}
-                    className={`flex ${
-                      mensaje.tipo ===
-                      "usuario"
-                        ? "justify-end"
-                        : "justify-start"
-                    }`}
-                  >
+                {mensajes.map(
+                  (mensaje) => (
 
                     <div
-                      className={`max-w-[85%] whitespace-pre-line rounded-2xl px-4 py-3 text-[15px] leading-6 shadow-sm ${
+                      key={
+                        mensaje.id
+                      }
+                      className={`flex ${
                         mensaje.tipo ===
                         "usuario"
-                          ? "rounded-br-md bg-blue-600 text-white"
-                          : "rounded-bl-md border border-gray-200 bg-white text-gray-800"
+                          ? "justify-end"
+                          : "justify-start"
                       }`}
                     >
 
-                      {mensaje.texto}
+                      <div
+                        className={`max-w-[85%] whitespace-pre-line rounded-2xl px-4 py-3 text-[15px] leading-6 shadow-sm ${
+                          mensaje.tipo ===
+                          "usuario"
+                            ? "rounded-br-md bg-blue-600 text-white"
+                            : "rounded-bl-md border border-gray-200 bg-white text-gray-800"
+                        }`}
+                      >
+
+                        {
+                          mensaje.texto
+                        }
+
+                      </div>
+
+                    </div>
+
+                  )
+                )}
+
+                {/* INDICADOR */}
+
+                {guardando && (
+
+                  <div className="flex justify-start">
+
+                    <div className="rounded-2xl rounded-bl-md border border-gray-200 bg-white px-4 py-3 shadow-sm">
+
+                      <div className="flex items-center gap-1">
+
+                        <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
+
+                        <span
+                          className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                          style={{
+                            animationDelay:
+                              "150ms",
+                          }}
+                        />
+
+                        <span
+                          className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                          style={{
+                            animationDelay:
+                              "300ms",
+                          }}
+                        />
+
+                      </div>
 
                     </div>
 
                   </div>
 
-                )
-              )}
+                )}
 
-              {/* INDICADOR DE PROCESAMIENTO */}
+              </div>
 
-              {guardando && (
+              {/* =============================================
+                  CONFIRMACIÓN
+              ============================================= */}
 
-                <div className="flex justify-start">
+              {paso ===
+                "confirmacion" &&
+                !guardando && (
 
-                  <div className="rounded-2xl rounded-bl-md border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                  <div className="border-t border-gray-200 bg-white px-4 py-4 sm:px-6">
 
-                    <div className="flex items-center gap-1">
+                    <div className="grid gap-3 sm:grid-cols-2">
 
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          enviarMensajeDirecto(
+                            idioma === "es"
+                              ? "Sí, enviar reserva"
+                              : "Yes, send reservation"
+                          )
+                        }
+                        className="min-h-[52px] rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700"
+                      >
 
-                      <span
-                        className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
-                        style={{
-                          animationDelay:
-                            "150ms",
-                        }}
-                      />
+                        ✅ {t.si}
 
-                      <span
-                        className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
-                        style={{
-                          animationDelay:
-                            "300ms",
-                        }}
-                      />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          enviarMensajeDirecto(
+                            idioma === "es"
+                              ? "No, quiero corregir"
+                              : "No, I want to correct it"
+                          )
+                        }
+                        className="min-h-[52px] rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-100"
+                      >
+
+                        ✏️ {t.no}
+
+                      </button>
 
                     </div>
 
                   </div>
+
+                )}
+
+              {/* =============================================
+                  INPUT CHAT
+              ============================================= */}
+
+              {paso !==
+                "finalizado" &&
+                paso !==
+                  "confirmacion" && (
+
+                  <div className="border-t border-gray-200 bg-white p-4 sm:p-5">
+
+                    <div className="flex items-end gap-3">
+
+                      <input
+                        type={
+                          paso ===
+                          "telefono"
+                            ? "tel"
+                            : "text"
+                        }
+                        value={
+                          entrada
+                        }
+                        onChange={(
+                          e
+                        ) =>
+                          setEntrada(
+                            e.target
+                              .value
+                          )
+                        }
+                        onKeyDown={
+                          manejarTecla
+                        }
+                        placeholder={
+                          idioma === "es"
+                            ? "Escribe tu respuesta..."
+                            : "Type your answer..."
+                        }
+                        disabled={
+                          guardando
+                        }
+                        autoComplete="off"
+                        inputMode={
+                          paso ===
+                          "telefono"
+                            ? "tel"
+                            : "text"
+                        }
+                        className="min-h-[52px] flex-1 rounded-2xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={
+                          enviarMensaje
+                        }
+                        disabled={
+                          guardando ||
+                          !entrada.trim()
+                        }
+                        className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-xl text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                      >
+
+                        ➤
+
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                )}
+
+              {/* =============================================
+                  FINAL
+              ============================================= */}
+
+              {paso ===
+                "finalizado" && (
+
+                <div className="border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
+
+                  {mensajeExito && (
+
+                    <div className="mb-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-4 text-sm font-semibold leading-6 text-green-800">
+
+                      {
+                        mensajeExito
+                      }
+
+                    </div>
+
+                  )}
+
+                  {errorReserva && (
+
+                    <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold leading-6 text-red-700">
+
+                      {
+                        errorReserva
+                      }
+
+                    </div>
+
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={
+                      reiniciarConversacion
+                    }
+                    className="min-h-[52px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white transition hover:bg-blue-700"
+                  >
+
+                    {
+                      t.nuevaReserva
+                    }
+
+                  </button>
 
                 </div>
 
@@ -1861,162 +2281,12 @@ export default function AgenteAAFPage() {
 
             </div>
 
-            {/* =================================================
-                BOTONES DE CONFIRMACIÓN
-            ================================================== */}
+          </section>
 
-            {paso === "confirmacion" &&
-              !guardando && (
+        </div>
 
-                <div className="border-t border-gray-200 bg-white px-4 py-4 sm:px-6">
+      </main>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        enviarMensajeDirecto(
-                          idioma === "es"
-                            ? "Sí, enviar reserva"
-                            : "Yes, send reservation"
-                        )
-                      }
-                      className="min-h-[52px] rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700"
-                    >
-                      ✅ {t.si}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        enviarMensajeDirecto(
-                          idioma === "es"
-                            ? "No, quiero corregir"
-                            : "No, I want to correct it"
-                        )
-                      }
-                      className="min-h-[52px] rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-100"
-                    >
-                      ✏️ {t.no}
-                    </button>
-
-                  </div>
-
-                </div>
-
-              )}
-
-            {/* =================================================
-                INPUT DEL CHATBOT
-            ================================================== */}
-
-            {paso !== "finalizado" &&
-              paso !== "confirmacion" && (
-
-                <div className="border-t border-gray-200 bg-white p-4 sm:p-5">
-
-                  <div className="flex items-end gap-3">
-
-                    <input
-                      type={
-                        paso === "telefono"
-                          ? "tel"
-                          : "text"
-                      }
-                      value={entrada}
-                      onChange={(e) =>
-                        setEntrada(
-                          e.target.value
-                        )
-                      }
-                      onKeyDown={
-                        manejarTecla
-                      }
-                      placeholder={
-                        idioma === "es"
-                          ? "Escribe tu respuesta..."
-                          : "Type your answer..."
-                      }
-                      disabled={guardando}
-                      autoComplete="off"
-                      inputMode={
-                        paso === "telefono"
-                          ? "tel"
-                          : "text"
-                      }
-                      className="min-h-[52px] flex-1 rounded-2xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100"
-                    />
-
-                    <button
-                      type="button"
-                      onClick={
-                        enviarMensaje
-                      }
-                      disabled={
-                        guardando ||
-                        !entrada.trim()
-                      }
-                      className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-xl text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-                    >
-                      ➤
-                    </button>
-
-                  </div>
-
-                </div>
-
-              )}
-
-            {/* =================================================
-                RESERVA FINALIZADA
-            ================================================== */}
-
-            {paso === "finalizado" && (
-
-              <div className="border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
-
-                {mensajeExito && (
-
-                  <div className="mb-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-4 text-sm font-semibold leading-6 text-green-800">
-
-                    {mensajeExito}
-
-                  </div>
-
-                )}
-
-                {errorReserva && (
-
-                  <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold leading-6 text-red-700">
-
-                    {errorReserva}
-
-                  </div>
-
-                )}
-
-                <button
-                  type="button"
-                  onClick={
-                    reiniciarConversacion
-                  }
-                  className="min-h-[52px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white transition hover:bg-blue-700"
-                >
-
-                  {t.nuevaReserva}
-
-                </button>
-
-              </div>
-
-            )}
-
-          </div>
-
-        </section>
-
-      </div>
-
-    </main>
+    </NotificacionesObligatorias>
   );
 }
