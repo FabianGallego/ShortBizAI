@@ -10,7 +10,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import NotificacionesObligatorias from "@/app/components/NotificacionesObligatorias";
-
+import ReservaChat from "./ReservaChat";
 type Empresa = {
   id: number | string;
   nombre: string;
@@ -2661,86 +2661,32 @@ export default function AgenteAAFPage() {
 
                   )}
 
-                {/* =============================================
-                    INPUT CHAT
-                ============================================= */}
 
-                {paso !==
-                  "finalizado" &&
-                  paso !==
-                    "confirmacion" &&
-                  paso !==
-                    "fecha" &&
-                  paso !==
-                    "hora" &&
-                  paso !==
-                    "personas" && (
 
-                    <div className="border-t border-gray-200 bg-white p-4 sm:p-5">
+{/* =============================================
+    INPUT CHAT
+============================================= */}
 
-                      <div className="flex items-end gap-3">
+{paso !==
+  "finalizado" &&
+  paso !==
+    "confirmacion" &&
+  paso !==
+    "fecha" &&
+  paso !==
+    "hora" &&
+  paso !==
+    "personas" && (
 
-                        <input
-                          type={
-                            paso ===
-                            "telefono"
-                              ? "tel"
-                              : "text"
-                          }
-                          value={
-                            entrada
-                          }
-                          onChange={(
-                            e
-                          ) =>
-                            setEntrada(
-                              e.target
-                                .value
-                            )
-                          }
-                          onKeyDown={
-                            manejarTecla
-                          }
-                          placeholder={
-                            idioma ===
-                            "es"
-                              ? "Escribe tu respuesta..."
-                              : "Type your answer..."
-                          }
-                          disabled={
-                            guardando
-                          }
-                          autoComplete="off"
-                          inputMode={
-                            paso ===
-                            "telefono"
-                              ? "tel"
-                              : "text"
-                          }
-                          className="min-h-[58px] flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-5 text-[16px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 sm:text-[17px]"
-                        />
+    <ReservaChat
+      entrada={entrada}
+      setEntrada={setEntrada}
+      enviarMensaje={enviarMensaje}
+      deshabilitado={guardando}
+      idioma={idioma}
+    />
 
-                        <button
-                          type="button"
-                          onClick={
-                            enviarMensaje
-                          }
-                          disabled={
-                            guardando ||
-                            !entrada.trim()
-                          }
-                          className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-xl text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-                        >
-
-                          ➤
-
-                        </button>
-
-                      </div>
-
-                    </div>
-
-                  )}
+  )}
 
                 {/* =============================================
                     FINAL
