@@ -42,7 +42,7 @@ function obtenerImagenRestaurante(
 
      public/image/publicfogon-bg.jpg
 
-     Por eso desde el navegador se utiliza:
+     Desde el navegador:
 
      /image/publicfogon-bg.jpg
   */
@@ -57,12 +57,6 @@ function obtenerImagenRestaurante(
   /*
      Aquí podremos agregar fácilmente
      los demás restaurantes.
-
-     Ejemplo:
-
-     if (nombreNormalizado.includes("nombre restaurante")) {
-       return "/image/nombre-restaurante-bg.jpg";
-     }
   */
 
   return null;
@@ -193,12 +187,16 @@ function convertirHora(
     return hora;
   }
 
-  let h = Number(horas);
+  let h =
+    Number(horas);
 
   const periodo =
-    h >= 12 ? "PM" : "AM";
+    h >= 12
+      ? "PM"
+      : "AM";
 
-  h = h % 12;
+  h =
+    h % 12;
 
   if (h === 0) {
     h = 12;
@@ -283,7 +281,9 @@ function fechaEsValida(
     mes === 2 &&
     esBisiesto
       ? 29
-      : diasPorMes[mes - 1];
+      : diasPorMes[
+          mes - 1
+        ];
 
   return (
     dia >= 1 &&
@@ -302,7 +302,10 @@ function fechaEsPasada(
     return false;
   }
 
-  return fecha < obtenerFechaHoy();
+  return (
+    fecha <
+    obtenerFechaHoy()
+  );
 }
 
 /* =========================================================
@@ -318,12 +321,16 @@ export default function AgenteAAFPage() {
   const [
     empresaId,
     setEmpresaId,
-  ] = useState<string | null>(null);
+  ] = useState<string | null>(
+    null
+  );
 
   const [
     empresa,
     setEmpresa,
-  ] = useState<Empresa | null>(null);
+  ] = useState<Empresa | null>(
+    null
+  );
 
   const [
     cargandoEmpresa,
@@ -337,7 +344,9 @@ export default function AgenteAAFPage() {
   const [
     idioma,
     setIdioma,
-  ] = useState<"es" | "en">(
+  ] = useState<
+    "es" | "en"
+  >(
     "es"
   );
 
@@ -348,7 +357,9 @@ export default function AgenteAAFPage() {
   const [
     mensajes,
     setMensajes,
-  ] = useState<Mensaje[]>([]);
+  ] = useState<Mensaje[]>(
+    []
+  );
 
   const [
     entrada,
@@ -367,7 +378,9 @@ export default function AgenteAAFPage() {
     | "personas"
     | "confirmacion"
     | "finalizado"
-  >("inicio");
+  >(
+    "inicio"
+  );
 
   /* =======================================================
      DATOS RESERVA
@@ -449,23 +462,32 @@ export default function AgenteAAFPage() {
   ] = useState("");
 
   /* =======================================================
+     ACCESO A LA RESERVA
+  ======================================================= */
+
+  const [
+    reservaHabilitada,
+    setReservaHabilitada,
+  ] = useState(false);
+
+  /* =======================================================
      REFERENCIAS
   ======================================================= */
 
   const mensajesRef =
-    useRef<HTMLDivElement>(null);
-
-  /*
-     Estos dos inputs permanecen ocultos.
-     Los botones visibles de fecha y hora
-     los activan para abrir el selector nativo.
-  */
+    useRef<HTMLDivElement>(
+      null
+    );
 
   const fechaInputRef =
-    useRef<HTMLInputElement>(null);
+    useRef<HTMLInputElement>(
+      null
+    );
 
   const horaInputRef =
-    useRef<HTMLInputElement>(null);
+    useRef<HTMLInputElement>(
+      null
+    );
 
   /* =========================================================
      TEXTOS
@@ -551,7 +573,7 @@ export default function AgenteAAFPage() {
         "Hacer otra reserva",
 
       reservarTitulo:
-        "Para reservar, activa las notificaciones.",
+        "Para continuar con la reserva debes activar las notificaciones.",
 
       activarBoton:
         "🔔 Activar notificaciones",
@@ -671,7 +693,7 @@ export default function AgenteAAFPage() {
         "Make another reservation",
 
       reservarTitulo:
-        "To make a reservation, enable notifications.",
+        "To continue with your reservation, you must enable notifications.",
 
       activarBoton:
         "🔔 Enable notifications",
@@ -733,7 +755,9 @@ export default function AgenteAAFPage() {
         "empresaId"
       );
 
-    setEmpresaId(id);
+    setEmpresaId(
+      id
+    );
 
   }, []);
 
@@ -753,7 +777,9 @@ export default function AgenteAAFPage() {
         return;
       }
 
-      setCargandoEmpresa(true);
+      setCargandoEmpresa(
+        true
+      );
 
       const {
         data,
@@ -777,7 +803,9 @@ export default function AgenteAAFPage() {
           error
         );
 
-        setEmpresa(null);
+        setEmpresa(
+          null
+        );
 
       } else {
 
@@ -786,7 +814,9 @@ export default function AgenteAAFPage() {
         );
       }
 
-      setCargandoEmpresa(false);
+      setCargandoEmpresa(
+        false
+      );
     }
 
     cargarEmpresa();
@@ -807,14 +837,18 @@ export default function AgenteAAFPage() {
       {
         id:
           Date.now(),
+
         tipo:
           "ia",
+
         texto:
           `${t.saludo}\n\n${t.preguntaNombre}`,
       },
     ]);
 
-    setPaso("nombre");
+    setPaso(
+      "nombre"
+    );
 
   }, [empresa, idioma]);
 
@@ -1204,6 +1238,16 @@ export default function AgenteAAFPage() {
         ""
       );
 
+      /*
+         Apenas las notificaciones quedan
+         correctamente activadas, se habilita
+         automáticamente la página de reserva.
+      */
+
+      setReservaHabilitada(
+        true
+      );
+
     } catch (error) {
 
       console.error(
@@ -1377,12 +1421,6 @@ export default function AgenteAAFPage() {
 
       return;
     }
-
-    /*
-       FECHA Y HORA YA NO SE ESCRIBEN MANUALMENTE.
-       Se seleccionan mediante los botones nativos
-       que aparecen en la interfaz.
-    */
 
     /* =====================================================
        PERSONAS
@@ -1995,165 +2033,292 @@ export default function AgenteAAFPage() {
               TARJETA PRINCIPAL
           ================================================= */}
 
-          <section className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl">
+          <section className="overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
 
-            {/* ===============================================
-                BIENVENIDA
-            =============================================== */}
+            {/* =================================================
+                PANTALLA DE BIENVENIDA + NOTIFICACIONES
+            ================================================= */}
 
-            <div
-              className="relative overflow-hidden px-5 pb-9 pt-8 sm:px-8 sm:pb-11 sm:pt-10"
-              style={
-                imagenRestaurante
-                  ? {
-                      backgroundImage: `url("${imagenRestaurante}")`,
-                      backgroundSize: "cover",
-                      backgroundPosition:
-                        "center",
-                    }
-                  : undefined
-              }
-            >
+            {!reservaHabilitada ? (
 
-              {/* ============================================
-                  CAPA OSCURA
-              ============================================ */}
+              <>
 
-              {imagenRestaurante && (
+                {/* ===========================================
+                    BIENVENIDA
+                =========================================== */}
 
-                <div className="absolute inset-0 bg-black/55" />
+                <div
+                  className="relative overflow-hidden px-6 pb-10 pt-9 sm:px-10 sm:pb-12 sm:pt-11"
+                  style={
+                    imagenRestaurante
+                      ? {
+                          backgroundImage:
+                            `url("${imagenRestaurante}")`,
+                          backgroundSize:
+                            "cover",
+                          backgroundPosition:
+                            "center",
+                        }
+                      : undefined
+                  }
+                >
 
-              )}
+                  {imagenRestaurante && (
 
-              {/* ============================================
-                  CONTENIDO BIENVENIDA
-              ============================================ */}
+                    <div className="absolute inset-0 bg-black/60" />
 
-              <div className="relative z-10">
+                  )}
 
-                {/* LOGO SHORTBIZAI */}
+                  <div className="relative z-10">
 
-                <div className="mb-6 flex justify-center">
+                    {/* LOGO */}
 
-                  <div className="rounded-2xl bg-white/95 px-5 py-3 shadow-xl backdrop-blur-sm">
+                    <div className="mb-7 flex justify-center">
 
-                    <Image
-                      src="/logo-foodshortai.png"
-                      alt="ShortBizAI"
-                      width={170}
-                      height={170}
-                      priority
-                      className="h-auto w-[125px] object-contain sm:w-[150px]"
-                    />
+                      <div className="rounded-2xl bg-white/95 px-5 py-3 shadow-2xl backdrop-blur-sm">
+
+                        <Image
+                          src="/logo-foodshortai.png"
+                          alt="ShortBizAI"
+                          width={170}
+                          height={170}
+                          priority
+                          className="h-auto w-[120px] object-contain sm:w-[140px]"
+                        />
+
+                      </div>
+
+                    </div>
+
+                    {/* TEXTO DE BIENVENIDA */}
+
+                    <div className="text-center">
+
+                      <p
+                        className={`mb-3 text-sm font-bold uppercase tracking-[0.3em] ${
+                          imagenRestaurante
+                            ? "text-white/90"
+                            : "text-gray-500"
+                        }`}
+                      >
+
+                        {idioma === "es"
+                          ? "ShortBizAI te da la bienvenida"
+                          : "ShortBizAI welcomes you"}
+
+                      </p>
+
+                      <h1
+                        className={`text-4xl font-black leading-tight tracking-tight sm:text-5xl ${
+                          imagenRestaurante
+                            ? "text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.75)]"
+                            : "text-gray-950"
+                        }`}
+                      >
+
+                        {empresa.nombre}
+
+                      </h1>
+
+                      <div
+                        className={`mx-auto mt-5 h-[2px] w-24 ${
+                          imagenRestaurante
+                            ? "bg-white"
+                            : "bg-blue-600"
+                        }`}
+                      />
+
+                      <p
+                        className={`mx-auto mt-6 max-w-xl text-base leading-7 sm:text-lg ${
+                          imagenRestaurante
+                            ? "text-white/95 drop-shadow-[0_2px_5px_rgba(0,0,0,0.7)]"
+                            : "text-gray-600"
+                        }`}
+                      >
+
+                        {idioma === "es"
+                          ? "Disfruta de nuestro exquisito menú y reserva tu mesa de manera rápida y sencilla."
+                          : "Enjoy our exquisite menu and reserve your table quickly and easily."}
+
+                      </p>
+
+                    </div>
 
                   </div>
 
                 </div>
 
-                {/* BIENVENIDA AL RESTAURANTE */}
+                {/* ===========================================
+                    ACTIVAR NOTIFICACIONES
+                =========================================== */}
 
-                <div className="text-center">
+                <div className="border-t border-gray-200 bg-white px-6 py-7 sm:px-10 sm:py-8">
 
-                  <p
-                    className={`mb-2 text-sm font-semibold uppercase tracking-[0.28em] ${
-                      imagenRestaurante
-                        ? "text-white/90"
-                        : "text-gray-500"
-                    }`}
-                  >
+                  <div className="mx-auto max-w-xl text-center">
 
-                    {idioma === "es"
-                      ? "Bienvenidos a"
-                      : "Welcome to"}
-
-                  </p>
-
-                  <h1
-                    className={`text-4xl font-black leading-tight tracking-tight sm:text-6xl ${
-                      imagenRestaurante
-                        ? "text-white drop-shadow-[0_3px_8px_rgba(0,0,0,0.7)]"
-                        : "text-gray-950"
-                    }`}
-                  >
-
-                    {empresa.nombre}
-
-                  </h1>
-
-                  <div
-                    className={`mx-auto mt-4 h-[2px] w-20 ${
-                      imagenRestaurante
-                        ? "bg-white"
-                        : "bg-blue-600"
-                    }`}
-                  />
-
-                  <p
-                    className={`mx-auto mt-6 max-w-2xl text-base leading-7 sm:text-lg ${
-                      imagenRestaurante
-                        ? "text-white/95 drop-shadow-[0_2px_5px_rgba(0,0,0,0.7)]"
-                        : "text-gray-600"
-                    }`}
-                  >
-
-                    {idioma === "es"
-                      ? "Disfruta de nuestro exquisito menú y reserva tu mesa de manera rápida y sencilla."
-                      : "Enjoy our exquisite menu and reserve your table quickly and easily."}
-
-                  </p>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* ===============================================
-                NOTIFICACIONES
-            =============================================== */}
-
-            <div className="border-y border-gray-200 bg-gray-50 px-5 py-5 sm:px-8">
-
-              {!notificacionesActivas ? (
-
-                <div>
-
-                  <div className="flex items-center gap-3">
-
-                    <div className="text-2xl">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-3xl shadow-sm">
                       🔔
                     </div>
 
-                    <h2 className="font-bold text-gray-950">
+                    <h2 className="text-xl font-black tracking-tight text-gray-950 sm:text-2xl">
 
                       {t.reservarTitulo}
 
                     </h2>
 
+                    <p className="mt-3 text-[15px] leading-6 text-gray-500 sm:text-base">
+
+                      {idioma === "es"
+                        ? "Así podremos avisarte directamente en este dispositivo cuando el restaurante confirme o cancele tu reserva."
+                        : "This allows us to notify you directly on this device when the restaurant confirms or cancels your reservation."}
+
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={
+                        registrarNotificaciones
+                      }
+                      disabled={
+                        activandoNotificaciones
+                      }
+                      className="mt-6 min-h-[58px] w-full rounded-2xl bg-blue-600 px-6 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition duration-200 hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-400 sm:text-lg"
+                    >
+
+                      {activandoNotificaciones
+                        ? t.activando
+                        : t.activarBoton}
+
+                    </button>
+
+                    {errorNotificaciones && (
+
+                      <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold leading-6 text-red-700">
+
+                        {
+                          errorNotificaciones
+                        }
+
+                      </div>
+
+                    )}
+
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={
-                      registrarNotificaciones
-                    }
-                    disabled={
-                      activandoNotificaciones
-                    }
-                    className="mt-4 min-h-[52px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-                  >
+                </div>
 
-                    {activandoNotificaciones
-                      ? t.activando
-                      : t.activarBoton}
+              </>
 
-                  </button>
+            ) : (
 
-                  {errorNotificaciones && (
+              /* =================================================
+                 CHATBOT PREMIUM
+              ================================================= */
 
-                    <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium leading-6 text-red-700">
+              <div className="flex flex-col">
 
-                      {errorNotificaciones}
+                {/* =============================================
+                    CABECERA PREMIUM
+                ============================================= */}
+
+                <div className="flex items-center gap-4 border-b border-gray-200 bg-white px-5 py-5 sm:px-7">
+
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-2xl shadow-md shadow-blue-600/20">
+                    🤖
+                  </div>
+
+                  <div className="min-w-0">
+
+                    <p className="text-lg font-black tracking-tight text-gray-950 sm:text-xl">
+                      ShortBizAI
+                    </p>
+
+                    <p className="mt-0.5 text-sm font-medium text-green-600">
+                      ●{" "}
+                      {idioma === "es"
+                        ? "Asistente de reservas disponible"
+                        : "Reservation assistant available"}
+                    </p>
+
+                  </div>
+
+                </div>
+
+                {/* =============================================
+                    MENSAJES
+                ============================================= */}
+
+                <div
+                  ref={mensajesRef}
+                  className="max-h-[520px] min-h-[420px] space-y-5 overflow-y-auto bg-gray-50 px-4 py-6 sm:px-7 sm:py-7"
+                >
+
+                  {mensajes.map(
+                    (mensaje) => (
+
+                      <div
+                        key={
+                          mensaje.id
+                        }
+                        className={`flex ${
+                          mensaje.tipo ===
+                          "usuario"
+                            ? "justify-end"
+                            : "justify-start"
+                        }`}
+                      >
+
+                        <div
+                          className={`max-w-[88%] whitespace-pre-line rounded-[1.35rem] px-5 py-4 text-[16px] leading-7 shadow-sm sm:text-[17px] ${
+                            mensaje.tipo ===
+                            "usuario"
+                              ? "rounded-br-md bg-blue-600 text-white shadow-blue-600/10"
+                              : "rounded-bl-md border border-gray-200 bg-white text-gray-800 shadow-gray-200/60"
+                          }`}
+                        >
+
+                          {
+                            mensaje.texto
+                          }
+
+                        </div>
+
+                      </div>
+
+                    )
+                  )}
+
+                  {/* INDICADOR */}
+
+                  {guardando && (
+
+                    <div className="flex justify-start">
+
+                      <div className="rounded-[1.35rem] rounded-bl-md border border-gray-200 bg-white px-5 py-4 shadow-sm">
+
+                        <div className="flex items-center gap-1.5">
+
+                          <span className="h-2.5 w-2.5 animate-bounce rounded-full bg-gray-400" />
+
+                          <span
+                            className="h-2.5 w-2.5 animate-bounce rounded-full bg-gray-400"
+                            style={{
+                              animationDelay:
+                                "150ms",
+                            }}
+                          />
+
+                          <span
+                            className="h-2.5 w-2.5 animate-bounce rounded-full bg-gray-400"
+                            style={{
+                              animationDelay:
+                                "300ms",
+                            }}
+                          />
+
+                        </div>
+
+                      </div>
 
                     </div>
 
@@ -2161,566 +2326,476 @@ export default function AgenteAAFPage() {
 
                 </div>
 
-              ) : (
+                {/* =============================================
+                    SELECTOR DE FECHA
+                ============================================= */}
 
-                <div className="flex items-start gap-3">
+                {paso ===
+                  "fecha" &&
+                  !guardando && (
 
-                  <div className="text-xl">
-                    🔔
-                  </div>
+                    <div className="border-t border-gray-200 bg-white px-5 py-5 sm:px-7">
 
-                  <div>
-
-                    <p className="font-bold text-green-700">
-                      {t.notificacionesActivadas}
-                    </p>
-
-                    <p className="mt-1 text-sm leading-6 text-green-700">
-                      {t.dispositivoListo}
-                    </p>
-
-                  </div>
-
-                </div>
-
-              )}
-
-            </div>
-
-            {/* ===============================================
-                CHATBOT
-            =============================================== */}
-
-            <div className="flex flex-col">
-
-              {/* CABECERA */}
-
-              <div className="flex items-center gap-3 border-b border-gray-200 px-5 py-4 sm:px-7">
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-xl shadow-sm">
-                  🤖
-                </div>
-
-                <div>
-
-                  <p className="font-black text-gray-950">
-                    ShortBizAI
-                  </p>
-
-                  <p className="text-xs text-green-600">
-
-                    ●{" "}
-
-                    {idioma === "es"
-                      ? "Asistente disponible"
-                      : "Assistant available"}
-
-                  </p>
-
-                </div>
-
-              </div>
-
-              {/* MENSAJES */}
-
-              <div
-                ref={mensajesRef}
-                className="max-h-[500px] min-h-[380px] space-y-4 overflow-y-auto bg-gray-50 px-4 py-5 sm:px-6"
-              >
-
-                {mensajes.map(
-                  (mensaje) => (
-
-                    <div
-                      key={
-                        mensaje.id
-                      }
-                      className={`flex ${
-                        mensaje.tipo ===
-                        "usuario"
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
-                    >
-
-                      <div
-                        className={`max-w-[85%] whitespace-pre-line rounded-2xl px-4 py-3 text-[15px] leading-6 shadow-sm ${
-                          mensaje.tipo ===
-                          "usuario"
-                            ? "rounded-br-md bg-blue-600 text-white"
-                            : "rounded-bl-md border border-gray-200 bg-white text-gray-800"
-                        }`}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          fechaInputRef.current?.click();
+                        }}
+                        className="flex min-h-[62px] w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.98] sm:text-lg"
                       >
 
+                        <span className="text-2xl">
+                          📅
+                        </span>
+
+                        <span>
+                          {fecha
+                            ? idioma ===
+                              "es"
+                              ? convertirFecha(
+                                  fecha
+                                )
+                              : convertirFechaIngles(
+                                  fecha
+                                )
+                            : t.seleccionarFecha}
+                        </span>
+
+                      </button>
+
+                      <input
+                        ref={
+                          fechaInputRef
+                        }
+                        type="date"
+                        min={
+                          obtenerFechaHoy()
+                        }
+                        value={
+                          fecha
+                        }
+                        onChange={(
+                          e
+                        ) =>
+                          seleccionarFecha(
+                            e.target.value
+                          )
+                        }
+                        className="sr-only"
+                        tabIndex={-1}
+                        aria-hidden="true"
+                      />
+
+                    </div>
+
+                  )}
+
+                {/* =============================================
+                    SELECTOR DE HORA
+                ============================================= */}
+
+                {paso ===
+                  "hora" &&
+                  !guardando && (
+
+                    <div className="border-t border-gray-200 bg-white px-5 py-5 sm:px-7">
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          horaInputRef.current?.click();
+                        }}
+                        className="flex min-h-[62px] w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.98] sm:text-lg"
+                      >
+
+                        <span className="text-2xl">
+                          🕐
+                        </span>
+
+                        <span>
+                          {hora
+                            ? convertirHora(
+                                hora
+                              )
+                            : t.seleccionarHora}
+                        </span>
+
+                      </button>
+
+                      <input
+                        ref={
+                          horaInputRef
+                        }
+                        type="time"
+                        value={
+                          hora
+                        }
+                        onChange={(
+                          e
+                        ) =>
+                          seleccionarHora(
+                            e.target.value
+                          )
+                        }
+                        className="sr-only"
+                        tabIndex={-1}
+                        aria-hidden="true"
+                      />
+
+                    </div>
+
+                  )}
+
+                {/* =============================================
+                    PERSONAS
+                ============================================= */}
+
+                {paso ===
+                  "personas" &&
+                  !guardando && (
+
+                    <div className="border-t border-gray-200 bg-white px-5 py-5 sm:px-7">
+
+                      <div className="mb-4 text-center text-sm font-semibold text-gray-500">
+
+                        {idioma === "es"
+                          ? "Selecciona el número de personas"
+                          : "Select the number of people"}
+
+                      </div>
+
+                      <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
+
+                        {[
+                          1,
+                          2,
+                          3,
+                          4,
+                          5,
+                          6,
+                          7,
+                        ].map(
+                          (
+                            numero
+                          ) => (
+
+                            <button
+                              key={
+                                numero
+                              }
+                              type="button"
+                              onClick={() => {
+
+                                const valor =
+                                  String(
+                                    numero
+                                  );
+
+                                setPersonas(
+                                  valor
+                                );
+
+                                const fechaTexto =
+                                  idioma ===
+                                  "es"
+                                    ? convertirFecha(
+                                        fecha
+                                      )
+                                    : convertirFechaIngles(
+                                        fecha
+                                      );
+
+                                const horaTexto =
+                                  convertirHora(
+                                    hora
+                                  );
+
+                                const resumen =
+                                  `${t.resumen}\n\n` +
+                                  `👤 ${t.resumenNombre}: ${nombre}\n` +
+                                  `📞 ${t.resumenTelefono}: ${telefono}\n` +
+                                  `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
+                                  `🕐 ${t.resumenHora}: ${horaTexto}\n` +
+                                  `👥 ${t.resumenPersonas}: ${valor}`;
+
+                                agregarMensaje(
+                                  "usuario",
+                                  valor
+                                );
+
+                                agregarMensaje(
+                                  "ia",
+                                  `${resumen}\n\n${t.confirmar}`
+                                );
+
+                                setPaso(
+                                  "confirmacion"
+                                );
+                              }}
+                              className="min-h-[56px] rounded-2xl border border-gray-200 bg-white text-lg font-bold text-gray-800 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 active:scale-95"
+                            >
+
+                              {
+                                numero
+                              }
+
+                            </button>
+
+                          )
+                        )}
+
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+
+                          const valor =
+                            "8";
+
+                          setPersonas(
+                            valor
+                          );
+
+                          const fechaTexto =
+                            idioma ===
+                            "es"
+                              ? convertirFecha(
+                                  fecha
+                                )
+                              : convertirFechaIngles(
+                                  fecha
+                                );
+
+                          const horaTexto =
+                            convertirHora(
+                              hora
+                            );
+
+                          const resumen =
+                            `${t.resumen}\n\n` +
+                            `👤 ${t.resumenNombre}: ${nombre}\n` +
+                            `📞 ${t.resumenTelefono}: ${telefono}\n` +
+                            `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
+                            `🕐 ${t.resumenHora}: ${horaTexto}\n` +
+                            `👥 ${t.resumenPersonas}: 8+`;
+
+                          agregarMensaje(
+                            "usuario",
+                            "8+"
+                          );
+
+                          agregarMensaje(
+                            "ia",
+                            `${resumen}\n\n${t.confirmar}`
+                          );
+
+                          setPaso(
+                            "confirmacion"
+                          );
+                        }}
+                        className="mt-3 min-h-[56px] w-full rounded-2xl border border-gray-200 bg-white text-lg font-bold text-gray-800 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 active:scale-95"
+                      >
+
+                        8+
+
+                      </button>
+
+                    </div>
+
+                  )}
+
+                {/* =============================================
+                    CONFIRMACIÓN
+                ============================================= */}
+
+                {paso ===
+                  "confirmacion" &&
+                  !guardando && (
+
+                    <div className="border-t border-gray-200 bg-white px-5 py-5 sm:px-7">
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            enviarMensajeDirecto(
+                              idioma === "es"
+                                ? "Sí, enviar reserva"
+                                : "Yes, send reservation"
+                            )
+                          }
+                          className="min-h-[58px] rounded-2xl bg-blue-600 px-4 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.99]"
+                        >
+
+                          ✅{" "}
+                          {
+                            t.si
+                          }
+
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            enviarMensajeDirecto(
+                              idioma === "es"
+                                ? "No, quiero corregir"
+                                : "No, I want to correct it"
+                            )
+                          }
+                          className="min-h-[58px] rounded-2xl border border-gray-200 bg-white px-4 text-base font-bold text-gray-700 shadow-sm transition hover:bg-gray-50 active:scale-[0.99]"
+                        >
+
+                          ✏️{" "}
+                          {
+                            t.no
+                          }
+
+                        </button>
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+                {/* =============================================
+                    INPUT CHAT
+                ============================================= */}
+
+                {paso !==
+                  "finalizado" &&
+                  paso !==
+                    "confirmacion" &&
+                  paso !==
+                    "fecha" &&
+                  paso !==
+                    "hora" &&
+                  paso !==
+                    "personas" && (
+
+                    <div className="border-t border-gray-200 bg-white p-4 sm:p-5">
+
+                      <div className="flex items-end gap-3">
+
+                        <input
+                          type={
+                            paso ===
+                            "telefono"
+                              ? "tel"
+                              : "text"
+                          }
+                          value={
+                            entrada
+                          }
+                          onChange={(
+                            e
+                          ) =>
+                            setEntrada(
+                              e.target
+                                .value
+                            )
+                          }
+                          onKeyDown={
+                            manejarTecla
+                          }
+                          placeholder={
+                            idioma ===
+                            "es"
+                              ? "Escribe tu respuesta..."
+                              : "Type your answer..."
+                          }
+                          disabled={
+                            guardando
+                          }
+                          autoComplete="off"
+                          inputMode={
+                            paso ===
+                            "telefono"
+                              ? "tel"
+                              : "text"
+                          }
+                          className="min-h-[58px] flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-5 text-[16px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 sm:text-[17px]"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={
+                            enviarMensaje
+                          }
+                          disabled={
+                            guardando ||
+                            !entrada.trim()
+                          }
+                          className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-xl text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                        >
+
+                          ➤
+
+                        </button>
+
+                      </div>
+
+                    </div>
+
+                  )}
+
+                {/* =============================================
+                    FINAL
+                ============================================= */}
+
+                {paso ===
+                  "finalizado" && (
+
+                  <div className="border-t border-gray-200 bg-white px-5 py-6 sm:px-7">
+
+                    {mensajeExito && (
+
+                      <div className="mb-4 rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-[15px] font-semibold leading-6 text-green-800 sm:text-base">
+
                         {
-                          mensaje.texto
+                          mensajeExito
                         }
 
                       </div>
 
-                    </div>
+                    )}
 
-                  )
-                )}
+                    {errorReserva && (
 
-                {/* INDICADOR */}
+                      <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-[15px] font-semibold leading-6 text-red-700">
 
-                {guardando && (
-
-                  <div className="flex justify-start">
-
-                    <div className="rounded-2xl rounded-bl-md border border-gray-200 bg-white px-4 py-3 shadow-sm">
-
-                      <div className="flex items-center gap-1">
-
-                        <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
-
-                        <span
-                          className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
-                          style={{
-                            animationDelay:
-                              "150ms",
-                          }}
-                        />
-
-                        <span
-                          className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
-                          style={{
-                            animationDelay:
-                              "300ms",
-                          }}
-                        />
+                        {
+                          errorReserva
+                        }
 
                       </div>
 
-                    </div>
-
-                  </div>
-
-                )}
-
-              </div>
-
-              {/* =============================================
-                  SELECTOR DE FECHA
-              ============================================= */}
-
-              {paso === "fecha" && !guardando && (
-
-                <div className="border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      fechaInputRef.current?.click();
-                    }}
-                    className="flex min-h-[58px] w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 text-base font-bold text-white shadow-md transition hover:bg-blue-700 active:scale-[0.98]"
-                  >
-
-                    <span className="text-2xl">
-                      📅
-                    </span>
-
-                    <span>
-                      {fecha
-                        ? idioma === "es"
-                          ? convertirFecha(fecha)
-                          : convertirFechaIngles(fecha)
-                        : t.seleccionarFecha}
-                    </span>
-
-                  </button>
-
-                  <input
-                    ref={fechaInputRef}
-                    type="date"
-                    min={obtenerFechaHoy()}
-                    value={fecha}
-                    onChange={(e) =>
-                      seleccionarFecha(
-                        e.target.value
-                      )
-                    }
-                    className="sr-only"
-                    tabIndex={-1}
-                    aria-hidden="true"
-                  />
-
-                </div>
-
-              )}
-
-              {/* =============================================
-                  SELECTOR DE HORA
-              ============================================= */}
-
-              {paso === "hora" && !guardando && (
-
-                <div className="border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      horaInputRef.current?.click();
-                    }}
-                    className="flex min-h-[58px] w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 text-base font-bold text-white shadow-md transition hover:bg-blue-700 active:scale-[0.98]"
-                  >
-
-                    <span className="text-2xl">
-                      🕐
-                    </span>
-
-                    <span>
-                      {hora
-                        ? convertirHora(hora)
-                        : t.seleccionarHora}
-                    </span>
-
-                  </button>
-
-                  <input
-                    ref={horaInputRef}
-                    type="time"
-                    value={hora}
-                    onChange={(e) =>
-                      seleccionarHora(
-                        e.target.value
-                      )
-                    }
-                    className="sr-only"
-                    tabIndex={-1}
-                    aria-hidden="true"
-                  />
-
-                </div>
-
-              )}
-
-              {/* =============================================
-                  PERSONAS
-              ============================================= */}
-
-              {paso === "personas" && !guardando && (
-
-                <div className="border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
-
-                  <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
-
-                    {[1, 2, 3, 4, 5, 6, 7].map(
-                      (numero) => (
-
-                        <button
-                          key={
-                            numero
-                          }
-                          type="button"
-                          onClick={() => {
-
-                            const valor =
-                              String(
-                                numero
-                              );
-
-                            setPersonas(
-                              valor
-                            );
-
-                            const fechaTexto =
-                              idioma === "es"
-                                ? convertirFecha(
-                                    fecha
-                                  )
-                                : convertirFechaIngles(
-                                    fecha
-                                  );
-
-                            const horaTexto =
-                              convertirHora(
-                                hora
-                              );
-
-                            const resumen =
-                              `${t.resumen}\n\n` +
-                              `👤 ${t.resumenNombre}: ${nombre}\n` +
-                              `📞 ${t.resumenTelefono}: ${telefono}\n` +
-                              `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
-                              `🕐 ${t.resumenHora}: ${horaTexto}\n` +
-                              `👥 ${t.resumenPersonas}: ${valor}`;
-
-                            agregarMensaje(
-                              "usuario",
-                              valor
-                            );
-
-                            agregarMensaje(
-                              "ia",
-                              `${resumen}\n\n${t.confirmar}`
-                            );
-
-                            setPaso(
-                              "confirmacion"
-                            );
-                          }}
-                          className="min-h-[52px] rounded-xl border border-gray-300 bg-white text-base font-bold text-gray-800 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 active:scale-95"
-                        >
-
-                          {numero}
-
-                        </button>
-
-                      )
                     )}
-
-                  </div>
-
-                  <div className="mt-3">
 
                     <button
                       type="button"
-                      onClick={() => {
-
-                        const valor =
-                          "8";
-
-                        setPersonas(
-                          valor
-                        );
-
-                        const fechaTexto =
-                          idioma === "es"
-                            ? convertirFecha(
-                                fecha
-                              )
-                            : convertirFechaIngles(
-                                fecha
-                              );
-
-                        const horaTexto =
-                          convertirHora(
-                            hora
-                          );
-
-                        const resumen =
-                          `${t.resumen}\n\n` +
-                          `👤 ${t.resumenNombre}: ${nombre}\n` +
-                          `📞 ${t.resumenTelefono}: ${telefono}\n` +
-                          `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
-                          `🕐 ${t.resumenHora}: ${horaTexto}\n` +
-                          `👥 ${t.resumenPersonas}: 8+`;
-
-                        agregarMensaje(
-                          "usuario",
-                          "8+"
-                        );
-
-                        agregarMensaje(
-                          "ia",
-                          `${resumen}\n\n${t.confirmar}`
-                        );
-
-                        setPaso(
-                          "confirmacion"
-                        );
-                      }}
-                      className="min-h-[52px] w-full rounded-xl border border-gray-300 bg-white text-base font-bold text-gray-800 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 active:scale-95"
+                      onClick={
+                        reiniciarConversacion
+                      }
+                      className="min-h-[58px] w-full rounded-2xl bg-blue-600 px-5 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 sm:text-lg"
                     >
 
-                      8+
+                      {
+                        t.nuevaReserva
+                      }
 
                     </button>
 
                   </div>
 
-                </div>
-
-              )}
-
-              {/* =============================================
-                  CONFIRMACIÓN
-              ============================================= */}
-
-              {paso ===
-                "confirmacion" &&
-                !guardando && (
-
-                  <div className="border-t border-gray-200 bg-white px-4 py-4 sm:px-6">
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          enviarMensajeDirecto(
-                            idioma === "es"
-                              ? "Sí, enviar reserva"
-                              : "Yes, send reservation"
-                          )
-                        }
-                        className="min-h-[52px] rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700"
-                      >
-
-                        ✅ {t.si}
-
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          enviarMensajeDirecto(
-                            idioma === "es"
-                              ? "No, quiero corregir"
-                              : "No, I want to correct it"
-                          )
-                        }
-                        className="min-h-[52px] rounded-xl border border-gray-300 bg-white px-4 text-sm font-bold text-gray-700 transition hover:bg-gray-100"
-                      >
-
-                        ✏️ {t.no}
-
-                      </button>
-
-                    </div>
-
-                  </div>
-
                 )}
 
-              {/* =============================================
-                  INPUT CHAT
-                  
-                  IMPORTANTE:
-                  FECHA Y HORA NO TIENEN INPUT DE TEXTO.
-                  Solo nombre, teléfono y personas.
-              ============================================= */}
+              </div>
 
-              {paso !==
-                "finalizado" &&
-                paso !==
-                  "confirmacion" &&
-                paso !==
-                  "fecha" &&
-                paso !==
-                  "hora" &&
-                paso !==
-                  "personas" && (
-
-                  <div className="border-t border-gray-200 bg-white p-4 sm:p-5">
-
-                    <div className="flex items-end gap-3">
-
-                      <input
-                        type={
-                          paso ===
-                          "telefono"
-                            ? "tel"
-                            : "text"
-                        }
-                        value={
-                          entrada
-                        }
-                        onChange={(
-                          e
-                        ) =>
-                          setEntrada(
-                            e.target
-                              .value
-                          )
-                        }
-                        onKeyDown={
-                          manejarTecla
-                        }
-                        placeholder={
-                          idioma === "es"
-                            ? "Escribe tu respuesta..."
-                            : "Type your answer..."
-                        }
-                        disabled={
-                          guardando
-                        }
-                        autoComplete="off"
-                        inputMode={
-                          paso ===
-                          "telefono"
-                            ? "tel"
-                            : "text"
-                        }
-                        className="min-h-[52px] flex-1 rounded-2xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100"
-                      />
-
-                      <button
-                        type="button"
-                        onClick={
-                          enviarMensaje
-                        }
-                        disabled={
-                          guardando ||
-                          !entrada.trim()
-                        }
-                        className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-xl text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-                      >
-
-                        ➤
-
-                      </button>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-              {/* =============================================
-                  FINAL
-              ============================================= */}
-
-              {paso ===
-                "finalizado" && (
-
-                <div className="border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
-
-                  {mensajeExito && (
-
-                    <div className="mb-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-4 text-sm font-semibold leading-6 text-green-800">
-
-                      {
-                        mensajeExito
-                      }
-
-                    </div>
-
-                  )}
-
-                  {errorReserva && (
-
-                    <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold leading-6 text-red-700">
-
-                      {
-                        errorReserva
-                      }
-
-                    </div>
-
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={
-                      reiniciarConversacion
-                    }
-                    className="min-h-[52px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white transition hover:bg-blue-700"
-                  >
-
-                    {
-                      t.nuevaReserva
-                    }
-
-                  </button>
-
-                </div>
-
-              )}
-
-            </div>
+            )}
 
           </section>
 
