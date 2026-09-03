@@ -95,6 +95,40 @@ function urlBase64ToUint8Array(
   );
 }
 
+/* =========================================================
+   FECHA ACTUAL
+========================================================= */
+
+function obtenerFechaHoy() {
+  const hoy =
+    new Date();
+
+  const anio =
+    hoy.getFullYear();
+
+  const mes =
+    String(
+      hoy.getMonth() + 1
+    ).padStart(
+      2,
+      "0"
+    );
+
+  const dia =
+    String(
+      hoy.getDate()
+    ).padStart(
+      2,
+      "0"
+    );
+
+  return `${anio}-${mes}-${dia}`;
+}
+
+/* =========================================================
+   CONVERTIR FECHA ESPAÑOL
+========================================================= */
+
 function convertirFecha(
   fecha: string
 ) {
@@ -116,6 +150,10 @@ function convertirFecha(
   return `${dia}/${mes}/${anio}`;
 }
 
+/* =========================================================
+   CONVERTIR FECHA INGLÉS
+========================================================= */
+
 function convertirFechaIngles(
   fecha: string
 ) {
@@ -136,6 +174,10 @@ function convertirFechaIngles(
 
   return `${mes}/${dia}/${anio}`;
 }
+
+/* =========================================================
+   CONVERTIR HORA
+========================================================= */
 
 function convertirHora(
   hora: string
@@ -247,6 +289,20 @@ function fechaEsValida(
     dia >= 1 &&
     dia <= diasDelMes
   );
+}
+
+/* =========================================================
+   VALIDAR SI FECHA ES PASADA
+========================================================= */
+
+function fechaEsPasada(
+  fecha: string
+) {
+  if (!fecha) {
+    return false;
+  }
+
+  return fecha < obtenerFechaHoy();
 }
 
 /* =========================================================
@@ -393,11 +449,23 @@ export default function AgenteAAFPage() {
   ] = useState("");
 
   /* =======================================================
-     REFERENCIA CHAT
+     REFERENCIAS
   ======================================================= */
 
   const mensajesRef =
     useRef<HTMLDivElement>(null);
+
+  /*
+     Estos dos inputs permanecen ocultos.
+     Los botones visibles de fecha y hora
+     los activan para abrir el selector nativo.
+  */
+
+  const fechaInputRef =
+    useRef<HTMLInputElement>(null);
+
+  const horaInputRef =
+    useRef<HTMLInputElement>(null);
 
   /* =========================================================
      TEXTOS
@@ -428,11 +496,17 @@ export default function AgenteAAFPage() {
       preguntaPersonas:
         "¿Para cuántas personas será la reserva?",
 
+      seleccionarFecha:
+        "Seleccionar fecha",
+
+      seleccionarHora:
+        "Seleccionar hora",
+
       fechaInvalida:
-        "Por favor indícame una fecha válida.",
+        "Por favor selecciona una fecha válida.",
 
       horaInvalida:
-        "Por favor indícame una hora válida.",
+        "Por favor selecciona una hora válida.",
 
       personasInvalidas:
         "Por favor indícame un número válido de personas.",
@@ -542,11 +616,17 @@ export default function AgenteAAFPage() {
       preguntaPersonas:
         "How many people will be joining?",
 
+      seleccionarFecha:
+        "Select date",
+
+      seleccionarHora:
+        "Select time",
+
       fechaInvalida:
-        "Please provide a valid date.",
+        "Please select a valid date.",
 
       horaInvalida:
-        "Please provide a valid time.",
+        "Please select a valid time.",
 
       personasInvalidas:
         "Please provide a valid number of people.",
@@ -786,6 +866,165 @@ export default function AgenteAAFPage() {
           texto,
         },
       ]
+    );
+  }
+
+  /* =========================================================
+     SELECCIONAR FECHA
+  ========================================================= */
+
+  function seleccionarFecha(
+    nuevaFecha: string
+  ) {
+
+    if (!nuevaFecha) {
+      return;
+    }
+
+    if (
+      !fechaEsValida(
+        nuevaFecha
+      )
+    ) {
+
+      agregarMensaje(
+        "ia",
+        t.fechaInvalida
+      );
+
+      return;
+    }
+
+    if (
+      fechaEsPasada(
+        nuevaFecha
+      )
+    ) {
+
+      agregarMensaje(
+        "ia",
+        idioma === "es"
+          ? "No puedes seleccionar una fecha pasada. Por favor elige otra fecha."
+          : "You cannot select a past date. Please choose another date."
+      );
+
+      return;
+    }
+
+    setFecha(
+      nuevaFecha
+    );
+
+    agregarMensaje(
+      "usuario",
+      idioma === "es"
+        ? convertirFecha(
+            nuevaFecha
+          )
+        : convertirFechaIngles(
+            nuevaFecha
+          )
+    );
+
+    agregarMensaje(
+      "ia",
+      t.preguntaHora
+    );
+
+    setPaso(
+      "hora"
+    );
+  }
+
+  /* =========================================================
+     SELECCIONAR HORA
+  ========================================================= */
+
+  function seleccionarHora(
+    nuevaHora: string
+  ) {
+
+    if (!nuevaHora) {
+      return;
+    }
+
+    const formatoHora =
+      /^\d{2}:\d{2}$/;
+
+    if (
+      !formatoHora.test(
+        nuevaHora
+      )
+    ) {
+
+      agregarMensaje(
+        "ia",
+        t.horaInvalida
+      );
+
+      return;
+    }
+
+    const [
+      h,
+      m,
+    ] =
+      nuevaHora.split(
+        ":"
+      );
+
+    const horas =
+      Number(h);
+
+    const minutos =
+      Number(m);
+
+    if (
+      horas < 0 ||
+      horas > 23 ||
+      minutos < 0 ||
+      minutos > 59
+    ) {
+
+      agregarMensaje(
+        "ia",
+        t.horaInvalida
+      );
+
+      return;
+    }
+
+    const horaFormateada =
+      `${String(
+        horas
+      ).padStart(
+        2,
+        "0"
+      )}:${String(
+        minutos
+      ).padStart(
+        2,
+        "0"
+      )}`;
+
+    setHora(
+      horaFormateada
+    );
+
+    agregarMensaje(
+      "usuario",
+      convertirHora(
+        horaFormateada
+      )
+    );
+
+    agregarMensaje(
+      "ia",
+      t.preguntaPersonas
+    );
+
+    setPaso(
+      "personas"
     );
   }
 
@@ -1139,168 +1378,11 @@ export default function AgenteAAFPage() {
       return;
     }
 
-    /* =====================================================
-       FECHA
-    ===================================================== */
-
-    if (
-      paso === "fecha"
-    ) {
-
-      let fechaValida =
-        texto;
-
-      const formatoFecha =
-        /^\d{4}-\d{2}-\d{2}$/;
-
-      const formatoFechaLatino =
-        /^\d{1,2}\/\d{1,2}\/\d{4}$/;
-
-      if (
-        formatoFechaLatino.test(
-          texto
-        )
-      ) {
-
-        const partes =
-          texto.split(
-            "/"
-          );
-
-        const dia =
-          partes[0].padStart(
-            2,
-            "0"
-          );
-
-        const mes =
-          partes[1].padStart(
-            2,
-            "0"
-          );
-
-        const anio =
-          partes[2];
-
-        fechaValida =
-          `${anio}-${mes}-${dia}`;
-      }
-
-      if (
-        !formatoFecha.test(
-          fechaValida
-        ) ||
-        !fechaEsValida(
-          fechaValida
-        )
-      ) {
-
-        agregarMensaje(
-          "ia",
-          t.fechaInvalida
-        );
-
-        return;
-      }
-
-      setFecha(
-        fechaValida
-      );
-
-      agregarMensaje(
-        "ia",
-        t.preguntaHora
-      );
-
-      setPaso(
-        "hora"
-      );
-
-      return;
-    }
-
-    /* =====================================================
-       HORA
-    ===================================================== */
-
-    if (
-      paso === "hora"
-    ) {
-
-      const formatoHora =
-        /^\d{1,2}:\d{2}$/;
-
-      if (
-        !formatoHora.test(
-          texto
-        )
-      ) {
-
-        agregarMensaje(
-          "ia",
-          t.horaInvalida
-        );
-
-        return;
-      }
-
-      const [
-        h,
-        m,
-      ] =
-        texto.split(
-          ":"
-        );
-
-      const horas =
-        Number(h);
-
-      const minutos =
-        Number(m);
-
-      if (
-        horas < 0 ||
-        horas > 23 ||
-        minutos < 0 ||
-        minutos > 59
-      ) {
-
-        agregarMensaje(
-          "ia",
-          t.horaInvalida
-        );
-
-        return;
-      }
-
-      const horaFormateada =
-        `${String(
-          horas
-        ).padStart(
-          2,
-          "0"
-        )}:${String(
-          minutos
-        ).padStart(
-          2,
-          "0"
-        )}`;
-
-      setHora(
-        horaFormateada
-      );
-
-      agregarMensaje(
-        "ia",
-        t.preguntaPersonas
-      );
-
-      setPaso(
-        "personas"
-      );
-
-      return;
-    }
+    /*
+       FECHA Y HORA YA NO SE ESCRIBEN MANUALMENTE.
+       Se seleccionan mediante los botones nativos
+       que aparecen en la interfaz.
+    */
 
     /* =====================================================
        PERSONAS
@@ -2220,6 +2302,240 @@ export default function AgenteAAFPage() {
               </div>
 
               {/* =============================================
+                  SELECTOR DE FECHA
+              ============================================= */}
+
+              {paso === "fecha" && !guardando && (
+
+                <div className="border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      fechaInputRef.current?.click();
+                    }}
+                    className="flex min-h-[58px] w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 text-base font-bold text-white shadow-md transition hover:bg-blue-700 active:scale-[0.98]"
+                  >
+
+                    <span className="text-2xl">
+                      📅
+                    </span>
+
+                    <span>
+                      {fecha
+                        ? idioma === "es"
+                          ? convertirFecha(fecha)
+                          : convertirFechaIngles(fecha)
+                        : t.seleccionarFecha}
+                    </span>
+
+                  </button>
+
+                  <input
+                    ref={fechaInputRef}
+                    type="date"
+                    min={obtenerFechaHoy()}
+                    value={fecha}
+                    onChange={(e) =>
+                      seleccionarFecha(
+                        e.target.value
+                      )
+                    }
+                    className="sr-only"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                  />
+
+                </div>
+
+              )}
+
+              {/* =============================================
+                  SELECTOR DE HORA
+              ============================================= */}
+
+              {paso === "hora" && !guardando && (
+
+                <div className="border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      horaInputRef.current?.click();
+                    }}
+                    className="flex min-h-[58px] w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 text-base font-bold text-white shadow-md transition hover:bg-blue-700 active:scale-[0.98]"
+                  >
+
+                    <span className="text-2xl">
+                      🕐
+                    </span>
+
+                    <span>
+                      {hora
+                        ? convertirHora(hora)
+                        : t.seleccionarHora}
+                    </span>
+
+                  </button>
+
+                  <input
+                    ref={horaInputRef}
+                    type="time"
+                    value={hora}
+                    onChange={(e) =>
+                      seleccionarHora(
+                        e.target.value
+                      )
+                    }
+                    className="sr-only"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                  />
+
+                </div>
+
+              )}
+
+              {/* =============================================
+                  PERSONAS
+              ============================================= */}
+
+              {paso === "personas" && !guardando && (
+
+                <div className="border-t border-gray-200 bg-white px-4 py-5 sm:px-6">
+
+                  <div className="grid grid-cols-4 gap-3 sm:grid-cols-7">
+
+                    {[1, 2, 3, 4, 5, 6, 7].map(
+                      (numero) => (
+
+                        <button
+                          key={
+                            numero
+                          }
+                          type="button"
+                          onClick={() => {
+
+                            const valor =
+                              String(
+                                numero
+                              );
+
+                            setPersonas(
+                              valor
+                            );
+
+                            const fechaTexto =
+                              idioma === "es"
+                                ? convertirFecha(
+                                    fecha
+                                  )
+                                : convertirFechaIngles(
+                                    fecha
+                                  );
+
+                            const horaTexto =
+                              convertirHora(
+                                hora
+                              );
+
+                            const resumen =
+                              `${t.resumen}\n\n` +
+                              `👤 ${t.resumenNombre}: ${nombre}\n` +
+                              `📞 ${t.resumenTelefono}: ${telefono}\n` +
+                              `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
+                              `🕐 ${t.resumenHora}: ${horaTexto}\n` +
+                              `👥 ${t.resumenPersonas}: ${valor}`;
+
+                            agregarMensaje(
+                              "usuario",
+                              valor
+                            );
+
+                            agregarMensaje(
+                              "ia",
+                              `${resumen}\n\n${t.confirmar}`
+                            );
+
+                            setPaso(
+                              "confirmacion"
+                            );
+                          }}
+                          className="min-h-[52px] rounded-xl border border-gray-300 bg-white text-base font-bold text-gray-800 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 active:scale-95"
+                        >
+
+                          {numero}
+
+                        </button>
+
+                      )
+                    )}
+
+                  </div>
+
+                  <div className="mt-3">
+
+                    <button
+                      type="button"
+                      onClick={() => {
+
+                        const valor =
+                          "8";
+
+                        setPersonas(
+                          valor
+                        );
+
+                        const fechaTexto =
+                          idioma === "es"
+                            ? convertirFecha(
+                                fecha
+                              )
+                            : convertirFechaIngles(
+                                fecha
+                              );
+
+                        const horaTexto =
+                          convertirHora(
+                            hora
+                          );
+
+                        const resumen =
+                          `${t.resumen}\n\n` +
+                          `👤 ${t.resumenNombre}: ${nombre}\n` +
+                          `📞 ${t.resumenTelefono}: ${telefono}\n` +
+                          `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
+                          `🕐 ${t.resumenHora}: ${horaTexto}\n` +
+                          `👥 ${t.resumenPersonas}: 8+`;
+
+                        agregarMensaje(
+                          "usuario",
+                          "8+"
+                        );
+
+                        agregarMensaje(
+                          "ia",
+                          `${resumen}\n\n${t.confirmar}`
+                        );
+
+                        setPaso(
+                          "confirmacion"
+                        );
+                      }}
+                      className="min-h-[52px] w-full rounded-xl border border-gray-300 bg-white text-base font-bold text-gray-800 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 active:scale-95"
+                    >
+
+                      8+
+
+                    </button>
+
+                  </div>
+
+                </div>
+
+              )}
+
+              {/* =============================================
                   CONFIRMACIÓN
               ============================================= */}
 
@@ -2271,12 +2587,22 @@ export default function AgenteAAFPage() {
 
               {/* =============================================
                   INPUT CHAT
+                  
+                  IMPORTANTE:
+                  FECHA Y HORA NO TIENEN INPUT DE TEXTO.
+                  Solo nombre, teléfono y personas.
               ============================================= */}
 
               {paso !==
                 "finalizado" &&
                 paso !==
-                  "confirmacion" && (
+                  "confirmacion" &&
+                paso !==
+                  "fecha" &&
+                paso !==
+                  "hora" &&
+                paso !==
+                  "personas" && (
 
                   <div className="border-t border-gray-200 bg-white p-4 sm:p-5">
 
