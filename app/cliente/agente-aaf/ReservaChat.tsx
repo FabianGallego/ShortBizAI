@@ -1,48 +1,45 @@
 "use client";
 
 import {
+  ChangeEvent,
+  KeyboardEvent,
   useEffect,
   useRef,
   useState,
-  type ChangeEvent,
-  type KeyboardEvent,
 } from "react";
 
-type ResultadoVoz = {
-  transcript: string;
+
+type SpeechRecognitionEventLike = Event & {
+  results: {
+    length: number;
+    [index: number]: {
+      [index: number]: {
+        transcript: string;
+      };
+      isFinal?: boolean;
+    };
+  };
 };
 
-type ResultadoVozItem = {
-  isFinal: boolean;
-  0: ResultadoVoz;
-};
-
-type EventoResultadoVoz = {
-  resultIndex: number;
-  results: ArrayLike<ResultadoVozItem>;
-};
-
-type EventoErrorVoz = {
-  error: string;
-};
-
-type ReconocimientoVoz = {
+type SpeechRecognitionInstance = {
   lang: string;
   interimResults: boolean;
   continuous: boolean;
   start: () => void;
   stop: () => void;
-  abort: () => void;
-  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: { error?: string }) => void) | null;
   onend: (() => void) | null;
-  onerror: ((event: EventoErrorVoz) => void) | null;
-  onresult: ((event: EventoResultadoVoz) => void) | null;
 };
 
-type VentanaConReconocimientoVoz = Window & {
-  SpeechRecognition?: new () => ReconocimientoVoz;
-  webkitSpeechRecognition?: new () => ReconocimientoVoz;
-};
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
 
 type ReservaChatProps = {
   entrada: string;
@@ -61,30 +58,27 @@ export default function ReservaChat({
 }: ReservaChatProps) {
   const [escuchando, setEscuchando] = useState(false);
   const [micDisponible, setMicDisponible] = useState(false);
-  const [errorVoz, setErrorVoz] = useState("");
+  const [errorMic, setErrorMic] = useState("");
 
   const reconocimientoRef =
-    useRef<ReconocimientoVoz | null>(null);
+    useRef<SpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
-    const ventana =
-      window as VentanaConReconocimientoVoz;
+    if (typeof window === "undefined") return;
 
-    const Reconocimiento =
-      ventana.SpeechRecognition ||
-      ventana.webkitSpeechRecognition;
+    const SpeechRecognitionAPI =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
 
-    if (!Reconocimiento) {
-      setMicDisponible(false);
-      return;
-    }
-
-    setMicDisponible(true);
+    setMicDisponible(Boolean(SpeechRecognitionAPI));
 
     return () => {
       if (reconocimientoRef.current) {
-        reconocimientoRef.current.abort();
-        reconocimientoRef.current = null;
+        try {
+          reconocimientoRef.current.stop();
+        } catch {
+          // No hacer nada si ya estaba detenido.
+        }
       }
     };
   }, []);
@@ -92,79 +86,52 @@ export default function ReservaChat({
   const alternarMicrofono = () => {
     if (deshabilitado) return;
 
-    const ventana =
-      window as VentanaConReconocimientoVoz;
+    if (escuchando) {
+      reconocimientoRef.current?.stop();
+      setEscuchando(false);
+      return;
+    }
 
-    const Reconocimiento =
-      ventana.SpeechRecognition ||
-      ventana.webkitSpeechRecognition;
+    if (typeof window === "undefined") return;
 
-    if (!Reconocimiento) {
-      setErrorVoz(
+    const SpeechRecognitionAPI =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+
+    if (!SpeechRecognitionAPI) {
+      setErrorMic(
         idioma === "es"
-          ? "El reconocimiento de voz no está disponible en este navegador."
-          : "Speech recognition is not available in this browser."
+          ? "Tu navegador no admite dictado por voz."
+          : "Your browser does not support voice dictation."
       );
       return;
     }
 
-    if (escuchando) {
-      reconocimientoRef.current?.stop();
-      return;
-    }
+    setErrorMic("");
 
-    setErrorVoz("");
-
-    const reconocimiento =
-      new Reconocimiento();
+    const reconocimiento = new SpeechRecognitionAPI();
 
     reconocimiento.lang =
-      idioma === "es"
-        ? "es-US"
-        : "en-US";
+      idioma === "es" ? "es-US" : "en-US";
 
     reconocimiento.interimResults = true;
     reconocimiento.continuous = false;
 
-    reconocimiento.onstart = () => {
-      setEscuchando(true);
-      setErrorVoz("");
-    };
-
-    reconocimiento.onend = () => {
-      setEscuchando(false);
-      reconocimientoRef.current = null;
-    };
-
-    reconocimiento.onerror = (event) => {
-      setEscuchando(false);
-      reconocimientoRef.current = null;
-
-      if (event.error === "not-allowed") {
-        setErrorVoz(
-          idioma === "es"
-            ? "Permite el acceso al micrófono para usar esta función."
-            : "Allow microphone access to use this feature."
-        );
-      } else {
-        setErrorVoz(
-          idioma === "es"
-            ? "No pude reconocer la voz. Inténtalo nuevamente."
-            : "I couldn't recognize your voice. Please try again."
-        );
-      }
-    };
-
-    reconocimiento.onresult = (event) => {
+    reconocimiento.onresult = (
+      event: SpeechRecognitionEventLike
+    ) => {
       let texto = "";
 
       for (
-        let i = event.resultIndex;
+        let i = 0;
         i < event.results.length;
         i++
       ) {
-        texto +=
-          event.results[i][0].transcript;
+        const resultado = event.results[i];
+
+        if (resultado?.[0]?.transcript) {
+          texto += resultado[0].transcript;
+        }
       }
 
       if (texto.trim()) {
@@ -172,14 +139,43 @@ export default function ReservaChat({
       }
     };
 
-    reconocimientoRef.current =
-      reconocimiento;
+    reconocimiento.onerror = (event) => {
+      setEscuchando(false);
+
+      if (event.error === "not-allowed") {
+        setErrorMic(
+          idioma === "es"
+            ? "Debes permitir el acceso al micrófono."
+            : "You must allow microphone access."
+        );
+      } else {
+        setErrorMic(
+          idioma === "es"
+            ? "No se pudo usar el micrófono. Inténtalo nuevamente."
+            : "The microphone could not be used. Please try again."
+        );
+      }
+    };
+
+    reconocimiento.onend = () => {
+      setEscuchando(false);
+      reconocimientoRef.current = null;
+    };
+
+    reconocimientoRef.current = reconocimiento;
 
     try {
       reconocimiento.start();
+      setEscuchando(true);
     } catch {
       setEscuchando(false);
       reconocimientoRef.current = null;
+
+      setErrorMic(
+        idioma === "es"
+          ? "No se pudo iniciar el micrófono."
+          : "Could not start the microphone."
+      );
     }
   };
 
@@ -192,12 +188,15 @@ export default function ReservaChat({
   const manejarTecla = (
     event: KeyboardEvent<HTMLInputElement>
   ) => {
-    if (event.key === "Enter") {
+    if (
+      event.key === "Enter" &&
+      !event.shiftKey
+    ) {
       event.preventDefault();
 
       if (
-        !deshabilitado &&
-        entrada.trim()
+        entrada.trim() &&
+        !deshabilitado
       ) {
         enviarMensaje();
       }
@@ -205,80 +204,102 @@ export default function ReservaChat({
   };
 
   return (
-    <div className="border-t border-gray-200 bg-white p-4 sm:p-5">
+    <div className="border-t border-gray-200 bg-white p-3 sm:p-5">
+      <div className="mx-auto w-full max-w-3xl">
+        <div className="flex w-full items-center gap-2 sm:gap-3">
 
-      {errorVoz && (
-        <div className="mb-2 text-center text-xs font-medium text-red-600">
-          {errorVoz}
-        </div>
-      )}
+          {/* CAMPO DE TEXTO */}
+          <div className="min-w-0 flex-1">
+            <input
+              type="text"
+              value={entrada}
+              onChange={manejarCambio}
+              onKeyDown={manejarTecla}
+              placeholder={
+                idioma === "es"
+                  ? "Escribe tu respuesta..."
+                  : "Type your answer..."
+              }
+              disabled={deshabilitado}
+              autoComplete="off"
+              className="h-14 w-full min-w-0 rounded-2xl border border-gray-200 bg-gray-50 px-4 text-[16px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 sm:h-[58px] sm:px-5 sm:text-[17px]"
+            />
+          </div>
 
-      {escuchando && (
-        <div className="mb-2 text-center text-sm font-semibold text-red-600">
-          🔴{" "}
-          {idioma === "es"
-            ? "Escuchando..."
-            : "Listening..."}
-        </div>
-      )}
+          {/* MICRÓFONO */}
+          {micDisponible && (
+            <button
+              type="button"
+              onClick={alternarMicrofono}
+              disabled={deshabilitado}
+              aria-label={
+                escuchando
+                  ? idioma === "es"
+                    ? "Detener micrófono"
+                    : "Stop microphone"
+                  : idioma === "es"
+                    ? "Hablar"
+                    : "Speak"
+              }
+              title={
+                escuchando
+                  ? idioma === "es"
+                    ? "Detener"
+                    : "Stop"
+                  : idioma === "es"
+                    ? "Hablar"
+                    : "Speak"
+              }
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-xl shadow-md transition sm:h-[58px] sm:w-[58px] ${
+                escuchando
+                  ? "animate-pulse bg-red-500 text-white shadow-red-500/30"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              } disabled:cursor-not-allowed disabled:opacity-50`}
+            >
+              {escuchando ? "⏹️" : "🎙️"}
+            </button>
+          )}
 
-      <div className="flex items-end gap-3">
-
-        <input
-          type="text"
-          value={entrada}
-          onChange={manejarCambio}
-          onKeyDown={manejarTecla}
-          placeholder={
-            escuchando
-              ? idioma === "es"
-                ? "Habla ahora..."
-                : "Speak now..."
-              : idioma === "es"
-              ? "Escribe tu respuesta..."
-              : "Type your answer..."
-          }
-          disabled={deshabilitado}
-          autoComplete="off"
-          className="min-h-[58px] flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-5 text-[16px] text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 disabled:bg-gray-100 sm:text-[17px]"
-        />
-
-        {micDisponible && (
+          {/* ENVIAR */}
           <button
             type="button"
-            onClick={alternarMicrofono}
-            disabled={deshabilitado}
-            aria-label={
-              escuchando
-                ? idioma === "es"
-                  ? "Detener micrófono"
-                  : "Stop microphone"
-                : idioma === "es"
-                ? "Hablar"
-                : "Speak"
+            onClick={enviarMensaje}
+            disabled={
+              deshabilitado ||
+              !entrada.trim()
             }
-            className={`flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-2xl text-xl transition-all ${
-              escuchando
-                ? "animate-pulse bg-red-600 text-white shadow-lg shadow-red-600/30"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            } disabled:cursor-not-allowed disabled:opacity-40`}
+            aria-label={
+              idioma === "es"
+                ? "Enviar mensaje"
+                : "Send message"
+            }
+            title={
+              idioma === "es"
+                ? "Enviar"
+                : "Send"
+            }
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-[22px] text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none sm:h-[58px] sm:w-[58px]"
           >
-            🎤
+            ➤
           </button>
+
+        </div>
+
+        {/* MENSAJE DEL MICRÓFONO */}
+        {errorMic && (
+          <div className="mt-2 px-1 text-xs text-red-500 sm:text-sm">
+            {errorMic}
+          </div>
         )}
 
-        <button
-          type="button"
-          onClick={enviarMensaje}
-          disabled={
-            deshabilitado ||
-            !entrada.trim()
-          }
-          className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-xl text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-        >
-          ➤
-        </button>
-
+        {escuchando && (
+          <div className="mt-2 flex items-center gap-2 px-1 text-xs font-medium text-red-500 sm:text-sm">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+            {idioma === "es"
+              ? "Escuchando..."
+              : "Listening..."}
+          </div>
+        )}
       </div>
     </div>
   );
