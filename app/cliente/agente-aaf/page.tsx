@@ -14,6 +14,7 @@ import ReservaChat from "./ReservaChat";
 type Empresa = {
   id: number | string;
   nombre: string;
+  codigo_publico: string;
 };
 
 type Mensaje = {
@@ -52,6 +53,12 @@ function obtenerImagenRestaurante(
     nombreNormalizado.includes("el fogon")
   ) {
     return "/image/publicfogon-bg.jpg";
+  }
+
+  if (
+    nombreNormalizado.includes("queensyard")
+  ) {
+    return "/image/queensyard-foto.png";
   }
 
   /*
@@ -341,15 +348,43 @@ export default function AgenteAAFPage() {
      IDIOMA
   ======================================================= */
 
-  const [
-    idioma,
-    setIdioma,
-  ] = useState<
-    "es" | "en"
-  >(
-    "es"
-  );
+const [
+  idioma,
+  setIdioma,
+] = useState<
+  "es" | "en"
+>(
+  "en"
+);
 
+/* =======================================================
+   IDIOMA GLOBAL DE SHORTBIZAI
+======================================================= */
+
+useEffect(() => {
+  const idiomaGuardado =
+    window.localStorage.getItem(
+      "shortbizai_idioma"
+    );
+
+  if (
+    idiomaGuardado === "es" ||
+    idiomaGuardado === "en"
+  ) {
+    setIdioma(idiomaGuardado);
+  }
+}, []);
+
+function cambiarIdioma(
+  nuevoIdioma: "es" | "en"
+) {
+  setIdioma(nuevoIdioma);
+
+  window.localStorage.setItem(
+    "shortbizai_idioma",
+    nuevoIdioma
+  );
+}
   /* =======================================================
      CHATBOT
   ======================================================= */
@@ -788,7 +823,7 @@ export default function AgenteAAFPage() {
         await supabase
           .from("empresas")
           .select(
-            "id, nombre"
+            "id, nombre, codigo_publico"
           )
           .eq(
             "id",
@@ -1950,6 +1985,55 @@ export default function AgenteAAFPage() {
 
   if (!empresa) {
 
+    if (!empresaId) {
+
+      return (
+        <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white text-center shadow-xl">
+
+            <div className="relative h-64 w-full">
+
+              <Image
+                src="/image/queensyard-foto.png"
+                alt="Queensyard Restaurant"
+                fill
+                priority
+                className="object-cover"
+              />
+
+            </div>
+
+            <div className="p-8">
+
+<p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-gray-500">
+  {idioma === "es" ? "Bienvenido" : "Welcome"}
+</p>
+
+              <h1 className="text-2xl font-black text-gray-950">
+                Queensyard Restaurant
+              </h1>
+
+
+             <a
+  href="/r/queensyard"
+  className="mt-7 inline-flex min-h-[56px] w-full items-center justify-center rounded-2xl bg-red-600 px-6 text-base font-black text-white shadow-lg transition hover:bg-red-700"
+>
+  {idioma === "es"
+    ? "RESERVAR →"
+    : "BOOK NOW →"}
+</a>
+
+
+
+            </div>
+
+          </div>
+
+        </main>
+      );
+    }
+
     return (
       <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
 
@@ -1999,9 +2083,12 @@ export default function AgenteAAFPage() {
 
               <button
                 type="button"
-                onClick={() =>
-                  setIdioma("es")
-                }
+
+onClick={() =>
+  cambiarIdioma("es")
+}
+
+
                 className={`px-4 py-2 text-sm font-bold transition ${
                   idioma === "es"
                     ? "bg-blue-600 text-white"
@@ -2013,9 +2100,11 @@ export default function AgenteAAFPage() {
 
               <button
                 type="button"
-                onClick={() =>
-                  setIdioma("en")
-                }
+
+              onClick={() =>
+  cambiarIdioma("en")
+}
+
                 className={`px-4 py-2 text-sm font-bold transition ${
                   idioma === "en"
                     ? "bg-blue-600 text-white"
