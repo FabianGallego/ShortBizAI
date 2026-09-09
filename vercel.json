@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/fidelizacion/procesar",
+      "schedule": "0 13 * * *"
+    }
+  ]
+}
