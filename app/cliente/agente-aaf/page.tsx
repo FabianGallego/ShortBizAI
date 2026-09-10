@@ -2138,7 +2138,7 @@ export default function AgenteAAFPage() {
               </h1>
 
               <a
-                href="/r/queensyard"
+                href="/cliente/agente-aaf?empresaId=93"
                 className="mt-7 inline-flex min-h-[56px] w-full items-center justify-center rounded-2xl bg-red-600 px-6 text-base font-black text-white shadow-lg transition hover:bg-red-700"
               >
                 BOOK NOW →
