@@ -11,6 +11,7 @@ import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import NotificacionesObligatorias from "@/app/components/NotificacionesObligatorias";
 import ReservaChat from "./ReservaChat";
+import build from "next/dist/build";
 type Empresa = {
   id: number | string;
   nombre: string;
@@ -383,6 +384,7 @@ export default function AgenteAAFPage() {
     | "fecha"
     | "hora"
     | "personas"
+    | "email"
     | "confirmacion"
     | "beneficio"
     | "finalizado"
@@ -543,6 +545,9 @@ export default function AgenteAAFPage() {
       preguntaPersonas:
         "¿Para cuántas personas será la reserva?",
 
+      preguntaEmail:
+        "Perfecto. ¿Cuál es tu correo electrónico?",
+
       seleccionarFecha:
         "Seleccionar fecha",
 
@@ -561,6 +566,9 @@ export default function AgenteAAFPage() {
       telefonoInvalido:
         "El número de teléfono debe tener 10 dígitos.",
 
+      emailInvalido:
+        "Por favor introduce un correo electrónico válido.",
+
       resumen:
         "Perfecto. Tengo todos los datos de tu reserva:",
 
@@ -578,6 +586,9 @@ export default function AgenteAAFPage() {
 
       resumenPersonas:
         "Personas",
+
+      resumenEmail:
+        "Correo",
 
       confirmar:
         "¿Deseas que envíe esta solicitud al restaurante?",
@@ -649,8 +660,7 @@ export default function AgenteAAFPage() {
         "Sí, quiero recibir beneficios",
       beneficioOmitir:
         "No, gracias",
-      emailInvalido:
-        "Por favor introduce un email válido.",
+      
       emailGuardado:
         "🎉 Listo. Guardaremos tu email para enviarte beneficios y promociones.",
       errorEmail:
@@ -680,6 +690,9 @@ export default function AgenteAAFPage() {
       preguntaPersonas:
         "How many people will be joining?",
 
+      preguntaEmail:
+        "Perfect. What is your email address?",
+
       seleccionarFecha:
         "Select date",
 
@@ -698,6 +711,8 @@ export default function AgenteAAFPage() {
       telefonoInvalido:
         "The phone number must have 10 digits.",
 
+      
+
       resumen:
         "Perfect. I have all the details for your reservation:",
 
@@ -715,6 +730,9 @@ export default function AgenteAAFPage() {
 
       resumenPersonas:
         "People",
+
+      resumenEmail:
+        "Email",
 
       confirmar:
         "Would you like me to send this request to the restaurant?",
@@ -1612,6 +1630,49 @@ export default function AgenteAAFPage() {
         String(numero)
       );
 
+      agregarMensaje(
+        "ia",
+        t.preguntaEmail
+      );
+
+      setPaso(
+        "email"
+      );
+
+      return;
+    }
+
+    /* =====================================================
+       EMAIL
+    ===================================================== */
+
+    if (
+      paso === "email"
+    ) {
+
+      const emailLimpio =
+        texto
+          .trim()
+          .toLowerCase();
+
+      if (
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+          emailLimpio
+        )
+      ) {
+
+        agregarMensaje(
+          "ia",
+          t.emailInvalido
+        );
+
+        return;
+      }
+
+      setEmail(
+        emailLimpio
+      );
+
       const fechaTexto =
         idioma === "es"
           ? convertirFecha(
@@ -1632,7 +1693,8 @@ export default function AgenteAAFPage() {
         `📞 ${t.resumenTelefono}: ${telefono}\n` +
         `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
         `🕐 ${t.resumenHora}: ${horaTexto}\n` +
-        `👥 ${t.resumenPersonas}: ${numero}`;
+        `👥 ${t.resumenPersonas}: ${personas}\n` +
+        `✉️ ${t.resumenEmail}: ${emailLimpio}`;
 
       agregarMensaje(
         "ia",
@@ -1711,6 +1773,7 @@ export default function AgenteAAFPage() {
         setFecha("");
         setHora("");
         setPersonas("");
+        setEmail("");
 
         setPaso(
           "nombre"
@@ -1760,7 +1823,8 @@ export default function AgenteAAFPage() {
       !telefono ||
       !fecha ||
       !hora ||
-      !personas
+      !personas ||
+      !email
     ) {
 
       setErrorReserva(
@@ -1836,6 +1900,11 @@ export default function AgenteAAFPage() {
                 String(
                   numeroPersonas
                 ),
+
+              email:
+                email
+                  .trim()
+                  .toLowerCase(),
 
               push_endpoint:
                 pushEndpoint,
@@ -1914,6 +1983,11 @@ export default function AgenteAAFPage() {
                       numeroPersonas
                     ),
 
+                  email:
+                    email
+                      .trim()
+                      .toLowerCase(),
+
                   pushEndpoint:
                     pushEndpoint,
                 }),
@@ -1963,7 +2037,7 @@ export default function AgenteAAFPage() {
       );
 
       setPaso(
-        "beneficio"
+        "finalizado"
       );
 
     } catch (error) {
@@ -2138,7 +2212,7 @@ export default function AgenteAAFPage() {
               </h1>
 
               <a
-                href="/cliente/agente-aaf?empresaId=93"
+                href="/r/queensyard"
                 className="mt-7 inline-flex min-h-[56px] w-full items-center justify-center rounded-2xl bg-red-600 px-6 text-base font-black text-white shadow-lg transition hover:bg-red-700"
               >
                 BOOK NOW →
@@ -2901,7 +2975,9 @@ export default function AgenteAAFPage() {
   paso !==
     "hora" &&
   paso !==
-    "personas" && (
+    "personas" &&
+  paso !==
+    "email" && (
 
     <ReservaChat
       entrada={entrada}
@@ -2912,6 +2988,176 @@ export default function AgenteAAFPage() {
     />
 
   )}
+
+                {/* =============================================
+                    EMAIL / CAPTURA OBLIGATORIA
+                ============================================= */}
+
+                {paso ===
+                  "email" && (
+
+                  <div className="border-t border-gray-200 bg-white px-5 py-6 sm:px-7">
+
+                    <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 sm:p-6">
+
+                      <div className="text-2xl">
+                        ✉️
+                      </div>
+
+                      <h2 className="mt-2 text-xl font-black text-gray-950 sm:text-2xl">
+                        {t.preguntaEmail}
+                      </h2>
+
+                      <p className="mt-2 text-sm leading-6 text-gray-600 sm:text-base">
+                        {idioma === "es"
+                          ? "Necesitamos tu correo para identificar tu reserva y mantenerte informado."
+                          : "We need your email to identify your reservation and keep you informed."}
+                      </p>
+
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) =>
+                          setEmail(
+                            e.target.value
+                          )
+                        }
+                        onKeyDown={(e) => {
+                          if (
+                            e.key ===
+                            "Enter"
+                          ) {
+                            e.preventDefault();
+
+                            const emailLimpio =
+                              email
+                                .trim()
+                                .toLowerCase();
+
+                            if (
+                              !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+                                emailLimpio
+                              )
+                            ) {
+                              agregarMensaje(
+                                "ia",
+                                t.emailInvalido
+                              );
+                              return;
+                            }
+
+                            setEmail(
+                              emailLimpio
+                            );
+
+                            const fechaTexto =
+                              idioma === "es"
+                                ? convertirFecha(
+                                    fecha
+                                  )
+                                : convertirFechaIngles(
+                                    fecha
+                                  );
+
+                            const horaTexto =
+                              convertirHora(
+                                hora
+                              );
+
+                            const resumen =
+                              `${t.resumen}\n\n` +
+                              `👤 ${t.resumenNombre}: ${nombre}\n` +
+                              `📞 ${t.resumenTelefono}: ${telefono}\n` +
+                              `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
+                              `🕐 ${t.resumenHora}: ${horaTexto}\n` +
+                              `👥 ${t.resumenPersonas}: ${personas}\n` +
+                              `✉️ ${t.resumenEmail}: ${emailLimpio}`;
+
+                            agregarMensaje(
+                              "ia",
+                              `${resumen}\n\n${t.confirmar}`
+                            );
+
+                            setPaso(
+                              "confirmacion"
+                            );
+                          }
+                        }}
+                        placeholder="email@example.com"
+                        autoComplete="email"
+                        className="mt-4 min-h-[56px] w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+
+                          const emailLimpio =
+                            email
+                              .trim()
+                              .toLowerCase();
+
+                          if (
+                            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+                              emailLimpio
+                            )
+                          ) {
+                            agregarMensaje(
+                              "ia",
+                              t.emailInvalido
+                            );
+                            return;
+                          }
+
+                          setEmail(
+                            emailLimpio
+                          );
+
+                          const fechaTexto =
+                            idioma === "es"
+                              ? convertirFecha(
+                                  fecha
+                                )
+                              : convertirFechaIngles(
+                                  fecha
+                                );
+
+                          const horaTexto =
+                            convertirHora(
+                              hora
+                            );
+
+                          const resumen =
+                            `${t.resumen}\n\n` +
+                            `👤 ${t.resumenNombre}: ${nombre}\n` +
+                            `📞 ${t.resumenTelefono}: ${telefono}\n` +
+                            `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
+                            `🕐 ${t.resumenHora}: ${horaTexto}\n` +
+                            `👥 ${t.resumenPersonas}: ${personas}\n` +
+                            `✉️ ${t.resumenEmail}: ${emailLimpio}`;
+
+                          agregarMensaje(
+                            "ia",
+                            `${resumen}\n\n${t.confirmar}`
+                          );
+
+                          setPaso(
+                            "confirmacion"
+                          );
+
+                        }}
+                        className="mt-3 min-h-[56px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700"
+                      >
+                        {idioma === "es"
+                          ? "Continuar →"
+                          : "Continue →"}
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                )}
 
                 {/* =============================================
                     BENEFICIO / CAPTURA DE EMAIL
