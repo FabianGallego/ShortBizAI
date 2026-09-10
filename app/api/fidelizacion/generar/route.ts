@@ -782,7 +782,7 @@ async function generarCampanas(
 
     creadas,
 
-    omitidas,
+    
   };
 }
 

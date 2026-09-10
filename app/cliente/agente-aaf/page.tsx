@@ -348,43 +348,15 @@ export default function AgenteAAFPage() {
      IDIOMA
   ======================================================= */
 
-const [
-  idioma,
-  setIdioma,
-] = useState<
-  "es" | "en"
->(
-  "en"
-);
-
-/* =======================================================
-   IDIOMA GLOBAL DE SHORTBIZAI
-======================================================= */
-
-useEffect(() => {
-  const idiomaGuardado =
-    window.localStorage.getItem(
-      "shortbizai_idioma"
-    );
-
-  if (
-    idiomaGuardado === "es" ||
-    idiomaGuardado === "en"
-  ) {
-    setIdioma(idiomaGuardado);
-  }
-}, []);
-
-function cambiarIdioma(
-  nuevoIdioma: "es" | "en"
-) {
-  setIdioma(nuevoIdioma);
-
-  window.localStorage.setItem(
-    "shortbizai_idioma",
-    nuevoIdioma
+  const [
+    idioma,
+    setIdioma,
+  ] = useState<
+    "es" | "en"
+  >(
+    "es"
   );
-}
+
   /* =======================================================
      CHATBOT
   ======================================================= */
@@ -412,6 +384,7 @@ function cambiarIdioma(
     | "hora"
     | "personas"
     | "confirmacion"
+    | "beneficio"
     | "finalizado"
   >(
     "inicio"
@@ -445,6 +418,23 @@ function cambiarIdioma(
     personas,
     setPersonas,
   ] = useState("");
+
+  const [
+    email,
+    setEmail,
+  ] = useState("");
+
+  const [
+    reservaIdCreada,
+    setReservaIdCreada,
+  ] = useState<number | string | null>(
+    null
+  );
+
+  const [
+    guardandoEmail,
+    setGuardandoEmail,
+  ] = useState(false);
 
   /* =======================================================
      ESTADO RESERVA
@@ -648,6 +638,23 @@ function cambiarIdioma(
 
       errorTelegram:
         "La reserva fue guardada, pero no pudimos enviar el aviso al restaurante.",
+
+      beneficioTitulo:
+        "🎁 ¿Quieres recibir beneficios exclusivos?",
+      beneficioDescripcion:
+        "Déjanos tu email y recibe ofertas, promociones y beneficios especiales de este restaurante.",
+      beneficioPlaceholder:
+        "Tu email",
+      beneficioBoton:
+        "Sí, quiero recibir beneficios",
+      beneficioOmitir:
+        "No, gracias",
+      emailInvalido:
+        "Por favor introduce un email válido.",
+      emailGuardado:
+        "🎉 Listo. Guardaremos tu email para enviarte beneficios y promociones.",
+      errorEmail:
+        "No pudimos guardar tu email. Puedes continuar con tu reserva.",
     },
 
     en: {
@@ -768,6 +775,23 @@ function cambiarIdioma(
 
       errorTelegram:
         "The reservation was saved, but we could not notify the restaurant.",
+
+      beneficioTitulo:
+        "🎁 Would you like to receive exclusive benefits?",
+      beneficioDescripcion:
+        "Leave your email and receive offers, promotions and special benefits from this restaurant.",
+      beneficioPlaceholder:
+        "Your email",
+      beneficioBoton:
+        "Yes, I want the benefits",
+      beneficioOmitir:
+        "No, thanks",
+      emailInvalido:
+        "Please enter a valid email address.",
+      emailGuardado:
+        "🎉 Done. We’ll save your email so we can send you benefits and promotions.",
+      errorEmail:
+        "We could not save your email. You can continue with your reservation.",
     },
   };
 
@@ -1307,6 +1331,99 @@ function cambiarIdioma(
   }
 
   /* =========================================================
+     GUARDAR EMAIL PARA BENEFICIOS
+  ========================================================= */
+
+  async function guardarEmailBeneficio() {
+
+    const emailLimpio =
+      email
+        .trim()
+        .toLowerCase();
+
+    if (
+      !emailLimpio ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        emailLimpio
+      )
+    ) {
+
+      agregarMensaje(
+        "ia",
+        t.emailInvalido
+      );
+
+      return;
+    }
+
+    if (!reservaIdCreada) {
+
+      agregarMensaje(
+        "ia",
+        t.errorEmail
+      );
+
+      return;
+    }
+
+    setGuardandoEmail(
+      true
+    );
+
+    try {
+
+      const {
+        error,
+      } =
+        await supabase
+          .from("reservas")
+          .update({
+            email:
+              emailLimpio,
+          })
+          .eq(
+            "id",
+            reservaIdCreada
+          );
+
+      if (error) {
+
+        console.error(
+          "ERROR GUARDANDO EMAIL:",
+          error
+        );
+
+        agregarMensaje(
+          "ia",
+          t.errorEmail
+        );
+
+        return;
+      }
+
+      agregarMensaje(
+        "usuario",
+        emailLimpio
+      );
+
+      agregarMensaje(
+        "ia",
+        `${t.emailGuardado}\n\n${t.esperando}`
+      );
+
+      setPaso(
+        "finalizado"
+      );
+
+    } finally {
+
+      setGuardandoEmail(
+        false
+      );
+    }
+  }
+
+  /* =========================================================
      REINICIAR CONVERSACIÓN
   ========================================================= */
 
@@ -1317,6 +1434,8 @@ function cambiarIdioma(
     setFecha("");
     setHora("");
     setPersonas("");
+    setEmail("");
+    setReservaIdCreada(null);
 
     setEntrada("");
 
@@ -1830,17 +1949,21 @@ function cambiarIdioma(
         true
       );
 
+      setReservaIdCreada(
+        data.id
+      );
+
       setMensajeExito(
         t.reservaEnviada
       );
 
       agregarMensaje(
         "ia",
-        `${t.reservaEnviada}\n\n${t.esperando}`
+        t.reservaEnviada
       );
 
       setPaso(
-        "finalizado"
+        "beneficio"
       );
 
     } catch (error) {
@@ -2006,25 +2129,20 @@ function cambiarIdioma(
 
             <div className="p-8">
 
-<p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-gray-500">
-  {idioma === "es" ? "Bienvenido" : "Welcome"}
-</p>
+              <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-gray-500">
+                Bienvenidos
+              </p>
 
               <h1 className="text-2xl font-black text-gray-950">
                 Queensyard Restaurant
               </h1>
 
-
-             <a
-  href="/r/queensyard"
-  className="mt-7 inline-flex min-h-[56px] w-full items-center justify-center rounded-2xl bg-red-600 px-6 text-base font-black text-white shadow-lg transition hover:bg-red-700"
->
-  {idioma === "es"
-    ? "RESERVAR →"
-    : "BOOK NOW →"}
-</a>
-
-
+              <a
+                href="/r/queensyard"
+                className="mt-7 inline-flex min-h-[56px] w-full items-center justify-center rounded-2xl bg-red-600 px-6 text-base font-black text-white shadow-lg transition hover:bg-red-700"
+              >
+                BOOK NOW →
+              </a>
 
             </div>
 
@@ -2083,12 +2201,9 @@ function cambiarIdioma(
 
               <button
                 type="button"
-
-onClick={() =>
-  cambiarIdioma("es")
-}
-
-
+                onClick={() =>
+                  setIdioma("es")
+                }
                 className={`px-4 py-2 text-sm font-bold transition ${
                   idioma === "es"
                     ? "bg-blue-600 text-white"
@@ -2100,11 +2215,9 @@ onClick={() =>
 
               <button
                 type="button"
-
-              onClick={() =>
-  cambiarIdioma("en")
-}
-
+                onClick={() =>
+                  setIdioma("en")
+                }
                 className={`px-4 py-2 text-sm font-bold transition ${
                   idioma === "en"
                     ? "bg-blue-600 text-white"
@@ -2425,55 +2538,76 @@ onClick={() =>
 
                     <div className="border-t border-gray-200 bg-white px-5 py-5 sm:px-7">
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          fechaInputRef.current?.click();
-                        }}
-                        className="flex min-h-[62px] w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.98] sm:text-lg"
-                      >
+                      <div className="relative">
 
-                        <span className="text-2xl">
-                          📅
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const input =
+                              fechaInputRef.current;
 
-                        <span>
-                          {fecha
-                            ? idioma ===
-                              "es"
-                              ? convertirFecha(
-                                  fecha
-                                )
-                              : convertirFechaIngles(
-                                  fecha
-                                )
-                            : t.seleccionarFecha}
-                        </span>
+                            if (!input) return;
 
-                      </button>
+                            try {
+                              if (
+                                "showPicker" in
+                                HTMLInputElement.prototype
+                              ) {
+                                input.showPicker();
+                              } else {
+                                input.click();
+                              }
+                            } catch {
+                              input.click();
+                            }
+                          }}
+                          className="flex min-h-[62px] w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.98] sm:text-lg"
+                        >
 
-                      <input
-                        ref={
-                          fechaInputRef
-                        }
-                        type="date"
-                        min={
-                          obtenerFechaHoy()
-                        }
-                        value={
-                          fecha
-                        }
-                        onChange={(
-                          e
-                        ) =>
-                          seleccionarFecha(
-                            e.target.value
-                          )
-                        }
-                        className="sr-only"
-                        tabIndex={-1}
-                        aria-hidden="true"
-                      />
+                          <span className="text-2xl">
+                            📅
+                          </span>
+
+                          <span>
+                            {fecha
+                              ? idioma ===
+                                "es"
+                                ? convertirFecha(
+                                    fecha
+                                  )
+                                : convertirFechaIngles(
+                                    fecha
+                                  )
+                              : t.seleccionarFecha}
+                          </span>
+
+                        </button>
+
+                        <input
+                          ref={
+                            fechaInputRef
+                          }
+                          type="date"
+                          min={
+                            obtenerFechaHoy()
+                          }
+                          value={
+                            fecha
+                          }
+                          onChange={(
+                            e
+                          ) =>
+                            seleccionarFecha(
+                              e.target.value
+                            )
+                          }
+                          aria-label={
+                            t.seleccionarFecha
+                          }
+                          className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-0"
+                        />
+
+                      </div>
 
                     </div>
 
@@ -2492,7 +2626,7 @@ onClick={() =>
                       <button
                         type="button"
                         onClick={() => {
-                          horaInputRef.current?.click();
+                          horaInputRef.current?.showPicker?.();
                         }}
                         className="flex min-h-[62px] w-full items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.98] sm:text-lg"
                       >
@@ -2526,7 +2660,7 @@ onClick={() =>
                             e.target.value
                           )
                         }
-                        className="sr-only"
+                        className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-0"
                         tabIndex={-1}
                         aria-hidden="true"
                       />
@@ -2759,6 +2893,8 @@ onClick={() =>
 {paso !==
   "finalizado" &&
   paso !==
+    "beneficio" &&
+  paso !==
     "confirmacion" &&
   paso !==
     "fecha" &&
@@ -2776,6 +2912,108 @@ onClick={() =>
     />
 
   )}
+
+                {/* =============================================
+                    BENEFICIO / CAPTURA DE EMAIL
+                ============================================= */}
+
+                {paso ===
+                  "beneficio" && (
+
+                  <div className="border-t border-gray-200 bg-white px-5 py-6 sm:px-7">
+
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 sm:p-6">
+
+                      <div className="text-2xl">
+                        🎁
+                      </div>
+
+                      <h2 className="mt-2 text-xl font-black text-gray-950 sm:text-2xl">
+                        {t.beneficioTitulo}
+                      </h2>
+
+                      <p className="mt-2 text-sm leading-6 text-gray-600 sm:text-base">
+                        {t.beneficioDescripcion}
+                      </p>
+
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) =>
+                          setEmail(
+                            e.target.value
+                          )
+                        }
+                        onKeyDown={(e) => {
+                          if (
+                            e.key ===
+                            "Enter"
+                          ) {
+                            e.preventDefault();
+
+                            if (
+                              !guardandoEmail
+                            ) {
+                              guardarEmailBeneficio();
+                            }
+                          }
+                        }}
+                        placeholder={
+                          t.beneficioPlaceholder
+                        }
+                        autoComplete="email"
+                        disabled={
+                          guardandoEmail
+                        }
+                        className="mt-4 min-h-[56px] w-full rounded-xl border border-gray-300 bg-white px-4 text-base text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={
+                          guardarEmailBeneficio
+                        }
+                        disabled={
+                          guardandoEmail
+                        }
+                        className="mt-3 min-h-[56px] w-full rounded-xl bg-blue-600 px-5 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {
+                          guardandoEmail
+                            ? "..."
+                            : t.beneficioBoton
+                        }
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+
+                          agregarMensaje(
+                            "ia",
+                            t.esperando
+                          );
+
+                          setPaso(
+                            "finalizado"
+                          );
+
+                        }}
+                        disabled={
+                          guardandoEmail
+                        }
+                        className="mt-3 w-full py-2 text-sm font-semibold text-gray-500 transition hover:text-gray-800 disabled:opacity-50"
+                      >
+                        {
+                          t.beneficioOmitir
+                        }
+                      </button>
+
+                    </div>
+
+                  </div>
+
+                )}
 
                 {/* =============================================
                     FINAL
