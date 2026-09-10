@@ -384,50 +384,44 @@ async function generarCampanas(
     const clienteExistente =
       clientes.get(key);
 
-
-
-  if (
-  clienteExistente
-) {
-  clienteExistente.reservas.push(
-    reserva
-  );
-
-  // Actualizar datos del cliente
-  // cuando una reserva posterior tenga
-  // información que antes estaba vacía.
-  if (
-    !clienteExistente.email &&
-    reserva.email
-  ) {
-    clienteExistente.email =
-      normalizarEmail(
-        reserva.email
+    if (
+      clienteExistente
+    ) {
+      clienteExistente.reservas.push(
+        reserva
       );
-  }
 
-  if (
-    !clienteExistente.telefono &&
-    reserva.telefono
-  ) {
-    clienteExistente.telefono =
-      reserva.telefono.trim();
-  }
+      // Actualizar datos del cliente
+      // cuando una reserva posterior tenga
+      // información que antes estaba vacía.
+      if (
+        !clienteExistente.email &&
+        reserva.email
+      ) {
+        clienteExistente.email =
+          normalizarEmail(
+            reserva.email
+          );
+      }
 
-  if (
-    (!clienteExistente.nombre ||
-      clienteExistente.nombre ===
-        "Cliente") &&
-    reserva.cliente_nombre
-  ) {
-    clienteExistente.nombre =
-      reserva.cliente_nombre.trim();
-  }
-} else {
+      if (
+        !clienteExistente.telefono &&
+        reserva.telefono
+      ) {
+        clienteExistente.telefono =
+          reserva.telefono.trim();
+      }
 
-
-
-
+      if (
+        (!clienteExistente.nombre ||
+          clienteExistente.nombre ===
+            "Cliente") &&
+        reserva.cliente_nombre
+      ) {
+        clienteExistente.nombre =
+          reserva.cliente_nombre.trim();
+      }
+    } else {
       clientes.set(key, {
         key,
         empresa_id:
@@ -497,6 +491,7 @@ async function generarCampanas(
   ======================================================= */
 
   const creadas: Campana[] = [];
+
   const omitidas: {
     cliente: string;
     motivo: string;
@@ -780,9 +775,10 @@ async function generarCampanas(
     omitidas:
       omitidas.length,
 
-    creadas,
+    motivos:
+      omitidas,
 
-    
+    creadas,
   };
 }
 
