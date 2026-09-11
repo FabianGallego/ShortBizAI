@@ -2193,176 +2193,195 @@ export default function AgenteAAFPage() {
 
       const servicios = [
         {
-          icono: "🍽️",
           nombre: "ShortFoodAI",
           categoriaEs: "Restaurantes",
           categoriaEn: "Restaurants",
           descripcionEs: "Descubre restaurantes locales y reserva tu mesa.",
           descripcionEn: "Discover local restaurants and book your table.",
           href: "/explore-local?categoria=restaurantes",
+          imagen:
+            "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1800&q=85",
         },
         {
-          icono: "💈",
+          nombre: "ShortTravelAI",
+          categoriaEs: "Viajes y experiencias",
+          categoriaEn: "Travel & Experiences",
+          descripcionEs: "Descubre lugares, experiencias y servicios para viajeros.",
+          descripcionEn: "Discover places, experiences, and services for travelers.",
+          href: "/explore-local?categoria=viajes",
+          imagen:
+            "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1400&q=85",
+        },
+        {
           nombre: "ShortBarberAI",
           categoriaEs: "Barberías",
           categoriaEn: "Barbers",
           descripcionEs: "Encuentra barberías locales y agenda tu cita.",
           descripcionEn: "Find local barbers and book your appointment.",
           href: "/explore-local?categoria=barberias",
+          imagen:
+            "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1400&q=85",
         },
         {
-          icono: "💆",
           nombre: "ShortSpaAI",
-          categoriaEs: "Spas",
-          categoriaEn: "Spas",
+          categoriaEs: "Belleza y bienestar",
+          categoriaEn: "Beauty & Wellness",
           descripcionEs: "Descubre spas locales y reserva tu servicio.",
           descripcionEn: "Discover local spas and book your service.",
           href: "/explore-local?categoria=spas",
+          imagen:
+            "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1400&q=85",
         },
         {
-          icono: "🏨",
           nombre: "ShortHotelAI",
           categoriaEs: "Hoteles",
           categoriaEn: "Hotels",
           descripcionEs: "Explora hoteles y encuentra tu próxima estadía.",
           descripcionEn: "Explore hotels and find your next stay.",
           href: "/explore-local?categoria=hoteles",
-        },
-        {
-          icono: "✈️",
-          nombre: "ShortTravelAI",
-          categoriaEs: "Viajes",
-          categoriaEn: "Travel",
-          descripcionEs: "Servicios y experiencias para viajeros.",
-          descripcionEn: "Services and experiences for travelers.",
-          href: "/explore-local?categoria=viajes",
+          imagen:
+            "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1400&q=85",
         },
       ];
 
       return (
-        <main className="min-h-screen bg-gray-50 px-4 py-6 text-gray-900 sm:px-6 sm:py-10">
-
-          <div className="mx-auto w-full max-w-5xl">
-
-            {/* ENCABEZADO */}
-            <header className="mb-8 text-center sm:mb-10">
-
-              <div className="mb-5 flex justify-center">
-                <div className="rounded-2xl bg-white px-5 py-3 shadow-lg ring-1 ring-gray-200">
-                  <Image
-                    src="/logo-foodshortai.png"
-                    alt="ShortBizAI"
-                    width={170}
-                    height={170}
-                    priority
-                    className="h-auto w-[125px] object-contain sm:w-[145px]"
-                  />
+        <main className="min-h-screen overflow-hidden bg-[#090909] px-4 py-5 text-white sm:px-6 sm:py-8">
+          <div className="mx-auto w-full max-w-7xl">
+            {/* HEADER */}
+            <header className="relative mb-8 sm:mb-10">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white shadow-[0_8px_30px_rgba(255,255,255,0.08)]">
+                    <Image
+                      src="/logo-foodshortai.png"
+                      alt="ShortBizAI"
+                      width={80}
+                      height={80}
+                      priority
+                      className="h-9 w-9 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.32em] text-white/50">
+                      ShortBizAI
+                    </p>
+                    <p className="text-xs font-medium text-white/35">
+                      Local experiences, powered by AI
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <p className="text-xs font-black uppercase tracking-[0.28em] text-blue-600 sm:text-sm">
-                ShortBizAI
-              </p>
-
-              <h1 className="mt-3 text-3xl font-black tracking-tight text-gray-950 sm:text-5xl">
-                {idioma === "es"
-                  ? "¿Qué servicio estás buscando?"
-                  : "What service are you looking for?"}
-              </h1>
-
-              <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-500 sm:text-lg">
-                {idioma === "es"
-                  ? "Explora negocios locales, descubre servicios y reserva directamente."
-                  : "Explore local businesses, discover services, and book directly."}
-              </p>
-
-              {/* IDIOMA */}
-              <div className="mt-6 flex justify-center">
-                <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div className="flex overflow-hidden rounded-full border border-white/10 bg-white/[0.04] p-1 backdrop-blur-xl">
                   <button
                     type="button"
                     onClick={() => setIdioma("es")}
-                    className={`px-4 py-2 text-sm font-bold transition ${
+                    className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition sm:px-4 ${
                       idioma === "es"
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-white text-black shadow-sm"
+                        : "text-white/55 hover:text-white"
                     }`}
                   >
-                    🇪🇸 Español
+                    ES
                   </button>
-
                   <button
                     type="button"
                     onClick={() => setIdioma("en")}
-                    className={`px-4 py-2 text-sm font-bold transition ${
+                    className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition sm:px-4 ${
                       idioma === "en"
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-white text-black shadow-sm"
+                        : "text-white/55 hover:text-white"
                     }`}
                   >
-                    🇺🇸 English
+                    EN
                   </button>
                 </div>
               </div>
 
+              <div className="max-w-4xl pb-2 pt-12 sm:pt-16">
+                <p className="mb-4 text-[11px] font-black uppercase tracking-[0.34em] text-white/45">
+                  {idioma === "es" ? "EXPERIENCIAS LOCALES" : "LOCAL EXPERIENCES"}
+                </p>
+                <h1 className="max-w-4xl text-4xl font-semibold leading-[0.96] tracking-[-0.045em] text-white sm:text-6xl lg:text-7xl">
+                  {idioma === "es"
+                    ? "Descubre algo que valga la pena reservar."
+                    : "Discover something worth booking."}
+                </h1>
+                <p className="mt-5 max-w-2xl text-sm leading-6 text-white/45 sm:text-base sm:leading-7">
+                  {idioma === "es"
+                    ? "Explora negocios, servicios y experiencias locales. Descubre. Reserva. Regresa."
+                    : "Explore local businesses, services, and experiences. Discover. Book. Return."}
+                </p>
+              </div>
             </header>
 
-            {/* SERVICIOS */}
-            <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-
-              {servicios.map((servicio) => (
+            {/* EXPERIENCE GRID */}
+            <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {servicios.map((servicio, index) => (
                 <a
                   key={servicio.nombre}
                   href={servicio.href}
-                  className="group flex min-h-[245px] flex-col rounded-[2rem] border border-gray-200 bg-white p-7 shadow-[0_15px_45px_rgba(0,0,0,0.08)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_55px_rgba(0,0,0,0.13)]"
+                  className={`group relative isolate overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#141414] shadow-[0_25px_70px_rgba(0,0,0,0.35)] transition duration-500 hover:-translate-y-1 hover:border-white/20 hover:shadow-[0_35px_90px_rgba(0,0,0,0.5)] ${
+                    index === 0 ? "sm:col-span-2 lg:col-span-4 lg:min-h-[470px]" : "min-h-[300px] sm:min-h-[330px]"
+                  }`}
                 >
+                  <div
+                    className="absolute inset-0 -z-20 bg-cover bg-center transition duration-700 ease-out group-hover:scale-105"
+                    style={{ backgroundImage: `url(${servicio.imagen})` }}
+                  />
+                  <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black via-black/45 to-black/10" />
+                  <div className="absolute inset-0 -z-10 bg-black/15 transition duration-500 group-hover:bg-black/5" />
 
-                  <div className="flex items-start justify-between">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-4xl shadow-sm ring-1 ring-gray-100">
-                      {servicio.icono}
+                  <div className="flex h-full min-h-[inherit] flex-col justify-between p-6 sm:p-7 lg:p-9">
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="rounded-full border border-white/15 bg-black/25 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-white/80 backdrop-blur-md">
+                        {idioma === "es"
+                          ? servicio.categoriaEs
+                          : servicio.categoriaEn}
+                      </span>
+                      <span className="text-xs font-medium text-white/45">
+                        0{index + 1}
+                      </span>
                     </div>
 
-                    <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-blue-700">
-                      {idioma === "es"
-                        ? servicio.categoriaEs
-                        : servicio.categoriaEn}
-                    </span>
+                    <div className="max-w-2xl">
+                      <h2 className={`font-semibold tracking-[-0.04em] text-white ${
+                        index === 0
+                          ? "text-4xl sm:text-5xl lg:text-6xl"
+                          : "text-3xl sm:text-4xl"
+                      }`}>
+                        {servicio.nombre}
+                      </h2>
+                      <p className="mt-2 max-w-xl text-sm leading-6 text-white/65">
+                        {idioma === "es"
+                          ? servicio.descripcionEs
+                          : servicio.descripcionEn}
+                      </p>
+
+                      <div className="mt-6 inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.18em] text-white">
+                        <span>
+                          {idioma === "es" ? "Explorar" : "Explore"}
+                        </span>
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-base transition duration-300 group-hover:translate-x-1 group-hover:bg-white group-hover:text-black">
+                          →
+                        </span>
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="mt-6">
-                    <h2 className="text-2xl font-black tracking-tight text-gray-950">
-                      {servicio.nombre}
-                    </h2>
-
-                    <p className="mt-2 text-sm leading-6 text-gray-500">
-                      {idioma === "es"
-                        ? servicio.descripcionEs
-                        : servicio.descripcionEn}
-                    </p>
-                  </div>
-
-                  <div className="mt-auto pt-6">
-                    <span className="inline-flex items-center text-sm font-black text-blue-600 transition group-hover:translate-x-1">
-                      {idioma === "es" ? "EXPLORAR" : "EXPLORE"} →
-                    </span>
-                  </div>
-
                 </a>
               ))}
-
             </section>
 
-            {/* PIE */}
-            <footer className="mt-10 text-center">
-              <p className="text-sm font-medium text-gray-400">
+            <footer className="flex flex-col items-center justify-between gap-3 py-8 text-center sm:flex-row sm:text-left">
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/25">
+                ShortBizAI
+              </p>
+              <p className="text-xs text-white/25">
                 {idioma === "es"
                   ? "Más servicios locales próximamente."
                   : "More local services coming soon."}
               </p>
             </footer>
-
           </div>
-
         </main>
       );
     }
@@ -2944,6 +2963,14 @@ export default function AgenteAAFPage() {
                                     hora
                                   );
 
+                                const resumen =
+                                  `${t.resumen}\n\n` +
+                                  `👤 ${t.resumenNombre}: ${nombre}\n` +
+                                  `📞 ${t.resumenTelefono}: ${telefono}\n` +
+                                  `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
+                                  `🕐 ${t.resumenHora}: ${horaTexto}\n` +
+                                  `👥 ${t.resumenPersonas}: ${valor}`;
+
                                 agregarMensaje(
                                   "usuario",
                                   valor
@@ -2997,6 +3024,14 @@ export default function AgenteAAFPage() {
                             convertirHora(
                               hora
                             );
+
+                          const resumen =
+                            `${t.resumen}\n\n` +
+                            `👤 ${t.resumenNombre}: ${nombre}\n` +
+                            `📞 ${t.resumenTelefono}: ${telefono}\n` +
+                            `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
+                            `🕐 ${t.resumenHora}: ${horaTexto}\n` +
+                            `👥 ${t.resumenPersonas}: 8+`;
 
                           agregarMensaje(
                             "usuario",
