@@ -2944,14 +2944,6 @@ export default function AgenteAAFPage() {
                                     hora
                                   );
 
-                                const resumen =
-                                  `${t.resumen}\n\n` +
-                                  `👤 ${t.resumenNombre}: ${nombre}\n` +
-                                  `📞 ${t.resumenTelefono}: ${telefono}\n` +
-                                  `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
-                                  `🕐 ${t.resumenHora}: ${horaTexto}\n` +
-                                  `👥 ${t.resumenPersonas}: ${valor}`;
-
                                 agregarMensaje(
                                   "usuario",
                                   valor
@@ -2959,11 +2951,11 @@ export default function AgenteAAFPage() {
 
                                 agregarMensaje(
                                   "ia",
-                                  `${resumen}\n\n${t.confirmar}`
+                                  t.preguntaEmail
                                 );
 
                                 setPaso(
-                                  "confirmacion"
+                                  "email"
                                 );
                               }}
                               className="min-h-[56px] rounded-2xl border border-gray-200 bg-white text-lg font-bold text-gray-800 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 active:scale-95"
@@ -3006,14 +2998,6 @@ export default function AgenteAAFPage() {
                               hora
                             );
 
-                          const resumen =
-                            `${t.resumen}\n\n` +
-                            `👤 ${t.resumenNombre}: ${nombre}\n` +
-                            `📞 ${t.resumenTelefono}: ${telefono}\n` +
-                            `📅 ${t.resumenFecha}: ${fechaTexto}\n` +
-                            `🕐 ${t.resumenHora}: ${horaTexto}\n` +
-                            `👥 ${t.resumenPersonas}: 8+`;
-
                           agregarMensaje(
                             "usuario",
                             "8+"
@@ -3021,11 +3005,11 @@ export default function AgenteAAFPage() {
 
                           agregarMensaje(
                             "ia",
-                            `${resumen}\n\n${t.confirmar}`
+                            t.preguntaEmail
                           );
 
                           setPaso(
-                            "confirmacion"
+                            "email"
                           );
                         }}
                         className="mt-3 min-h-[56px] w-full rounded-2xl border border-gray-200 bg-white text-lg font-bold text-gray-800 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 active:scale-95"
