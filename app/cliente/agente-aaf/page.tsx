@@ -355,7 +355,7 @@ export default function AgenteAAFPage() {
   ] = useState<
     "es" | "en"
   >(
-    "es"
+    "en"
   );
 
   /* =======================================================
@@ -2978,11 +2978,11 @@ export default function AgenteAAFPage() {
 
                                 agregarMensaje(
                                   "ia",
-                                  t.preguntaEmail
+                                  `${resumen}\n\n${t.confirmar}`
                                 );
 
                                 setPaso(
-                                  "email"
+                                  "confirmacion"
                                 );
                               }}
                               className="min-h-[56px] rounded-2xl border border-gray-200 bg-white text-lg font-bold text-gray-800 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 active:scale-95"
@@ -3040,11 +3040,11 @@ export default function AgenteAAFPage() {
 
                           agregarMensaje(
                             "ia",
-                            t.preguntaEmail
+                            `${resumen}\n\n${t.confirmar}`
                           );
 
                           setPaso(
-                            "email"
+                            "confirmacion"
                           );
                         }}
                         className="mt-3 min-h-[56px] w-full rounded-2xl border border-gray-200 bg-white text-lg font-bold text-gray-800 shadow-sm transition hover:border-blue-500 hover:bg-blue-50 active:scale-95"
