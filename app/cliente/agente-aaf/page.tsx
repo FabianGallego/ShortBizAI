@@ -2177,48 +2177,189 @@ export default function AgenteAAFPage() {
   }
 
   /* =========================================================
-     EMPRESA NO ENCONTRADA
+     ENTRADA GENERAL SHORTBIZAI
+
+     Cuando la página se abre sin empresaId, NO asumimos
+     ningún restaurante. Esta es la puerta de entrada general
+     de Booking Now / Local Store.
+
+     Cuando existe empresaId, la ejecución continúa abajo y
+     funciona como la pasarela específica de ese negocio.
   ========================================================= */
 
   if (!empresa) {
 
     if (!empresaId) {
 
+      const servicios = [
+        {
+          icono: "🍽️",
+          nombre: "ShortFoodAI",
+          categoriaEs: "Restaurantes",
+          categoriaEn: "Restaurants",
+          descripcionEs: "Descubre restaurantes locales y reserva tu mesa.",
+          descripcionEn: "Discover local restaurants and book your table.",
+          href: "/explore-local?categoria=restaurantes",
+        },
+        {
+          icono: "💈",
+          nombre: "ShortBarberAI",
+          categoriaEs: "Barberías",
+          categoriaEn: "Barbers",
+          descripcionEs: "Encuentra barberías locales y agenda tu cita.",
+          descripcionEn: "Find local barbers and book your appointment.",
+          href: "/explore-local?categoria=barberias",
+        },
+        {
+          icono: "💆",
+          nombre: "ShortSpaAI",
+          categoriaEs: "Spas",
+          categoriaEn: "Spas",
+          descripcionEs: "Descubre spas locales y reserva tu servicio.",
+          descripcionEn: "Discover local spas and book your service.",
+          href: "/explore-local?categoria=spas",
+        },
+        {
+          icono: "🏨",
+          nombre: "ShortHotelAI",
+          categoriaEs: "Hoteles",
+          categoriaEn: "Hotels",
+          descripcionEs: "Explora hoteles y encuentra tu próxima estadía.",
+          descripcionEn: "Explore hotels and find your next stay.",
+          href: "/explore-local?categoria=hoteles",
+        },
+        {
+          icono: "✈️",
+          nombre: "ShortTravelAI",
+          categoriaEs: "Viajes",
+          categoriaEn: "Travel",
+          descripcionEs: "Servicios y experiencias para viajeros.",
+          descripcionEn: "Services and experiences for travelers.",
+          href: "/explore-local?categoria=viajes",
+        },
+      ];
+
       return (
-        <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+        <main className="min-h-screen bg-gray-50 px-4 py-6 text-gray-900 sm:px-6 sm:py-10">
 
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white text-center shadow-xl">
+          <div className="mx-auto w-full max-w-5xl">
 
-            <div className="relative h-64 w-full">
+            {/* ENCABEZADO */}
+            <header className="mb-8 text-center sm:mb-10">
 
-              <Image
-                src="/image/queensyard-foto.png"
-                alt="Queensyard Restaurant"
-                fill
-                priority
-                className="object-cover"
-              />
+              <div className="mb-5 flex justify-center">
+                <div className="rounded-2xl bg-white px-5 py-3 shadow-lg ring-1 ring-gray-200">
+                  <Image
+                    src="/logo-foodshortai.png"
+                    alt="ShortBizAI"
+                    width={170}
+                    height={170}
+                    priority
+                    className="h-auto w-[125px] object-contain sm:w-[145px]"
+                  />
+                </div>
+              </div>
 
-            </div>
-
-            <div className="p-8">
-
-              <p className="mb-3 text-sm font-bold uppercase tracking-[0.25em] text-gray-500">
-                Bienvenidos
+              <p className="text-xs font-black uppercase tracking-[0.28em] text-blue-600 sm:text-sm">
+                ShortBizAI
               </p>
 
-              <h1 className="text-2xl font-black text-gray-950">
-                Queensyard Restaurant
+              <h1 className="mt-3 text-3xl font-black tracking-tight text-gray-950 sm:text-5xl">
+                {idioma === "es"
+                  ? "¿Qué servicio estás buscando?"
+                  : "What service are you looking for?"}
               </h1>
 
-              <a
-                href="/r/queensyard"
-                className="mt-7 inline-flex min-h-[56px] w-full items-center justify-center rounded-2xl bg-red-600 px-6 text-base font-black text-white shadow-lg transition hover:bg-red-700"
-              >
-                BOOK NOW →
-              </a>
+              <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-500 sm:text-lg">
+                {idioma === "es"
+                  ? "Explora negocios locales, descubre servicios y reserva directamente."
+                  : "Explore local businesses, discover services, and book directly."}
+              </p>
 
-            </div>
+              {/* IDIOMA */}
+              <div className="mt-6 flex justify-center">
+                <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setIdioma("es")}
+                    className={`px-4 py-2 text-sm font-bold transition ${
+                      idioma === "es"
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    🇪🇸 Español
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIdioma("en")}
+                    className={`px-4 py-2 text-sm font-bold transition ${
+                      idioma === "en"
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    🇺🇸 English
+                  </button>
+                </div>
+              </div>
+
+            </header>
+
+            {/* SERVICIOS */}
+            <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+
+              {servicios.map((servicio) => (
+                <a
+                  key={servicio.nombre}
+                  href={servicio.href}
+                  className="group flex min-h-[245px] flex-col rounded-[2rem] border border-gray-200 bg-white p-7 shadow-[0_15px_45px_rgba(0,0,0,0.08)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_55px_rgba(0,0,0,0.13)]"
+                >
+
+                  <div className="flex items-start justify-between">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-4xl shadow-sm ring-1 ring-gray-100">
+                      {servicio.icono}
+                    </div>
+
+                    <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-blue-700">
+                      {idioma === "es"
+                        ? servicio.categoriaEs
+                        : servicio.categoriaEn}
+                    </span>
+                  </div>
+
+                  <div className="mt-6">
+                    <h2 className="text-2xl font-black tracking-tight text-gray-950">
+                      {servicio.nombre}
+                    </h2>
+
+                    <p className="mt-2 text-sm leading-6 text-gray-500">
+                      {idioma === "es"
+                        ? servicio.descripcionEs
+                        : servicio.descripcionEn}
+                    </p>
+                  </div>
+
+                  <div className="mt-auto pt-6">
+                    <span className="inline-flex items-center text-sm font-black text-blue-600 transition group-hover:translate-x-1">
+                      {idioma === "es" ? "EXPLORAR" : "EXPLORE"} →
+                    </span>
+                  </div>
+
+                </a>
+              ))}
+
+            </section>
+
+            {/* PIE */}
+            <footer className="mt-10 text-center">
+              <p className="text-sm font-medium text-gray-400">
+                {idioma === "es"
+                  ? "Más servicios locales próximamente."
+                  : "More local services coming soon."}
+              </p>
+            </footer>
 
           </div>
 
@@ -2228,19 +2369,15 @@ export default function AgenteAAFPage() {
 
     return (
       <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-
         <div className="w-full max-w-lg rounded-3xl bg-white p-8 text-center shadow-xl">
-
           <div className="mb-4 text-5xl">
-            🍽️
+            ⚠️
           </div>
 
           <h1 className="text-2xl font-black text-gray-950">
             {t.empresaNoIdentificada}
           </h1>
-
         </div>
-
       </main>
     );
   }
