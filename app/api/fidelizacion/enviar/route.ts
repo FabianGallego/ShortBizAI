@@ -1139,7 +1139,7 @@ async function enviarEmail(
     process.env.RESEND_API_KEY;
 
   const fromEmail =
-    process.env.RESEND_FROM_EMAIL;
+    process.env.LOYALTY_FROM_EMAIL;
 
   if (!apiKey) {
     throw new Error(
@@ -1149,7 +1149,7 @@ async function enviarEmail(
 
   if (!fromEmail) {
     throw new Error(
-      "Falta RESEND_FROM_EMAIL en las variables de entorno."
+      "Falta LOYALTY_FROM_EMAIL en las variables de entorno."
     );
   }
 
