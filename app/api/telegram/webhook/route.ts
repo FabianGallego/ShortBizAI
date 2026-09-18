@@ -576,7 +576,14 @@ export async function POST(req: Request) {
       .outer { padding:16px 10px !important; }
       .card { border-radius:18px !important; }
       .card-pad { padding:26px 20px !important; }
-      .title { font-size:25px !important; line-height:31px !important; }
+      .title {
+  font-size:22px !important;
+  line-height:28px !important;
+  letter-spacing:-.2px !important;
+  word-break:keep-all !important;
+  overflow-wrap:normal !important;
+  white-space:normal !important;
+}
       .intro { font-size:16px !important; line-height:25px !important; }
       .detail-pad { padding:18px !important; }
       .detail-value { font-size:16px !important; line-height:22px !important; }
