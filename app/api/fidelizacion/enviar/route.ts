@@ -27,11 +27,63 @@ type Campana = {
 
 function obtenerContenidoEmail(
   campana: Campana,
-  empresaNombre: string
+  empresaNombre: string,
+  codigoPublico: string | null
 ) {
   const nombre =
     campana.cliente_nombre?.trim() ||
-    "Cliente";
+    "Guest";
+
+  /* =======================================================
+     URL PÚBLICA DE RESERVA
+  ======================================================= */
+
+  const reservaUrl =
+    codigoPublico
+      ? `https://shortbizai.com/r/${codigoPublico}`
+      : "https://shortbizai.com";
+
+  /* =======================================================
+     BOTÓN DE RESERVA
+  ======================================================= */
+
+  const botonReserva = `
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      style="margin-top:28px;"
+    >
+      <tr>
+        <td align="center">
+
+          <a
+            href="${reservaUrl}"
+            target="_blank"
+            class="email-button"
+            style="
+              display:inline-block;
+              background-color:#111827;
+              color:#ffffff;
+              text-decoration:none;
+              font-family:Arial, Helvetica, sans-serif;
+              font-size:15px;
+              font-weight:700;
+              line-height:1;
+              padding:16px 28px;
+              border-radius:8px;
+              text-align:center;
+            "
+          >
+            BOOK YOUR TABLE →
+          </a>
+
+        </td>
+      </tr>
+    </table>
+  `;
 
   /* =======================================================
      ESTILOS RESPONSIVE
@@ -138,7 +190,7 @@ function obtenerContenidoEmail(
   `;
 
   /* =======================================================
-     AGRADECIMIENTO
+     DAY 5 — THANK YOU
   ======================================================= */
 
   if (
@@ -147,21 +199,26 @@ function obtenerContenidoEmail(
   ) {
     return {
       subject:
-        `Gracias por visitarnos, ${nombre} ❤️`,
+        `Thank you for visiting us, ${nombre} ❤️`,
 
       html: `
         <!DOCTYPE html>
-        <html lang="es">
+        <html lang="en">
         <head>
           <meta charset="UTF-8">
+
           <meta
             name="viewport"
             content="width=device-width, initial-scale=1.0"
           >
+
           <meta
             name="x-apple-disable-message-reformatting"
           >
-          <title>Gracias por visitarnos</title>
+
+          <title>
+            Thank you for visiting us
+          </title>
 
           ${estilos}
         </head>
@@ -239,7 +296,7 @@ function obtenerContenidoEmail(
                     </td>
                   </tr>
 
-                  <!-- CONTENIDO -->
+                  <!-- CONTENT -->
 
                   <tr>
                     <td
@@ -267,7 +324,7 @@ function obtenerContenidoEmail(
                           letter-spacing:-0.2px;
                         "
                       >
-                        Gracias por visitarnos ❤️
+                        Thank you for visiting us ❤️
                       </h1>
 
                       <p
@@ -278,13 +335,9 @@ function obtenerContenidoEmail(
                           font-size:16px;
                           line-height:1.6;
                           color:#374151;
-                          white-space:normal;
-                          word-break:normal;
-                          overflow-wrap:normal;
-                          word-wrap:normal;
                         "
                       >
-                        Hola ${nombre},
+                        Hi ${nombre},
                       </p>
 
                       <p
@@ -295,13 +348,9 @@ function obtenerContenidoEmail(
                           font-size:16px;
                           line-height:1.6;
                           color:#374151;
-                          white-space:normal;
-                          word-break:normal;
-                          overflow-wrap:normal;
-                          word-wrap:normal;
                         "
                       >
-                        Gracias por haber visitado
+                        Thank you for choosing
                         <strong>${empresaNombre}</strong>.
                       </p>
 
@@ -313,14 +362,42 @@ function obtenerContenidoEmail(
                           font-size:16px;
                           line-height:1.6;
                           color:#374151;
-                          white-space:normal;
-                          word-break:normal;
-                          overflow-wrap:normal;
-                          word-wrap:normal;
                         "
                       >
-                        Nos encantó recibirte y esperamos
-                        verte nuevamente muy pronto.
+                        We hope you enjoyed the food,
+                        the atmosphere, and your time with us.
+                      </p>
+
+                      <p
+                        class="email-text"
+                        style="
+                          margin:0 0 18px 0;
+                          padding:0;
+                          font-size:16px;
+                          line-height:1.6;
+                          color:#374151;
+                        "
+                      >
+                        For us, every visit is more than
+                        just a reservation. It is an opportunity
+                        to create an experience that makes
+                        you want to come back.
+                      </p>
+
+                      <p
+                        class="email-text"
+                        style="
+                          margin:0 0 18px 0;
+                          padding:0;
+                          font-size:16px;
+                          line-height:1.6;
+                          color:#374151;
+                        "
+                      >
+                        We're always working on new
+                        experiences, special moments,
+                        and reasons to make your next
+                        visit even better.
                       </p>
 
                       <p
@@ -331,18 +408,12 @@ function obtenerContenidoEmail(
                           font-size:16px;
                           line-height:1.6;
                           color:#374151;
-                          white-space:normal;
-                          word-break:normal;
-                          overflow-wrap:normal;
-                          word-wrap:normal;
                         "
                       >
-                        Estamos preparando nuevos beneficios,
-                        promociones y experiencias especiales
-                        para nuestros clientes.
+                        We'd love to see you again.
                       </p>
 
-                      <!-- TARJETA -->
+                      <!-- CTA -->
 
                       <table
                         role="presentation"
@@ -350,28 +421,25 @@ function obtenerContenidoEmail(
                         cellpadding="0"
                         cellspacing="0"
                         border="0"
+                        style="margin-bottom:8px;"
                       >
                         <tr>
                           <td
-                            class="email-card"
+                            align="center"
                             style="
-                              padding:20px;
-                              background-color:#f3f4f6;
-                              border-radius:12px;
-                              color:#111827;
-                              font-size:15px;
+                              font-size:13px;
                               line-height:1.5;
-                              white-space:normal;
+                              font-weight:700;
+                              color:#111827;
+                              letter-spacing:0.5px;
                             "
                           >
-
-                            <strong>
-                              Gracias por ser parte de nuestra comunidad.
-                            </strong>
-
+                            READY FOR YOUR NEXT VISIT?
                           </td>
                         </tr>
                       </table>
+
+                      ${botonReserva}
 
                     </td>
                   </tr>
@@ -391,6 +459,29 @@ function obtenerContenidoEmail(
 
                       <p
                         style="
+                          margin:0 0 8px 0;
+                          font-size:14px;
+                          line-height:1.5;
+                          color:#374151;
+                        "
+                      >
+                        With appreciation,
+                      </p>
+
+                      <p
+                        style="
+                          margin:0 0 12px 0;
+                          font-size:14px;
+                          line-height:1.5;
+                          font-weight:600;
+                          color:#374151;
+                        "
+                      >
+                        The ${empresaNombre} Team
+                      </p>
+
+                      <p
+                        style="
                           margin:0;
                           padding:0;
                           font-size:12px;
@@ -418,7 +509,7 @@ function obtenerContenidoEmail(
   }
 
   /* =======================================================
-     INVITACIÓN
+     DAY 15 — COME BACK
   ======================================================= */
 
   if (
@@ -427,21 +518,26 @@ function obtenerContenidoEmail(
   ) {
     return {
       subject:
-        `¿Volvemos a vernos, ${nombre}?`,
+        `What if we did it again, ${nombre}?`,
 
       html: `
         <!DOCTYPE html>
-        <html lang="es">
+        <html lang="en">
         <head>
           <meta charset="UTF-8">
+
           <meta
             name="viewport"
             content="width=device-width, initial-scale=1.0"
           >
+
           <meta
             name="x-apple-disable-message-reformatting"
           >
-          <title>Volvemos a vernos</title>
+
+          <title>
+            What if we did it again?
+          </title>
 
           ${estilos}
         </head>
@@ -491,6 +587,8 @@ function obtenerContenidoEmail(
                   "
                 >
 
+                  <!-- HEADER -->
+
                   <tr>
                     <td
                       style="
@@ -513,6 +611,8 @@ function obtenerContenidoEmail(
 
                     </td>
                   </tr>
+
+                  <!-- CONTENT -->
 
                   <tr>
                     <td
@@ -540,39 +640,34 @@ function obtenerContenidoEmail(
                           letter-spacing:-0.2px;
                         "
                       >
-                        ¡Nos gustaría verte nuevamente!
+                        What if we did it again?
                       </h1>
 
                       <p
                         class="email-text"
                         style="
                           margin:0 0 18px 0;
+                          padding:0;
                           font-size:16px;
                           line-height:1.6;
                           color:#374151;
-                          white-space:normal;
-                          word-break:normal;
-                          overflow-wrap:normal;
-                          word-wrap:normal;
                         "
                       >
-                        Hola ${nombre},
+                        Hi ${nombre},
                       </p>
 
                       <p
                         class="email-text"
                         style="
                           margin:0 0 18px 0;
+                          padding:0;
                           font-size:16px;
                           line-height:1.6;
                           color:#374151;
-                          white-space:normal;
-                          word-break:normal;
-                          overflow-wrap:normal;
-                          word-wrap:normal;
                         "
                       >
-                        Hace unos días disfrutaste de
+                        It's been a little while since
+                        your last visit to
                         <strong>${empresaNombre}</strong>.
                       </p>
 
@@ -580,36 +675,116 @@ function obtenerContenidoEmail(
                         class="email-text"
                         style="
                           margin:0 0 18px 0;
+                          padding:0;
                           font-size:16px;
                           line-height:1.6;
                           color:#374151;
-                          white-space:normal;
-                          word-break:normal;
-                          overflow-wrap:normal;
-                          word-wrap:normal;
                         "
                       >
-                        ¿Qué tal si volvemos a vernos?
+                        So we thought we'd ask:
                       </p>
 
                       <p
                         class="email-text"
                         style="
-                          margin:0;
+                          margin:0 0 18px 0;
+                          padding:0;
+                          font-size:18px;
+                          line-height:1.6;
+                          font-weight:700;
+                          color:#111827;
+                        "
+                      >
+                        What if we did it again?
+                      </p>
+
+                      <p
+                        class="email-text"
+                        style="
+                          margin:0 0 18px 0;
+                          padding:0;
                           font-size:16px;
                           line-height:1.6;
                           color:#374151;
-                          white-space:normal;
-                          word-break:normal;
-                          overflow-wrap:normal;
-                          word-wrap:normal;
                         "
                       >
-                        Nos encantará recibirte nuevamente.
+                        Maybe it's another dinner with
+                        someone special.
                       </p>
+
+                      <p
+                        class="email-text"
+                        style="
+                          margin:0 0 18px 0;
+                          padding:0;
+                          font-size:16px;
+                          line-height:1.6;
+                          color:#374151;
+                        "
+                      >
+                        Maybe it's a night out with friends.
+                      </p>
+
+                      <p
+                        class="email-text"
+                        style="
+                          margin:0 0 18px 0;
+                          padding:0;
+                          font-size:16px;
+                          line-height:1.6;
+                          color:#374151;
+                        "
+                      >
+                        Or maybe you simply feel like
+                        enjoying that experience again.
+                      </p>
+
+                      <p
+                        class="email-text"
+                        style="
+                          margin:0 0 18px 0;
+                          padding:0;
+                          font-size:16px;
+                          line-height:1.6;
+                          color:#374151;
+                        "
+                      >
+                        Whatever the occasion, we'd love
+                        to have you back.
+                      </p>
+
+                      <!-- CTA -->
+
+                      <table
+                        role="presentation"
+                        width="100%"
+                        cellpadding="0"
+                        cellspacing="0"
+                        border="0"
+                        style="margin-bottom:8px;"
+                      >
+                        <tr>
+                          <td
+                            align="center"
+                            style="
+                              font-size:13px;
+                              line-height:1.5;
+                              font-weight:700;
+                              color:#111827;
+                              letter-spacing:0.5px;
+                            "
+                          >
+                            READY FOR ANOTHER VISIT?
+                          </td>
+                        </tr>
+                      </table>
+
+                      ${botonReserva}
 
                     </td>
                   </tr>
+
+                  <!-- FOOTER -->
 
                   <tr>
                     <td
@@ -621,6 +796,29 @@ function obtenerContenidoEmail(
                         text-align:center;
                       "
                     >
+
+                      <p
+                        style="
+                          margin:0 0 8px 0;
+                          font-size:14px;
+                          line-height:1.5;
+                          color:#374151;
+                        "
+                      >
+                        We'll take care of the rest.
+                      </p>
+
+                      <p
+                        style="
+                          margin:0 0 12px 0;
+                          font-size:14px;
+                          line-height:1.5;
+                          color:#374151;
+                        "
+                      >
+                        Warmly,<br>
+                        The ${empresaNombre} Team
+                      </p>
 
                       <p
                         style="
@@ -650,7 +848,7 @@ function obtenerContenidoEmail(
   }
 
   /* =======================================================
-     SEGUNDO INTENTO
+     DAY 30 — A REASON TO RETURN
   ======================================================= */
 
   if (
@@ -659,21 +857,26 @@ function obtenerContenidoEmail(
   ) {
     return {
       subject:
-        `Te esperamos nuevamente en ${empresaNombre}`,
+        `We have something for your next visit, ${nombre}`,
 
       html: `
         <!DOCTYPE html>
-        <html lang="es">
+        <html lang="en">
         <head>
           <meta charset="UTF-8">
+
           <meta
             name="viewport"
             content="width=device-width, initial-scale=1.0"
           >
+
           <meta
             name="x-apple-disable-message-reformatting"
           >
-          <title>Te esperamos nuevamente</title>
+
+          <title>
+            We have something for your next visit
+          </title>
 
           ${estilos}
         </head>
@@ -723,6 +926,8 @@ function obtenerContenidoEmail(
                   "
                 >
 
+                  <!-- HEADER -->
+
                   <tr>
                     <td
                       style="
@@ -745,6 +950,8 @@ function obtenerContenidoEmail(
 
                     </td>
                   </tr>
+
+                  <!-- CONTENT -->
 
                   <tr>
                     <td
@@ -772,63 +979,159 @@ function obtenerContenidoEmail(
                           letter-spacing:-0.2px;
                         "
                       >
-                        Te esperamos nuevamente
+                        We have something for your next visit
                       </h1>
 
                       <p
                         class="email-text"
                         style="
                           margin:0 0 18px 0;
+                          padding:0;
                           font-size:16px;
                           line-height:1.6;
                           color:#374151;
-                          white-space:normal;
-                          word-break:normal;
-                          overflow-wrap:normal;
-                          word-wrap:normal;
                         "
                       >
-                        Hola ${nombre},
+                        Hi ${nombre},
                       </p>
 
                       <p
                         class="email-text"
                         style="
                           margin:0 0 18px 0;
+                          padding:0;
                           font-size:16px;
                           line-height:1.6;
                           color:#374151;
-                          white-space:normal;
-                          word-break:normal;
-                          overflow-wrap:normal;
-                          word-wrap:normal;
                         "
                       >
-                        Queríamos pasar a saludarte y recordarte
-                        que las puertas de
-                        <strong>${empresaNombre}</strong>
-                        están abiertas para ti.
+                        It's been a little while since
+                        we last saw you at
+                        <strong>${empresaNombre}</strong>.
                       </p>
 
                       <p
                         class="email-text"
                         style="
-                          margin:0;
+                          margin:0 0 18px 0;
+                          padding:0;
                           font-size:16px;
                           line-height:1.6;
                           color:#374151;
-                          white-space:normal;
-                          word-break:normal;
-                          overflow-wrap:normal;
-                          word-wrap:normal;
                         "
                       >
-                        Esperamos tener la oportunidad de recibirte
-                        nuevamente.
+                        We'd love to welcome you back.
                       </p>
+
+                      <p
+                        class="email-text"
+                        style="
+                          margin:0 0 18px 0;
+                          padding:0;
+                          font-size:16px;
+                          line-height:1.6;
+                          color:#374151;
+                        "
+                      >
+                        So here's a little something to
+                        make your next visit even more special:
+                      </p>
+
+                      <!-- BENEFICIO CONTROLADO POR EL RESTAURANTE -->
+
+                      <table
+                        role="presentation"
+                        width="100%"
+                        cellpadding="0"
+                        cellspacing="0"
+                        border="0"
+                        style="
+                          margin:24px 0 22px 0;
+                        "
+                      >
+                        <tr>
+                          <td
+                            class="email-card"
+                            style="
+                              padding:20px;
+                              background-color:#f3f4f6;
+                              border-radius:12px;
+                              color:#111827;
+                              font-size:15px;
+                              line-height:1.5;
+                              text-align:center;
+                            "
+                          >
+
+                            <strong>
+                              [YOUR SPECIAL BENEFIT / OFFER]
+                            </strong>
+
+                          </td>
+                        </tr>
+                      </table>
+
+                      <p
+                        class="email-text"
+                        style="
+                          margin:0 0 18px 0;
+                          padding:0;
+                          font-size:16px;
+                          line-height:1.6;
+                          color:#374151;
+                        "
+                      >
+                        Because coming back should feel
+                        just as good as the first time.
+                      </p>
+
+                      <p
+                        class="email-text"
+                        style="
+                          margin:0 0 26px 0;
+                          padding:0;
+                          font-size:16px;
+                          line-height:1.6;
+                          color:#374151;
+                        "
+                      >
+                        Whether it's dinner, drinks,
+                        a celebration, or simply a night out,
+                        we'd love to have you with us again.
+                      </p>
+
+                      <!-- CTA -->
+
+                      <table
+                        role="presentation"
+                        width="100%"
+                        cellpadding="0"
+                        cellspacing="0"
+                        border="0"
+                        style="margin-bottom:8px;"
+                      >
+                        <tr>
+                          <td
+                            align="center"
+                            style="
+                              font-size:13px;
+                              line-height:1.5;
+                              font-weight:700;
+                              color:#111827;
+                              letter-spacing:0.5px;
+                            "
+                          >
+                            READY TO COME BACK?
+                          </td>
+                        </tr>
+                      </table>
+
+                      ${botonReserva}
 
                     </td>
                   </tr>
+
+                  <!-- FOOTER -->
 
                   <tr>
                     <td
@@ -840,6 +1143,29 @@ function obtenerContenidoEmail(
                         text-align:center;
                       "
                     >
+
+                      <p
+                        style="
+                          margin:0 0 8px 0;
+                          font-size:14px;
+                          line-height:1.5;
+                          color:#374151;
+                        "
+                      >
+                        We'll be happy to see you.
+                      </p>
+
+                      <p
+                        style="
+                          margin:0 0 12px 0;
+                          font-size:14px;
+                          line-height:1.5;
+                          color:#374151;
+                        "
+                      >
+                        Warmly,<br>
+                        The ${empresaNombre} Team
+                      </p>
 
                       <p
                         style="
@@ -869,26 +1195,31 @@ function obtenerContenidoEmail(
   }
 
   /* =======================================================
-     REACTIVACIÓN
+     DAY 45 — WE MISS YOU
   ======================================================= */
 
   return {
     subject:
-      `Te extrañamos en ${empresaNombre} ❤️`,
+      `We miss seeing you, ${nombre} ❤️`,
 
     html: `
       <!DOCTYPE html>
-      <html lang="es">
+      <html lang="en">
       <head>
         <meta charset="UTF-8">
+
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0"
         >
+
         <meta
           name="x-apple-disable-message-reformatting"
         >
-        <title>Te extrañamos</title>
+
+        <title>
+          We miss seeing you
+        </title>
 
         ${estilos}
       </head>
@@ -938,6 +1269,8 @@ function obtenerContenidoEmail(
                 "
               >
 
+                <!-- HEADER -->
+
                 <tr>
                   <td
                     style="
@@ -960,6 +1293,8 @@ function obtenerContenidoEmail(
 
                   </td>
                 </tr>
+
+                <!-- CONTENT -->
 
                 <tr>
                   <td
@@ -987,7 +1322,7 @@ function obtenerContenidoEmail(
                         letter-spacing:-0.2px;
                       "
                     >
-                      Te extrañamos ❤️
+                      We miss seeing you ❤️
                     </h1>
 
                     <p
@@ -997,13 +1332,9 @@ function obtenerContenidoEmail(
                         font-size:16px;
                         line-height:1.6;
                         color:#374151;
-                        white-space:normal;
-                        word-break:normal;
-                        overflow-wrap:normal;
-                        word-wrap:normal;
                       "
                     >
-                      Hola ${nombre},
+                      Hi ${nombre},
                     </p>
 
                     <p
@@ -1013,13 +1344,10 @@ function obtenerContenidoEmail(
                         font-size:16px;
                         line-height:1.6;
                         color:#374151;
-                        white-space:normal;
-                        word-break:normal;
-                        overflow-wrap:normal;
-                        word-wrap:normal;
                       "
                     >
-                      Hace un tiempo no te vemos por
+                      It's been a little while since
+                      your last visit to
                       <strong>${empresaNombre}</strong>.
                     </p>
 
@@ -1030,33 +1358,98 @@ function obtenerContenidoEmail(
                         font-size:16px;
                         line-height:1.6;
                         color:#374151;
-                        white-space:normal;
-                        word-break:normal;
-                        overflow-wrap:normal;
-                        word-wrap:normal;
                       "
                     >
-                      Nos encantaría recibirte nuevamente.
+                      And honestly...
                     </p>
 
                     <p
                       class="email-text"
                       style="
-                        margin:0;
+                        margin:0 0 18px 0;
+                        font-size:18px;
+                        line-height:1.6;
+                        font-weight:700;
+                        color:#111827;
+                      "
+                    >
+                      We'd love to see you again.
+                    </p>
+
+                    <p
+                      class="email-text"
+                      style="
+                        margin:0 0 18px 0;
                         font-size:16px;
                         line-height:1.6;
                         color:#374151;
-                        white-space:normal;
-                        word-break:normal;
-                        overflow-wrap:normal;
-                        word-wrap:normal;
                       "
                     >
-                      ¡Esperamos verte pronto!
+                      Maybe it's been a busy few weeks.
+                      Maybe you've discovered somewhere new.
+                      Or maybe you simply haven't had a reason
+                      to come back yet.
                     </p>
+
+                    <p
+                      class="email-text"
+                      style="
+                        margin:0 0 18px 0;
+                        font-size:16px;
+                        line-height:1.6;
+                        color:#374151;
+                      "
+                    >
+                      Whatever the reason, your table
+                      is always waiting.
+                    </p>
+
+                    <p
+                      class="email-text"
+                      style="
+                        margin:0 0 26px 0;
+                        font-size:16px;
+                        line-height:1.6;
+                        color:#374151;
+                      "
+                    >
+                      Come enjoy your favorite dishes,
+                      discover something new, or simply
+                      spend another great evening with us.
+                    </p>
+
+                    <!-- CTA -->
+
+                    <table
+                      role="presentation"
+                      width="100%"
+                      cellpadding="0"
+                      cellspacing="0"
+                      border="0"
+                      style="margin-bottom:8px;"
+                    >
+                      <tr>
+                        <td
+                          align="center"
+                          style="
+                            font-size:13px;
+                            line-height:1.5;
+                            font-weight:700;
+                            color:#111827;
+                            letter-spacing:0.5px;
+                          "
+                        >
+                          YOUR NEXT VISIT IS JUST A CLICK AWAY.
+                        </td>
+                      </tr>
+                    </table>
+
+                    ${botonReserva}
 
                   </td>
                 </tr>
+
+                <!-- FOOTER -->
 
                 <tr>
                   <td
@@ -1068,6 +1461,29 @@ function obtenerContenidoEmail(
                       text-align:center;
                     "
                   >
+
+                    <p
+                      style="
+                        margin:0 0 8px 0;
+                        font-size:14px;
+                        line-height:1.5;
+                        color:#374151;
+                      "
+                    >
+                      We hope to welcome you back soon.
+                    </p>
+
+                    <p
+                      style="
+                        margin:0 0 12px 0;
+                        font-size:14px;
+                        line-height:1.5;
+                        color:#374151;
+                      "
+                    >
+                      Warmly,<br>
+                      The ${empresaNombre} Team
+                    </p>
 
                     <p
                       style="
@@ -1108,7 +1524,9 @@ async function obtenerEmpresaNombre(
     error,
   } = await supabase
     .from("empresas")
-    .select("nombre")
+    .select(
+      "nombre, codigo_publico"
+    )
     .eq(
       "id",
       empresaId
@@ -1121,10 +1539,15 @@ async function obtenerEmpresaNombre(
     );
   }
 
-  return (
-    data?.nombre ||
-    "nuestro restaurante"
-  );
+  return {
+    nombre:
+      data?.nombre ||
+      "our restaurant",
+
+    codigoPublico:
+      data?.codigo_publico ||
+      null,
+  };
 }
 
 /* =========================================================
@@ -1133,7 +1556,8 @@ async function obtenerEmpresaNombre(
 
 async function enviarEmail(
   campana: Campana,
-  empresaNombre: string
+  empresaNombre: string,
+  codigoPublico: string | null
 ) {
   const apiKey =
     process.env.RESEND_API_KEY;
@@ -1162,7 +1586,8 @@ async function enviarEmail(
   const contenido =
     obtenerContenidoEmail(
       campana,
-      empresaNombre
+      empresaNombre,
+      codigoPublico
     );
 
   const respuesta =
@@ -1207,7 +1632,7 @@ async function enviarEmail(
 
     throw new Error(
       resultado?.message ||
-        "Resend no pudo enviar el email."
+        "Resend could not send the email."
     );
   }
 
@@ -1293,7 +1718,7 @@ async function procesarCampanas(
          OBTENER EMPRESA
       ===================================================== */
 
-      const empresaNombre =
+      const empresa =
         await obtenerEmpresaNombre(
           campana.empresa_id
         );
@@ -1305,7 +1730,8 @@ async function procesarCampanas(
       const resultadoEmail =
         await enviarEmail(
           campana,
-          empresaNombre
+          empresa.nombre,
+          empresa.codigoPublico
         );
 
       console.log(
@@ -1463,7 +1889,7 @@ export async function GET(
       ok: true,
 
       mensaje:
-        "Motor de envío de fidelización ejecutado correctamente.",
+        "Loyalty email engine executed successfully.",
 
       resultado,
     });
@@ -1480,7 +1906,7 @@ export async function GET(
         error:
           error instanceof Error
             ? error.message
-            : "Error desconocido.",
+            : "Unknown error.",
       },
       {
         status: 500,
@@ -1516,7 +1942,7 @@ export async function POST(
       }
     } catch {
       /*
-       * Body vacío permitido.
+       * Empty body allowed.
        */
     }
 
@@ -1529,7 +1955,7 @@ export async function POST(
       ok: true,
 
       mensaje:
-        "Motor de envío de fidelización ejecutado correctamente.",
+        "Loyalty email engine executed successfully.",
 
       resultado,
     });
@@ -1546,7 +1972,7 @@ export async function POST(
         error:
           error instanceof Error
             ? error.message
-            : "Error desconocido.",
+            : "Unknown error.",
       },
       {
         status: 500,
