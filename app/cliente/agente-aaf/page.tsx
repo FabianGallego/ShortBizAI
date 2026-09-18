@@ -9,7 +9,6 @@ import {
 
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
-import NotificacionesObligatorias from "@/app/components/NotificacionesObligatorias";
 import ReservaChat from "./ReservaChat";
 import build from "next/dist/build";
 type Empresa = {
@@ -495,7 +494,7 @@ export default function AgenteAAFPage() {
   const [
     reservaHabilitada,
     setReservaHabilitada,
-  ] = useState(false);
+  ] = useState(true);
 
   /* =======================================================
      REFERENCIAS
@@ -1884,26 +1883,6 @@ export default function AgenteAAFPage() {
       return;
     }
 
-    /* =====================================================
-       NOTIFICACIONES OBLIGATORIAS
-    ===================================================== */
-
-    if (
-      !notificacionesActivas ||
-      !pushEndpoint
-    ) {
-
-      setErrorReserva(
-        t.errorNotificaciones
-      );
-
-      agregarMensaje(
-        "ia",
-        t.errorNotificaciones
-      );
-
-      return;
-    }
 
     setGuardando(
       true
@@ -2458,9 +2437,7 @@ export default function AgenteAAFPage() {
   ========================================================= */
 
   return (
-    <NotificacionesObligatorias>
-
-      <main className="min-h-screen bg-gray-50 text-gray-900">
+    <main className="min-h-screen bg-gray-50 text-gray-900">
 
         <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-8">
 
@@ -3503,8 +3480,6 @@ export default function AgenteAAFPage() {
 
         </div>
 
-      </main>
-
-    </NotificacionesObligatorias>
+    </main>
   );
 }

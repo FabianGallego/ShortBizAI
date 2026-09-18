@@ -3,6 +3,9 @@ import webpush from "web-push";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESERVA_FROM_EMAIL =
+  process.env.RESERVA_FROM_EMAIL || "reserva@shortbizai.com";
 
 export async function POST(req: Request) {
   try {
@@ -169,7 +172,7 @@ export async function POST(req: Request) {
       } = await supabaseAdmin
         .from("reservas")
         .select(
-          "id, cliente_nombre, telefono, fecha, hora, personas, push_endpoint, estado"
+          "id, cliente_nombre, telefono, email, fecha, hora, personas, push_endpoint, estado"
         )
         .eq("id", id)
         .maybeSingle();
@@ -256,7 +259,7 @@ export async function POST(req: Request) {
         })
         .eq("id", id)
         .select(
-          "id, cliente_nombre, telefono, fecha, hora, personas, push_endpoint, estado"
+          "id, cliente_nombre, telefono, email, fecha, hora, personas, push_endpoint, estado"
         )
         .single();
 
@@ -346,11 +349,19 @@ export async function POST(req: Request) {
       }
 
       // ===================================================
-      // PUSH AL CLIENTE
+      // NOTIFICACIÓN AL CLIENTE
       //
-      // IMPORTANTE:
-      // Usamos el push_endpoint de ESTA reserva.
-      // No enviamos la notificación a todos.
+      // Intentamos PUSH y EMAIL de forma independiente.
+      // Un fallo de Push no debe impedir el email.
+      // ===================================================
+
+      let pushEnviado = false;
+      let emailEnviado = false;
+      let motivoPush = "";
+      let motivoEmail = "";
+
+      // ===================================================
+      // PUSH AL CLIENTE
       // ===================================================
 
       if (!reserva.push_endpoint) {
@@ -359,172 +370,338 @@ export async function POST(req: Request) {
           reserva.id
         );
 
-        return NextResponse.json({
-          ok: true,
-          reservaActualizada: true,
-          reservaId: reserva.id,
-          estado: reserva.estado,
-          pushEnviado: false,
-          motivo:
-            "La reserva no tiene push_endpoint",
-        });
-      }
-
-      // ===================================================
-      // BUSCAR LA SUSCRIPCIÓN DEL CLIENTE
-      // ===================================================
-
-      const {
-        data: suscripcion,
-        error: suscripcionError,
-      } = await supabaseAdmin
-        .from("push_subscriptions")
-        .select(
-          "id, endpoint, subscription"
-        )
-        .eq(
-          "endpoint",
-          reserva.push_endpoint
-        )
-        .maybeSingle();
-
-      if (suscripcionError) {
-        console.error(
-          "❌ ERROR BUSCANDO SUSCRIPCIÓN:",
-          suscripcionError
-        );
-
-        return NextResponse.json({
-          ok: true,
-          reservaActualizada: true,
-          reservaId: reserva.id,
-          estado: reserva.estado,
-          pushEnviado: false,
-        });
-      }
-
-      if (!suscripcion) {
-        console.warn(
-          "⚠️ NO SE ENCONTRÓ SUSCRIPCIÓN PARA:",
-          reserva.push_endpoint
-        );
-
-        return NextResponse.json({
-          ok: true,
-          reservaActualizada: true,
-          reservaId: reserva.id,
-          estado: reserva.estado,
-          pushEnviado: false,
-        });
-      }
-
-      console.log(
-        "PUSH: suscripción encontrada:",
-        suscripcion.id
-      );
-
-      // ===================================================
-      // MENSAJE PARA EL CLIENTE
-      // ===================================================
-
-      const titulo =
-        tipo === "confirmar"
-          ? "✅ Reserva confirmada"
-          : "❌ Reserva cancelada";
-
-      const mensaje =
-        tipo === "confirmar"
-          ? `Tu reserva para ${reserva.fecha} a las ${reserva.hora} fue confirmada.`
-          : `Tu reserva para ${reserva.fecha} a las ${reserva.hora} fue cancelada.`;
-
-      // ===================================================
-      // ENVIAR PUSH
-      // ===================================================
-
-      try {
-        await webpush.sendNotification(
-          suscripcion.subscription,
-          JSON.stringify({
-            title: titulo,
-            body: mensaje,
-            icon: "/logo-foodshortai.png",
-            data: {
-              reservaId: reserva.id,
-              estado: reserva.estado,
-            },
-          })
-        );
-
-        console.log(
-          "================================="
-        );
-
-        console.log(
-          "✅ PUSH ENVIADO AL CLIENTE"
-        );
-
-        console.log(
-          "SUSCRIPCIÓN:",
-          suscripcion.id
-        );
-
-        console.log(
-          "RESERVA:",
-          reserva.id
-        );
-
-        console.log(
-          "================================="
-        );
-
-        return NextResponse.json({
-          ok: true,
-          reservaActualizada: true,
-          reservaId: reserva.id,
-          estado: reserva.estado,
-          pushEnviado: true,
-        });
-
-      } catch (pushError: any) {
-        console.error(
-          "❌ ERROR ENVIANDO PUSH:",
-          pushError
-        );
-
+        motivoPush = "La reserva no tiene push_endpoint";
+      } else {
         // =================================================
-        // SUSCRIPCIÓN VENCIDA
+        // BUSCAR LA SUSCRIPCIÓN DEL CLIENTE
         // =================================================
 
-        if (
-          pushError?.statusCode === 404 ||
-          pushError?.statusCode === 410
-        ) {
-          await supabaseAdmin
-            .from("push_subscriptions")
-            .delete()
-            .eq(
-              "id",
+        const {
+          data: suscripcion,
+          error: suscripcionError,
+        } = await supabaseAdmin
+          .from("push_subscriptions")
+          .select(
+            "id, endpoint, subscription"
+          )
+          .eq(
+            "endpoint",
+            reserva.push_endpoint
+          )
+          .maybeSingle();
+
+        if (suscripcionError) {
+          console.error(
+            "❌ ERROR BUSCANDO SUSCRIPCIÓN:",
+            suscripcionError
+          );
+
+          motivoPush =
+            suscripcionError.message ||
+            "Error buscando la suscripción";
+        } else if (!suscripcion) {
+          console.warn(
+            "⚠️ NO SE ENCONTRÓ SUSCRIPCIÓN PARA:",
+            reserva.push_endpoint
+          );
+
+          motivoPush =
+            "No se encontró la suscripción Push";
+        } else {
+          console.log(
+            "PUSH: suscripción encontrada:",
+            suscripcion.id
+          );
+
+          const titulo =
+            tipo === "confirmar"
+              ? "✅ Reserva confirmada"
+              : "❌ Reserva cancelada";
+
+          const mensaje =
+            tipo === "confirmar"
+              ? `Tu reserva para ${reserva.fecha} a las ${reserva.hora} fue confirmada.`
+              : `Tu reserva para ${reserva.fecha} a las ${reserva.hora} fue cancelada.`;
+
+          try {
+            await webpush.sendNotification(
+              suscripcion.subscription,
+              JSON.stringify({
+                title: titulo,
+                body: mensaje,
+                icon: "/logo-foodshortai.png",
+                data: {
+                  reservaId: reserva.id,
+                  estado: reserva.estado,
+                },
+              })
+            );
+
+            pushEnviado = true;
+
+            console.log(
+              "================================="
+            );
+
+            console.log(
+              "✅ PUSH ENVIADO AL CLIENTE"
+            );
+
+            console.log(
+              "SUSCRIPCIÓN:",
               suscripcion.id
             );
 
+            console.log(
+              "RESERVA:",
+              reserva.id
+            );
+
+            console.log(
+              "================================="
+            );
+          } catch (pushError: any) {
+            console.error(
+              "❌ ERROR ENVIANDO PUSH:",
+              pushError
+            );
+
+            motivoPush =
+              pushError?.message ||
+              "No se pudo enviar Push";
+
+            // =============================================
+            // SUSCRIPCIÓN VENCIDA
+            // =============================================
+
+            if (
+              pushError?.statusCode === 404 ||
+              pushError?.statusCode === 410
+            ) {
+              const { error: deleteError } =
+                await supabaseAdmin
+                  .from("push_subscriptions")
+                  .delete()
+                  .eq(
+                    "id",
+                    suscripcion.id
+                  );
+
+              if (deleteError) {
+                console.error(
+                  "❌ ERROR ELIMINANDO SUSCRIPCIÓN VENCIDA:",
+                  deleteError
+                );
+              } else {
+                console.log(
+                  "🗑️ SUSCRIPCIÓN ELIMINADA:",
+                  suscripcion.id
+                );
+              }
+            }
+          }
+        }
+      }
+
+      // ===================================================
+      // EMAIL AL CLIENTE
+      //
+      // Usa:
+      //   RESEND_API_KEY
+      //   RESERVA_FROM_EMAIL
+      //
+      // NO utiliza loyalty@shortbizai.com.
+      // ===================================================
+
+      if (!reserva.email?.trim()) {
+        console.warn(
+          "⚠️ ESTA RESERVA NO TIENE EMAIL:",
+          reserva.id
+        );
+
+        motivoEmail =
+          "La reserva no tiene email del cliente";
+      } else if (!RESEND_API_KEY) {
+        console.error(
+          "❌ FALTA RESEND_API_KEY"
+        );
+
+        motivoEmail =
+          "Falta RESEND_API_KEY";
+      } else {
+        const clienteNombre =
+          reserva.cliente_nombre?.trim() ||
+          "Cliente";
+
+        const empresaTexto =
+          "ShortBizAI";
+
+        const esConfirmacion =
+          tipo === "confirmar";
+
+        const asunto =
+          esConfirmacion
+            ? "✅ Your reservation is confirmed"
+            : "❌ Your reservation has been cancelled";
+
+        const tituloEmail =
+          esConfirmacion
+            ? "Reservation Confirmed"
+            : "Reservation Cancelled";
+
+        const textoPrincipal =
+          esConfirmacion
+            ? `Your reservation for ${reserva.fecha || "the requested date"} at ${reserva.hora || "the requested time"} has been confirmed.`
+            : `Your reservation for ${reserva.fecha || "the requested date"} at ${reserva.hora || "the requested time"} has been cancelled.`;
+
+        const colorEstado =
+          esConfirmacion
+            ? "#16a34a"
+            : "#dc2626";
+
+        const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${asunto}</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+  <div style="max-width:600px;margin:0 auto;padding:32px 16px;">
+    <div style="background:#ffffff;border-radius:16px;padding:32px;border:1px solid #e5e7eb;">
+      <div style="font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:24px;">
+        ShortBizAI
+      </div>
+
+      <h1 style="margin:0 0 16px;font-size:28px;line-height:1.2;color:${colorEstado};">
+        ${tituloEmail}
+      </h1>
+
+      <p style="font-size:16px;line-height:1.6;margin:0 0 20px;">
+        Hello ${clienteNombre},
+      </p>
+
+      <p style="font-size:16px;line-height:1.6;margin:0 0 24px;">
+        ${textoPrincipal}
+      </p>
+
+      <div style="background:#f9fafb;border-radius:12px;padding:20px;margin:0 0 24px;">
+        <p style="margin:0 0 8px;font-size:14px;color:#6b7280;">Date</p>
+        <p style="margin:0 0 16px;font-size:17px;font-weight:700;">${reserva.fecha || "—"}</p>
+
+        <p style="margin:0 0 8px;font-size:14px;color:#6b7280;">Time</p>
+        <p style="margin:0 0 16px;font-size:17px;font-weight:700;">${reserva.hora || "—"}</p>
+
+        <p style="margin:0 0 8px;font-size:14px;color:#6b7280;">Guests</p>
+        <p style="margin:0;font-size:17px;font-weight:700;">${reserva.personas || "—"}</p>
+      </div>
+
+      <p style="font-size:13px;line-height:1.5;color:#9ca3af;margin:0;">
+        Reservation ID: ${reserva.id}
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+        try {
+          const respuestaEmail = await fetch(
+            "https://api.resend.com/emails",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${RESEND_API_KEY}`,
+                "Content-Type":
+                  "application/json",
+              },
+              body: JSON.stringify({
+                from: RESERVA_FROM_EMAIL,
+                to: [reserva.email.trim()],
+                subject: asunto,
+                html,
+              }),
+            }
+          );
+
+          const resultadoEmail =
+            await respuestaEmail.json();
+
           console.log(
-            "🗑️ SUSCRIPCIÓN ELIMINADA:",
-            suscripcion.id
+            "RESEND HTTP STATUS:",
+            respuestaEmail.status
+          );
+
+          console.log(
+            "RESEND RESPONSE:",
+            resultadoEmail
+          );
+
+          if (
+            !respuestaEmail.ok ||
+            !resultadoEmail?.id
+          ) {
+            motivoEmail =
+              resultadoEmail?.message ||
+              resultadoEmail?.error ||
+              "Resend rechazó el email";
+
+            console.error(
+              "❌ EMAIL NO ENVIADO:",
+              motivoEmail
+            );
+          } else {
+            emailEnviado = true;
+
+            console.log(
+              "================================="
+            );
+
+            console.log(
+              "✅ EMAIL ENVIADO AL CLIENTE"
+            );
+
+            console.log(
+              "EMAIL:",
+              reserva.email.trim()
+            );
+
+            console.log(
+              "RESEND ID:",
+              resultadoEmail.id
+            );
+
+            console.log(
+              "================================="
+            );
+          }
+        } catch (emailError: any) {
+          motivoEmail =
+            emailError?.message ||
+            "Error enviando email";
+
+          console.error(
+            "❌ ERROR ENVIANDO EMAIL:",
+            emailError
           );
         }
-
-        return NextResponse.json({
-          ok: true,
-          reservaActualizada: true,
-          reservaId: reserva.id,
-          estado: reserva.estado,
-          pushEnviado: false,
-          errorPush:
-            pushError?.message ||
-            "No se pudo enviar Push",
-        });
       }
-    }
+
+      // ===================================================
+      // RESULTADO FINAL
+      // ===================================================
+
+      return NextResponse.json({
+        ok: true,
+        reservaActualizada: true,
+        reservaId: reserva.id,
+        estado: reserva.estado,
+        pushEnviado,
+        emailEnviado,
+        motivoPush: motivoPush || undefined,
+        motivoEmail: motivoEmail || undefined,
+      });
+      }
 
     // =====================================================
     // MENSAJES NORMALES DE TELEGRAM
