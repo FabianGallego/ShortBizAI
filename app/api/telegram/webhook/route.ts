@@ -565,43 +565,95 @@ export async function POST(req: Request) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no" />
   <title>${asunto}</title>
+  <style>
+    body { margin:0 !important; padding:0 !important; width:100% !important; background:#f3f4f6; }
+    table { border-collapse:collapse; border-spacing:0; }
+    img { border:0; outline:none; text-decoration:none; display:block; }
+    @media only screen and (max-width:620px) {
+      .outer { padding:16px 10px !important; }
+      .card { border-radius:18px !important; }
+      .card-pad { padding:26px 20px !important; }
+      .title { font-size:25px !important; line-height:31px !important; }
+      .intro { font-size:16px !important; line-height:25px !important; }
+      .detail-pad { padding:18px !important; }
+      .detail-value { font-size:16px !important; line-height:22px !important; }
+    }
+  </style>
 </head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;color:#111827;">
-  <div style="max-width:600px;margin:0 auto;padding:32px 16px;">
-    <div style="background:#ffffff;border-radius:16px;padding:32px;border:1px solid #e5e7eb;">
-      <div style="font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;margin-bottom:24px;">
-        ShortBizAI
-      </div>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#f3f4f6;">
+    <tr>
+      <td class="outer" align="center" style="padding:30px 16px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
+          <tr>
+            <td align="center" style="padding:0 0 16px;">
+              <div style="font-size:15px;line-height:20px;font-weight:800;letter-spacing:2.5px;color:#111827;">SHORTBIZAI</div>
+            </td>
+          </tr>
+          <tr>
+            <td class="card card-pad" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:20px;padding:34px 32px;box-shadow:0 4px 18px rgba(17,24,39,.06);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding:0 0 24px;border-bottom:1px solid #eef0f2;">
+                    <div style="display:inline-block;padding:7px 12px;border-radius:999px;background:${esConfirmacion ? "#ecfdf3" : "#fef2f2"};color:${colorEstado};font-size:11px;line-height:14px;font-weight:800;letter-spacing:1px;text-transform:uppercase;">
+                      ${esConfirmacion ? "Confirmed" : "Cancelled"}
+                    </div>
+                    <h1 class="title" style="margin:13px 0 0;color:${colorEstado};font-size:30px;line-height:36px;font-weight:800;letter-spacing:-.4px;">
+                      ${tituloEmail}
+                    </h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:24px 0 0;">
+                    <p class="intro" style="margin:0 0 12px;font-size:16px;line-height:25px;color:#111827;">
+                      Hello ${clienteNombre},
+                    </p>
+                    <p class="intro" style="margin:0 0 24px;font-size:16px;line-height:25px;color:#4b5563;">
+                      ${textoPrincipal}
+                    </p>
 
-      <h1 style="margin:0 0 16px;font-size:28px;line-height:1.2;color:${colorEstado};">
-        ${tituloEmail}
-      </h1>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;">
+                      <tr>
+                        <td class="detail-pad" style="padding:20px;">
+                          <div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">Date</div>
+                          <div class="detail-value" style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding:5px 0 17px;">${reserva.fecha || "—"}</div>
 
-      <p style="font-size:16px;line-height:1.6;margin:0 0 20px;">
-        Hello ${clienteNombre},
-      </p>
+                          <div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">Time</div>
+                          <div class="detail-value" style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding:5px 0 17px;">${reserva.hora || "—"}</div>
 
-      <p style="font-size:16px;line-height:1.6;margin:0 0 24px;">
-        ${textoPrincipal}
-      </p>
+                          <div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">Guests</div>
+                          <div class="detail-value" style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding-top:5px;">${reserva.personas || "—"}</div>
+                        </td>
+                      </tr>
+                    </table>
 
-      <div style="background:#f9fafb;border-radius:12px;padding:20px;margin:0 0 24px;">
-        <p style="margin:0 0 8px;font-size:14px;color:#6b7280;">Date</p>
-        <p style="margin:0 0 16px;font-size:17px;font-weight:700;">${reserva.fecha || "—"}</p>
-
-        <p style="margin:0 0 8px;font-size:14px;color:#6b7280;">Time</p>
-        <p style="margin:0 0 16px;font-size:17px;font-weight:700;">${reserva.hora || "—"}</p>
-
-        <p style="margin:0 0 8px;font-size:14px;color:#6b7280;">Guests</p>
-        <p style="margin:0;font-size:17px;font-weight:700;">${reserva.personas || "—"}</p>
-      </div>
-
-      <p style="font-size:13px;line-height:1.5;color:#9ca3af;margin:0;">
-        Reservation ID: ${reserva.id}
-      </p>
-    </div>
-  </div>
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:22px;">
+                      <tr>
+                        <td align="center" style="padding:0;">
+                          <div style="font-size:11px;line-height:16px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Reservation ID</div>
+                          <div style="font-size:14px;line-height:20px;color:#374151;font-weight:700;padding-top:3px;">#${reserva.id}</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:16px 12px 0;">
+              <p style="margin:0;font-size:11px;line-height:17px;color:#9ca3af;">
+                This is an automated reservation notification from ShortBizAI.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 
