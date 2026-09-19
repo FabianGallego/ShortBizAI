@@ -608,7 +608,7 @@ export default function AgenteAAFPage() {
         "Hacer otra reserva",
 
       reservarTitulo:
-        "Para continuar con la reserva debes activar las notificaciones.",
+        "Activa las notificaciones para recibir avisos en este dispositivo.",
 
       activarBoton:
         "🔔 Activar notificaciones",
@@ -638,7 +638,7 @@ export default function AgenteAAFPage() {
         "No pudimos activar las notificaciones. Inténtalo nuevamente.",
 
       errorNotificaciones:
-        "Debes permitir las notificaciones para recibir la confirmación o cancelación de tu reserva.",
+        "Puedes continuar con la reserva aunque no actives las notificaciones.",
 
       empresaNoIdentificada:
         "No pudimos identificar el restaurante.",
@@ -752,7 +752,7 @@ export default function AgenteAAFPage() {
         "Make another reservation",
 
       reservarTitulo:
-        "To continue with your reservation, you must enable notifications.",
+        "Enable notifications to receive updates on this device.",
 
       activarBoton:
         "🔔 Enable notifications",
@@ -782,7 +782,7 @@ export default function AgenteAAFPage() {
         "We could not enable notifications. Please try again.",
 
       errorNotificaciones:
-        "You must allow notifications to receive the confirmation or cancellation of your reservation.",
+        "You can continue with your reservation even if you don't enable notifications.",
 
       empresaNoIdentificada:
         "We could not identify the restaurant.",
@@ -2621,8 +2621,8 @@ export default function AgenteAAFPage() {
                     <p className="mt-3 text-[15px] leading-6 text-gray-500 sm:text-base">
 
                       {idioma === "es"
-                        ? "Así podremos avisarte directamente en este dispositivo cuando el restaurante confirme o cancele tu reserva."
-                        : "This allows us to notify you directly on this device when the restaurant confirms or cancels your reservation."}
+                        ? "Recibirás un aviso directamente en este dispositivo cuando el restaurante confirme o cancele tu reserva. Puedes continuar con la reserva aunque no las actives."
+                        : "You will receive a notification directly on this device when the restaurant confirms or cancels your reservation. You can continue with your reservation even if you don't enable them."}
 
                     </p>
 
