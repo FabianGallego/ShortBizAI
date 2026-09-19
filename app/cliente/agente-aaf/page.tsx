@@ -2607,32 +2607,56 @@ export default function AgenteAAFPage() {
 
                     </p>
 
-                    <button
-                      type="button"
-                      onClick={
-                        registrarNotificaciones
-                      }
-                      disabled={
-                        activandoNotificaciones
-                      }
-                      className="mt-6 min-h-[58px] w-full rounded-2xl bg-blue-600 px-6 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition duration-200 hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-400 sm:text-lg"
-                    >
+                    {notificacionesActivas ? (
 
-                      {activandoNotificaciones
-                        ? t.activando
-                        : t.activarBoton}
+                      <div className="mt-6 rounded-2xl border border-green-200 bg-green-50 px-5 py-5 text-center">
 
-                    </button>
+                        <div className="text-2xl">✅</div>
 
-                    {errorNotificaciones && (
+                        <p className="mt-2 text-base font-black text-green-700 sm:text-lg">
+                          {t.notificacionesActivadas}
+                        </p>
 
-                      <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold leading-6 text-red-700">
-
-                        {
-                          errorNotificaciones
-                        }
+                        <p className="mt-1 text-sm leading-6 text-green-700/80">
+                          {t.dispositivoListo}
+                        </p>
 
                       </div>
+
+                    ) : (
+
+                      <>
+
+                        <button
+                          type="button"
+                          onClick={
+                            registrarNotificaciones
+                          }
+                          disabled={
+                            activandoNotificaciones
+                          }
+                          className="mt-6 min-h-[58px] w-full rounded-2xl bg-blue-600 px-6 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition duration-200 hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-400 sm:text-lg"
+                        >
+
+                          {activandoNotificaciones
+                            ? t.activando
+                            : t.activarBoton}
+
+                        </button>
+
+                        {errorNotificaciones && (
+
+                          <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold leading-6 text-red-700">
+
+                            {
+                              errorNotificaciones
+                            }
+
+                          </div>
+
+                        )}
+
+                      </>
 
                     )}
 
