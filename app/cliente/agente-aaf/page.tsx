@@ -2600,65 +2600,6 @@ export default function AgenteAAFPage() {
 
                 </div>
 
-                {/* ===========================================
-                    ACTIVAR NOTIFICACIONES
-                =========================================== */}
-
-                <div className="border-t border-gray-200 bg-white px-6 py-7 sm:px-10 sm:py-8">
-
-                  <div className="mx-auto max-w-xl text-center">
-
-                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-3xl shadow-sm">
-                      🔔
-                    </div>
-
-                    <h2 className="text-xl font-black tracking-tight text-gray-950 sm:text-2xl">
-
-                      {t.reservarTitulo}
-
-                    </h2>
-
-                    <p className="mt-3 text-[15px] leading-6 text-gray-500 sm:text-base">
-
-                      {idioma === "es"
-                        ? "Recibirás un aviso directamente en este dispositivo cuando el restaurante confirme o cancele tu reserva. Puedes continuar con la reserva aunque no las actives."
-                        : "You will receive a notification directly on this device when the restaurant confirms or cancels your reservation. You can continue with your reservation even if you don't enable them."}
-
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={
-                        registrarNotificaciones
-                      }
-                      disabled={
-                        activandoNotificaciones
-                      }
-                      className="mt-6 min-h-[58px] w-full rounded-2xl bg-blue-600 px-6 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition duration-200 hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-400 sm:text-lg"
-                    >
-
-                      {activandoNotificaciones
-                        ? t.activando
-                        : t.activarBoton}
-
-                    </button>
-
-                    {errorNotificaciones && (
-
-                      <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold leading-6 text-red-700">
-
-                        {
-                          errorNotificaciones
-                        }
-
-                      </div>
-
-                    )}
-
-                  </div>
-
-                </div>
-
               </>
 
             ) : (
@@ -3473,6 +3414,67 @@ export default function AgenteAAFPage() {
                 )}
 
               </div>
+
+
+                {/* ===========================================
+                    ACTIVAR NOTIFICACIONES
+                =========================================== */}
+
+                <div className="border-t border-gray-200 bg-white px-6 py-7 sm:px-10 sm:py-8">
+
+                  <div className="mx-auto max-w-xl text-center">
+
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-3xl shadow-sm">
+                      🔔
+                    </div>
+
+                    <h2 className="text-xl font-black tracking-tight text-gray-950 sm:text-2xl">
+
+                      {t.reservarTitulo}
+
+                    </h2>
+
+                    <p className="mt-3 text-[15px] leading-6 text-gray-500 sm:text-base">
+
+                      {idioma === "es"
+                        ? "Recibirás un aviso directamente en este dispositivo cuando el restaurante confirme o cancele tu reserva. Puedes continuar con la reserva aunque no las actives."
+                        : "You will receive a notification directly on this device when the restaurant confirms or cancels your reservation. You can continue with your reservation even if you don't enable them."}
+
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={
+                        registrarNotificaciones
+                      }
+                      disabled={
+                        activandoNotificaciones
+                      }
+                      className="mt-6 min-h-[58px] w-full rounded-2xl bg-blue-600 px-6 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition duration-200 hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-gray-400 sm:text-lg"
+                    >
+
+                      {activandoNotificaciones
+                        ? t.activando
+                        : t.activarBoton}
+
+                    </button>
+
+                    {errorNotificaciones && (
+
+                      <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold leading-6 text-red-700">
+
+                        {
+                          errorNotificaciones
+                        }
+
+                      </div>
+
+                    )}
+
+                  </div>
+
+                </div>
+
 
             )}
 
