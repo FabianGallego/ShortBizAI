@@ -7,6 +7,280 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESERVA_FROM_EMAIL =
   process.env.RESERVA_FROM_EMAIL || "reserva@shortbizai.com";
 
+// =====================================================
+// WHATSAPP CLOUD API
+// =====================================================
+
+const WHATSAPP_ACCESS_TOKEN =
+  process.env.WHATSAPP_ACCESS_TOKEN;
+
+const WHATSAPP_PHONE_NUMBER_ID =
+  process.env.WHATSAPP_PHONE_NUMBER_ID;
+
+// =====================================================
+// ENVIAR WHATSAPP AL CLIENTE
+//
+// Importante:
+// - WhatsApp es independiente de Push y Email.
+// - Si WhatsApp falla, NO se cancela la reserva.
+// - El token nunca se imprime en los logs.
+// =====================================================
+
+async function enviarWhatsApp(
+  telefono: string | null | undefined,
+  clienteNombre: string | null | undefined,
+  fecha: string | null | undefined,
+  hora: string | null | undefined,
+  personas: number | null | undefined,
+  reservaId: number | string,
+  confirmado: boolean
+) {
+  if (
+    !WHATSAPP_ACCESS_TOKEN ||
+    !WHATSAPP_PHONE_NUMBER_ID
+  ) {
+    console.warn(
+      "⚠️ WHATSAPP NO CONFIGURADO: falta WHATSAPP_ACCESS_TOKEN o WHATSAPP_PHONE_NUMBER_ID"
+    );
+
+    return {
+      enviado: false,
+      motivo:
+        "Falta configuración de WhatsApp",
+    };
+  }
+
+  if (!telefono?.trim()) {
+    console.warn(
+      "⚠️ WHATSAPP: la reserva no tiene teléfono:",
+      reservaId
+    );
+
+    return {
+      enviado: false,
+      motivo:
+        "La reserva no tiene teléfono del cliente",
+    };
+  }
+
+  // ===================================================
+  // NORMALIZAR TELÉFONO
+  //
+  // Ejemplo:
+  // (929) 301-1167
+  // 929-301-1167
+  // +1 929 301 1167
+  //
+  // Se convierte a:
+  // 19293011167
+  // ===================================================
+
+  let telefonoWhatsApp =
+    telefono.replace(/\D/g, "");
+
+  // Si el teléfono viene con 10 dígitos,
+  // asumimos Estados Unidos.
+  if (
+    telefonoWhatsApp.length === 10
+  ) {
+    telefonoWhatsApp =
+      `1${telefonoWhatsApp}`;
+  }
+
+  if (
+    telefonoWhatsApp.length < 10
+  ) {
+    console.warn(
+      "⚠️ WHATSAPP: teléfono inválido:",
+      telefono
+    );
+
+    return {
+      enviado: false,
+      motivo:
+        "Número de teléfono inválido",
+    };
+  }
+
+  const nombre =
+    clienteNombre?.trim() ||
+    "Cliente";
+
+  const fechaTexto =
+    fecha || "la fecha solicitada";
+
+  const horaTexto =
+    hora || "la hora solicitada";
+
+  const personasTexto =
+    personas
+      ? String(personas)
+      : "—";
+
+  // ===================================================
+  // MENSAJE
+  // ===================================================
+
+  const mensaje = confirmado
+    ? `Hola ${nombre} 👋
+
+Tu reserva ha sido confirmada. ✅
+
+📅 Fecha: ${fechaTexto}
+🕐 Hora: ${horaTexto}
+👥 Personas: ${personasTexto}
+
+Número de reserva: #${reservaId}
+
+Gracias por reservar con nosotros.
+
+— ShortBizAI`
+    : `Hola ${nombre} 👋
+
+Tu reserva ha sido cancelada. ❌
+
+📅 Fecha: ${fechaTexto}
+🕐 Hora: ${horaTexto}
+👥 Personas: ${personasTexto}
+
+Número de reserva: #${reservaId}
+
+Si necesitas realizar una nueva reserva, puedes hacerlo nuevamente.
+
+— ShortBizAI`;
+
+  // ===================================================
+  // ENDPOINT WHATSAPP CLOUD API
+  // ===================================================
+
+  const url =
+    `https://graph.facebook.com/v23.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+
+  try {
+    const respuesta =
+      await fetch(url, {
+        method: "POST",
+
+        headers: {
+          Authorization:
+            `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
+
+          "Content-Type":
+            "application/json",
+        },
+
+        body: JSON.stringify({
+          messaging_product:
+            "whatsapp",
+
+          recipient_type:
+            "individual",
+
+          to:
+            telefonoWhatsApp,
+
+          type:
+            "text",
+
+          text: {
+            preview_url:
+              false,
+
+            body:
+              mensaje,
+          },
+        }),
+      });
+
+    const resultado =
+      await respuesta.json();
+
+    console.log(
+      "WHATSAPP HTTP STATUS:",
+      respuesta.status
+    );
+
+    // IMPORTANTE:
+    // Nunca imprimimos el token.
+
+    console.log(
+      "WHATSAPP RESPONSE:",
+      resultado
+    );
+
+    if (!respuesta.ok) {
+      const motivo =
+        resultado?.error?.message ||
+        resultado?.message ||
+        "WhatsApp rechazó el mensaje";
+
+      console.error(
+        "❌ WHATSAPP NO ENVIADO:",
+        motivo
+      );
+
+      return {
+        enviado: false,
+        motivo,
+        respuesta:
+          resultado,
+      };
+    }
+
+    const messageId =
+      resultado?.messages?.[0]?.id ||
+      null;
+
+    console.log(
+      "================================="
+    );
+
+    console.log(
+      "✅ WHATSAPP ENVIADO AL CLIENTE"
+    );
+
+    console.log(
+      "RESERVA:",
+      reservaId
+    );
+
+    console.log(
+      "TELÉFONO:",
+      telefonoWhatsApp
+    );
+
+    console.log(
+      "MESSAGE ID:",
+      messageId
+    );
+
+    console.log(
+      "================================="
+    );
+
+    return {
+      enviado: true,
+      messageId,
+      respuesta:
+        resultado,
+    };
+  } catch (error: any) {
+    const motivo =
+      error?.message ||
+      "Error enviando WhatsApp";
+
+    console.error(
+      "❌ ERROR ENVIANDO WHATSAPP:",
+      motivo
+    );
+
+    return {
+      enviado: false,
+      motivo,
+    };
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -14,12 +288,15 @@ export async function POST(req: Request) {
     console.log(
       "================================="
     );
+
     console.log(
       "TELEGRAM WEBHOOK RECIBIDO"
     );
+
     console.log(
       JSON.stringify(body, null, 2)
     );
+
     console.log(
       "================================="
     );
@@ -36,7 +313,8 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           ok: false,
-          error: "Falta TELEGRAM_BOT_TOKEN",
+          error:
+            "Falta TELEGRAM_BOT_TOKEN",
         },
         { status: 500 }
       );
@@ -158,12 +436,6 @@ export async function POST(req: Request) {
 
       // ===================================================
       // BUSCAR RESERVA
-      //
-      // Primero la buscamos para tener:
-      // - cliente
-      // - fecha
-      // - hora
-      // - push_endpoint
       // ===================================================
 
       const {
@@ -201,8 +473,6 @@ export async function POST(req: Request) {
           id
         );
 
-        // Avisar a Telegram aunque la reserva
-        // no exista.
         try {
           await fetch(
             `https://api.telegram.org/bot${TELEGRAM_TOKEN}/answerCallbackQuery`,
@@ -340,7 +610,6 @@ export async function POST(req: Request) {
           "TELEGRAM CALLBACK:",
           resultadoCallback
         );
-
       } catch (error) {
         console.error(
           "❌ ERROR RESPONDIENDO A TELEGRAM:",
@@ -349,16 +618,20 @@ export async function POST(req: Request) {
       }
 
       // ===================================================
-      // NOTIFICACIÓN AL CLIENTE
+      // NOTIFICACIONES AL CLIENTE
       //
-      // Intentamos PUSH y EMAIL de forma independiente.
-      // Un fallo de Push no debe impedir el email.
+      // PUSH, EMAIL Y WHATSAPP SON INDEPENDIENTES.
+      //
+      // Si uno falla, los otros continúan.
       // ===================================================
 
       let pushEnviado = false;
       let emailEnviado = false;
+      let whatsappEnviado = false;
+
       let motivoPush = "";
       let motivoEmail = "";
+      let motivoWhatsApp = "";
 
       // ===================================================
       // PUSH AL CLIENTE
@@ -370,7 +643,8 @@ export async function POST(req: Request) {
           reserva.id
         );
 
-        motivoPush = "La reserva no tiene push_endpoint";
+        motivoPush =
+          "La reserva no tiene push_endpoint";
       } else {
         // =================================================
         // BUSCAR LA SUSCRIPCIÓN DEL CLIENTE
@@ -429,10 +703,13 @@ export async function POST(req: Request) {
               JSON.stringify({
                 title: titulo,
                 body: mensaje,
-                icon: "/logo-foodshortai.png",
+                icon:
+                  "/logo-foodshortai.png",
                 data: {
-                  reservaId: reserva.id,
-                  estado: reserva.estado,
+                  reservaId:
+                    reserva.id,
+                  estado:
+                    reserva.estado,
                 },
               })
             );
@@ -478,14 +755,17 @@ export async function POST(req: Request) {
               pushError?.statusCode === 404 ||
               pushError?.statusCode === 410
             ) {
-              const { error: deleteError } =
-                await supabaseAdmin
-                  .from("push_subscriptions")
-                  .delete()
-                  .eq(
-                    "id",
-                    suscripcion.id
-                  );
+              const {
+                error: deleteError,
+              } = await supabaseAdmin
+                .from(
+                  "push_subscriptions"
+                )
+                .delete()
+                .eq(
+                  "id",
+                  suscripcion.id
+                );
 
               if (deleteError) {
                 console.error(
@@ -505,12 +785,6 @@ export async function POST(req: Request) {
 
       // ===================================================
       // EMAIL AL CLIENTE
-      //
-      // Usa:
-      //   RESEND_API_KEY
-      //   RESERVA_FROM_EMAIL
-      //
-      // NO utiliza loyalty@shortbizai.com.
       // ===================================================
 
       if (!reserva.email?.trim()) {
@@ -533,29 +807,23 @@ export async function POST(req: Request) {
           reserva.cliente_nombre?.trim() ||
           "Cliente";
 
-        const empresaTexto =
-          "ShortBizAI";
-
-        const esConfirmacion =
-          tipo === "confirmar";
-
         const asunto =
-          esConfirmacion
+          tipo === "confirmar"
             ? "✅ Your reservation is confirmed"
             : "❌ Your reservation has been cancelled";
 
         const tituloEmail =
-          esConfirmacion
+          tipo === "confirmar"
             ? "Reservation Confirmed"
             : "Reservation Cancelled";
 
         const textoPrincipal =
-          esConfirmacion
+          tipo === "confirmar"
             ? `Your reservation for ${reserva.fecha || "the requested date"} at ${reserva.hora || "the requested time"} has been confirmed.`
             : `Your reservation for ${reserva.fecha || "the requested date"} at ${reserva.hora || "the requested time"} has been cancelled.`;
 
         const colorEstado =
-          esConfirmacion
+          tipo === "confirmar"
             ? "#16a34a"
             : "#dc2626";
 
@@ -568,120 +836,310 @@ export async function POST(req: Request) {
   <meta name="x-apple-disable-message-reformatting" />
   <meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no" />
   <title>${asunto}</title>
+
   <style>
-    body { margin:0 !important; padding:0 !important; width:100% !important; background:#f3f4f6; }
-    table { border-collapse:collapse; border-spacing:0; }
-    img { border:0; outline:none; text-decoration:none; display:block; }
+    body {
+      margin:0 !important;
+      padding:0 !important;
+      width:100% !important;
+      background:#f3f4f6;
+    }
+
+    table {
+      border-collapse:collapse;
+      border-spacing:0;
+    }
+
+    img {
+      border:0;
+      outline:none;
+      text-decoration:none;
+      display:block;
+    }
+
     @media only screen and (max-width:620px) {
-      .outer { padding:16px 10px !important; }
-      .card { border-radius:18px !important; }
-      .card-pad { padding:26px 20px !important; }
+      .outer {
+        padding:16px 10px !important;
+      }
+
+      .card {
+        border-radius:18px !important;
+      }
+
+      .card-pad {
+        padding:26px 20px !important;
+      }
+
       .title {
-  font-size:22px !important;
-  line-height:28px !important;
-  letter-spacing:-.2px !important;
-  word-break:keep-all !important;
-  overflow-wrap:normal !important;
-  white-space:normal !important;
-}
-      .intro { font-size:16px !important; line-height:25px !important; }
-      .detail-pad { padding:18px !important; }
-      .detail-value { font-size:16px !important; line-height:22px !important; }
+        font-size:22px !important;
+        line-height:28px !important;
+        letter-spacing:-.2px !important;
+        word-break:keep-all !important;
+        overflow-wrap:normal !important;
+        white-space:normal !important;
+      }
+
+      .intro {
+        font-size:16px !important;
+        line-height:25px !important;
+      }
+
+      .detail-pad {
+        padding:18px !important;
+      }
+
+      .detail-value {
+        font-size:16px !important;
+        line-height:22px !important;
+      }
     }
   </style>
 </head>
+
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#f3f4f6;">
+
+  <table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    style="width:100%;background:#f3f4f6;"
+  >
     <tr>
-      <td class="outer" align="center" style="padding:30px 16px;">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
+      <td
+        class="outer"
+        align="center"
+        style="padding:30px 16px;"
+      >
+
+        <table
+          role="presentation"
+          width="600"
+          cellpadding="0"
+          cellspacing="0"
+          border="0"
+          style="width:100%;max-width:600px;"
+        >
+
           <tr>
-            <td align="center" style="padding:0 0 16px;">
-              <div style="font-size:15px;line-height:20px;font-weight:800;letter-spacing:2.5px;color:#111827;">SHORTBIZAI</div>
+            <td
+              align="center"
+              style="padding:0 0 16px;"
+            >
+              <div
+                style="font-size:15px;line-height:20px;font-weight:800;letter-spacing:2.5px;color:#111827;"
+              >
+                SHORTBIZAI
+              </div>
             </td>
           </tr>
+
           <tr>
-            <td class="card card-pad" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:20px;padding:34px 32px;box-shadow:0 4px 18px rgba(17,24,39,.06);">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <td
+              class="card card-pad"
+              style="background:#ffffff;border:1px solid #e5e7eb;border-radius:20px;padding:34px 32px;box-shadow:0 4px 18px rgba(17,24,39,.06);"
+            >
+
+              <table
+                role="presentation"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+              >
+
                 <tr>
-                  <td align="center" style="padding:0 0 24px;border-bottom:1px solid #eef0f2;">
-                    <div style="display:inline-block;padding:7px 12px;border-radius:999px;background:${esConfirmacion ? "#ecfdf3" : "#fef2f2"};color:${colorEstado};font-size:11px;line-height:14px;font-weight:800;letter-spacing:1px;text-transform:uppercase;">
-                      ${esConfirmacion ? "Confirmed" : "Cancelled"}
+                  <td
+                    align="center"
+                    style="padding:0 0 24px;border-bottom:1px solid #eef0f2;"
+                  >
+
+                    <div
+                      style="display:inline-block;padding:7px 12px;border-radius:999px;background:${tipo === "confirmar" ? "#ecfdf3" : "#fef2f2"};color:${colorEstado};font-size:11px;line-height:14px;font-weight:800;letter-spacing:1px;text-transform:uppercase;"
+                    >
+                      ${tipo === "confirmar" ? "Confirmed" : "Cancelled"}
                     </div>
-                    <h1 class="title" style="margin:13px 0 0;color:${colorEstado};font-size:30px;line-height:36px;font-weight:800;letter-spacing:-.4px;">
+
+                    <h1
+                      class="title"
+                      style="margin:13px 0 0;color:${colorEstado};font-size:30px;line-height:36px;font-weight:800;letter-spacing:-.4px;"
+                    >
                       ${tituloEmail}
                     </h1>
+
                   </td>
                 </tr>
+
                 <tr>
                   <td style="padding:24px 0 0;">
-                    <p class="intro" style="margin:0 0 12px;font-size:16px;line-height:25px;color:#111827;">
+
+                    <p
+                      class="intro"
+                      style="margin:0 0 12px;font-size:16px;line-height:25px;color:#111827;"
+                    >
                       Hello ${clienteNombre},
                     </p>
-                    <p class="intro" style="margin:0 0 24px;font-size:16px;line-height:25px;color:#4b5563;">
+
+                    <p
+                      class="intro"
+                      style="margin:0 0 24px;font-size:16px;line-height:25px;color:#4b5563;"
+                    >
                       ${textoPrincipal}
                     </p>
 
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;">
+                    <table
+                      role="presentation"
+                      width="100%"
+                      cellpadding="0"
+                      cellspacing="0"
+                      border="0"
+                      style="width:100%;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;"
+                    >
+
                       <tr>
-                        <td class="detail-pad" style="padding:20px;">
-                          <div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">Date</div>
-                          <div class="detail-value" style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding:5px 0 17px;">${reserva.fecha || "—"}</div>
+                        <td
+                          class="detail-pad"
+                          style="padding:20px;"
+                        >
 
-                          <div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">Time</div>
-                          <div class="detail-value" style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding:5px 0 17px;">${reserva.hora || "—"}</div>
+                          <div
+                            style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;"
+                          >
+                            Date
+                          </div>
 
-                          <div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">Guests</div>
-                          <div class="detail-value" style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding-top:5px;">${reserva.personas || "—"}</div>
+                          <div
+                            class="detail-value"
+                            style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding:5px 0 17px;"
+                          >
+                            ${reserva.fecha || "—"}
+                          </div>
+
+                          <div
+                            style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;"
+                          >
+                            Time
+                          </div>
+
+                          <div
+                            class="detail-value"
+                            style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding:5px 0 17px;"
+                          >
+                            ${reserva.hora || "—"}
+                          </div>
+
+                          <div
+                            style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;"
+                          >
+                            Guests
+                          </div>
+
+                          <div
+                            class="detail-value"
+                            style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding-top:5px;"
+                          >
+                            ${reserva.personas || "—"}
+                          </div>
+
                         </td>
                       </tr>
+
                     </table>
 
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:22px;">
+                    <table
+                      role="presentation"
+                      width="100%"
+                      cellpadding="0"
+                      cellspacing="0"
+                      border="0"
+                      style="margin-top:22px;"
+                    >
+
                       <tr>
-                        <td align="center" style="padding:0;">
-                          <div style="font-size:11px;line-height:16px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Reservation ID</div>
-                          <div style="font-size:14px;line-height:20px;color:#374151;font-weight:700;padding-top:3px;">#${reserva.id}</div>
+                        <td
+                          align="center"
+                          style="padding:0;"
+                        >
+
+                          <div
+                            style="font-size:11px;line-height:16px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;font-weight:700;"
+                          >
+                            Reservation ID
+                          </div>
+
+                          <div
+                            style="font-size:14px;line-height:20px;color:#374151;font-weight:700;padding-top:3px;"
+                          >
+                            #${reserva.id}
+                          </div>
+
                         </td>
                       </tr>
+
                     </table>
+
                   </td>
                 </tr>
+
               </table>
+
             </td>
           </tr>
+
           <tr>
-            <td align="center" style="padding:16px 12px 0;">
-              <p style="margin:0;font-size:11px;line-height:17px;color:#9ca3af;">
+            <td
+              align="center"
+              style="padding:16px 12px 0;"
+            >
+
+              <p
+                style="margin:0;font-size:11px;line-height:17px;color:#9ca3af;"
+              >
                 This is an automated reservation notification from ShortBizAI.
               </p>
+
             </td>
           </tr>
+
         </table>
+
       </td>
     </tr>
   </table>
+
 </body>
 </html>`;
 
         try {
-          const respuestaEmail = await fetch(
-            "https://api.resend.com/emails",
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${RESEND_API_KEY}`,
-                "Content-Type":
-                  "application/json",
-              },
-              body: JSON.stringify({
-                from: RESERVA_FROM_EMAIL,
-                to: [reserva.email.trim()],
-                subject: asunto,
-                html,
-              }),
-            }
-          );
+          const respuestaEmail =
+            await fetch(
+              "https://api.resend.com/emails",
+              {
+                method: "POST",
+
+                headers: {
+                  Authorization:
+                    `Bearer ${RESEND_API_KEY}`,
+
+                  "Content-Type":
+                    "application/json",
+                },
+
+                body: JSON.stringify({
+                  from:
+                    RESERVA_FROM_EMAIL,
+
+                  to: [
+                    reserva.email.trim(),
+                  ],
+
+                  subject: asunto,
+
+                  html,
+                }),
+              }
+            );
 
           const resultadoEmail =
             await respuestaEmail.json();
@@ -747,20 +1205,142 @@ export async function POST(req: Request) {
       }
 
       // ===================================================
+      // WHATSAPP AL CLIENTE
+      //
+      // IMPORTANTE:
+      // Se ejecuta DESPUÉS de actualizar la reserva.
+      //
+      // Si WhatsApp falla:
+      // - la reserva sigue confirmada/cancelada
+      // - Telegram ya respondió
+      // - Push sigue funcionando
+      // - Email sigue funcionando
+      // ===================================================
+
+      try {
+        const resultadoWhatsApp =
+          await enviarWhatsApp(
+            reserva.telefono,
+            reserva.cliente_nombre,
+            reserva.fecha,
+            reserva.hora,
+            reserva.personas,
+            reserva.id,
+            tipo === "confirmar"
+          );
+
+        whatsappEnviado =
+          resultadoWhatsApp.enviado;
+
+        if (
+          !resultadoWhatsApp.enviado
+        ) {
+          motivoWhatsApp =
+            resultadoWhatsApp.motivo ||
+            "WhatsApp no pudo enviar el mensaje";
+        }
+
+      } catch (whatsappError: any) {
+        motivoWhatsApp =
+          whatsappError?.message ||
+          "Error enviando WhatsApp";
+
+        console.error(
+          "❌ ERROR GENERAL WHATSAPP:",
+          whatsappError
+        );
+      }
+
+      // ===================================================
       // RESULTADO FINAL
       // ===================================================
 
+      console.log(
+        "================================="
+      );
+
+      console.log(
+        "📊 RESULTADO NOTIFICACIONES"
+      );
+
+      console.log(
+        "RESERVA:",
+        reserva.id
+      );
+
+      console.log(
+        "ESTADO:",
+        reserva.estado
+      );
+
+      console.log(
+        "PUSH:",
+        pushEnviado
+      );
+
+      console.log(
+        "EMAIL:",
+        emailEnviado
+      );
+
+      console.log(
+        "WHATSAPP:",
+        whatsappEnviado
+      );
+
+      if (motivoPush) {
+        console.log(
+          "MOTIVO PUSH:",
+          motivoPush
+        );
+      }
+
+      if (motivoEmail) {
+        console.log(
+          "MOTIVO EMAIL:",
+          motivoEmail
+        );
+      }
+
+      if (motivoWhatsApp) {
+        console.log(
+          "MOTIVO WHATSAPP:",
+          motivoWhatsApp
+        );
+      }
+
+      console.log(
+        "================================="
+      );
+
       return NextResponse.json({
         ok: true,
-        reservaActualizada: true,
-        reservaId: reserva.id,
-        estado: reserva.estado,
+
+        reservaActualizada:
+          true,
+
+        reservaId:
+          reserva.id,
+
+        estado:
+          reserva.estado,
+
         pushEnviado,
+
         emailEnviado,
-        motivoPush: motivoPush || undefined,
-        motivoEmail: motivoEmail || undefined,
+
+        whatsappEnviado,
+
+        motivoPush:
+          motivoPush || undefined,
+
+        motivoEmail:
+          motivoEmail || undefined,
+
+        motivoWhatsApp:
+          motivoWhatsApp || undefined,
       });
-      }
+    }
 
     // =====================================================
     // MENSAJES NORMALES DE TELEGRAM
@@ -797,6 +1377,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         ok: false,
+
         error:
           error?.message ||
           "Error interno del webhook",
@@ -806,32 +1387,45 @@ export async function POST(req: Request) {
   }
 }
 
+// =====================================================
+// GET - CONFIGURAR WEBHOOK TELEGRAM
+// =====================================================
 
 export async function GET() {
   try {
     const webhookUrl =
       "https://www.shortbizai.com/api/telegram/webhook";
 
-    const respuesta = await fetch(
-      `https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`,
-      {
-        method: "GET",
-        cache: "no-store",
-      }
-    );
+    const respuesta =
+      await fetch(
+        `https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`,
+        {
+          method: "GET",
+          cache: "no-store",
+        }
+      );
 
-    const resultado = await respuesta.json();
+    const resultado =
+      await respuesta.json();
 
     console.log(
       "TELEGRAM SET WEBHOOK:",
-      JSON.stringify(resultado, null, 2)
+      JSON.stringify(
+        resultado,
+        null,
+        2
+      )
     );
 
     return NextResponse.json({
       ok: resultado.ok,
+
       webhookUrl,
-      telegram: resultado,
+
+      telegram:
+        resultado,
     });
+
   } catch (error: any) {
     console.error(
       "ERROR CONFIGURANDO WEBHOOK:",
@@ -841,6 +1435,7 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: false,
+
         error:
           error?.message ||
           "Error configurando webhook",
