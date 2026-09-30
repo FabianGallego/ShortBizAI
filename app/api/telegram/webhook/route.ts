@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import webpush from "web-push";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -281,6 +282,95 @@ Si necesitas realizar una nueva reserva, puedes hacerlo nuevamente.
   }
 }
 
+
+// =====================================================
+// CONEXIÓN AUTOMÁTICA DE TELEGRAM
+// =====================================================
+
+function verificarTokenConexion(token: string) {
+  if (!TELEGRAM_TOKEN) {
+    return null;
+  }
+
+  const partes = token.split(".");
+
+  if (partes.length !== 3) {
+    return null;
+  }
+
+  const [empresaIdTexto, expiraTexto, firma] = partes;
+  const empresaId = Number(empresaIdTexto);
+  const expira = Number(expiraTexto);
+
+  if (!empresaId || !expira || !firma) {
+    return null;
+  }
+
+  if (Math.floor(Date.now() / 1000) > expira) {
+    return null;
+  }
+
+  const datos = `${empresaId}.${expira}`;
+
+  const firmaEsperada = crypto
+    .createHmac("sha256", TELEGRAM_TOKEN)
+    .update(datos)
+    .digest("hex")
+    .slice(0, 32);
+
+  if (firma.length !== firmaEsperada.length) {
+    return null;
+  }
+
+  if (
+    !crypto.timingSafeEqual(
+      Buffer.from(firma),
+      Buffer.from(firmaEsperada)
+    )
+  ) {
+    return null;
+  }
+
+  return {
+    empresaId,
+    expira,
+  };
+}
+
+async function enviarMensajeTelegram(
+  chatId: string | number,
+  texto: string
+) {
+  if (!TELEGRAM_TOKEN) {
+    throw new Error("Falta TELEGRAM_BOT_TOKEN.");
+  }
+
+  const respuesta = await fetch(
+    `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: texto,
+      }),
+    }
+  );
+
+  const resultado = await respuesta.json();
+
+  if (!respuesta.ok || !resultado?.ok) {
+    throw new Error(
+      resultado?.description ||
+        "Telegram rechazó el mensaje."
+    );
+  }
+
+  return resultado;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -329,6 +419,204 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
       process.env.VAPID_PRIVATE_KEY!
     );
+
+
+    // =====================================================
+    // CONECTAR TELEGRAM AUTOMÁTICAMENTE CON /START
+    // =====================================================
+
+    if (body.message) {
+      const mensajeTelegram = body.message;
+      const texto = String(mensajeTelegram.text || "").trim();
+      const chatId = mensajeTelegram.chat?.id;
+
+      if (texto.startsWith("/start")) {
+        if (!chatId) {
+          console.error("❌ /START SIN CHAT ID");
+          return NextResponse.json({ ok: true });
+        }
+
+        const partesStart = texto.split(/\s+/);
+        const parametroStart = partesStart[1];
+
+        if (!parametroStart) {
+          await enviarMensajeTelegram(
+            chatId,
+            "👋 Hola. Para conectar Telegram con tu restaurante, inicia la conexión desde ShortBizAI."
+          );
+
+          return NextResponse.json({ ok: true });
+        }
+
+        if (!parametroStart.startsWith("empresa_")) {
+          await enviarMensajeTelegram(
+            chatId,
+            "❌ El enlace de conexión de ShortBizAI no es válido."
+          );
+
+          return NextResponse.json({ ok: true });
+        }
+
+        const tokenConexion =
+          parametroStart.substring("empresa_".length);
+
+        const conexion =
+          verificarTokenConexion(tokenConexion);
+
+        if (!conexion) {
+          await enviarMensajeTelegram(
+            chatId,
+            "❌ El enlace de conexión ha expirado o no es válido. Genera un nuevo enlace desde ShortBizAI."
+          );
+
+          return NextResponse.json({ ok: true });
+        }
+
+        const empresaId = conexion.empresaId;
+
+        // ===================================================
+        // COMPROBAR EMPRESA
+        // ===================================================
+
+        const {
+          data: empresa,
+          error: empresaError,
+        } = await supabaseAdmin
+          .from("empresas")
+          .select("id, nombre, activo")
+          .eq("id", empresaId)
+          .maybeSingle();
+
+        if (empresaError) {
+          console.error(
+            "❌ ERROR BUSCANDO EMPRESA PARA TELEGRAM:",
+            empresaError
+          );
+
+          await enviarMensajeTelegram(
+            chatId,
+            "❌ No fue posible comprobar la empresa. Intenta nuevamente."
+          );
+
+          return NextResponse.json({ ok: true });
+        }
+
+        if (!empresa || empresa.activo === false) {
+          await enviarMensajeTelegram(
+            chatId,
+            "❌ La empresa no está activa en ShortBizAI."
+          );
+
+          return NextResponse.json({ ok: true });
+        }
+
+        // ===================================================
+        // GUARDAR CHAT ID DE LA EMPRESA
+        // ===================================================
+
+        const {
+          data: configuracionTelegram,
+          error: configuracionError,
+        } = await supabaseAdmin
+          .from("empresa_notificaciones")
+          .select(
+            "empresa_id, telegram_activo, telegram_chat_id, telegram_conectado"
+          )
+          .eq("empresa_id", empresaId)
+          .maybeSingle();
+
+        if (configuracionError) {
+          console.error(
+            "❌ ERROR BUSCANDO CONFIGURACIÓN TELEGRAM:",
+            configuracionError
+          );
+
+          await enviarMensajeTelegram(
+            chatId,
+            "❌ No fue posible guardar la conexión de Telegram."
+          );
+
+          return NextResponse.json({ ok: true });
+        }
+
+        let guardarError = null;
+
+        if (configuracionTelegram) {
+          const resultadoUpdate = await supabaseAdmin
+            .from("empresa_notificaciones")
+            .update({
+              telegram_chat_id: String(chatId),
+              telegram_conectado: true,
+            })
+            .eq("empresa_id", empresaId);
+
+          guardarError = resultadoUpdate.error;
+        } else {
+          const resultadoInsert = await supabaseAdmin
+            .from("empresa_notificaciones")
+            .insert({
+              empresa_id: empresaId,
+              telegram_chat_id: String(chatId),
+              telegram_conectado: true,
+              telegram_activo: true,
+            });
+
+          guardarError = resultadoInsert.error;
+        }
+
+        if (guardarError) {
+          console.error(
+            "❌ ERROR GUARDANDO CONEXIÓN TELEGRAM:",
+            guardarError
+          );
+
+          await enviarMensajeTelegram(
+            chatId,
+            "❌ No fue posible guardar la conexión de Telegram."
+          );
+
+          return NextResponse.json({ ok: true });
+        }
+
+        console.log(
+          "================================="
+        );
+
+        console.log(
+          "✅ TELEGRAM CONECTADO AUTOMÁTICAMENTE"
+        );
+
+        console.log(
+          "EMPRESA:",
+          empresa.id
+        );
+
+        console.log(
+          "NOMBRE:",
+          empresa.nombre
+        );
+
+        console.log(
+          "CHAT ID:",
+          chatId
+        );
+
+        console.log(
+          "================================="
+        );
+
+        await enviarMensajeTelegram(
+          chatId,
+          `✅ Telegram conectado correctamente con ${empresa.nombre}.\n\nYa puedes recibir las notificaciones de reservas de ShortBizAI en este chat.`
+        );
+
+        return NextResponse.json({
+          ok: true,
+          telegramConectado: true,
+          empresaId: empresa.id,
+        });
+      }
+    }
 
     // =====================================================
     // CONFIRMAR / CANCELAR
