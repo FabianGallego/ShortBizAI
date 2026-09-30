@@ -6,21 +6,21 @@ import { supabase } from "@/lib/supabase";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [cargando, setCargando] = useState(false);
+  const [recuperando, setRecuperando] = useState(false);
+
   const [error, setError] = useState("");
+  const [mensaje, setMensaje] = useState("");
 
   async function iniciarSesion(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     setError("");
+    setMensaje("");
     setCargando(true);
 
     try {
-      /*
-       * Siempre cerramos cualquier sesión anterior antes de iniciar
-       * una nueva. Esto evita que una sesión vieja de otro usuario
-       * (por ejemplo, un propietario) interfiera con el acceso.
-       */
       await supabase.auth.signOut();
 
       const correo = email.trim().toLowerCase();
@@ -43,10 +43,6 @@ export default function LoginPage() {
         throw new Error("No se pudo iniciar la sesión.");
       }
 
-      /*
-       * El rol se determina exclusivamente por el user.id
-       * que Supabase acaba de autenticar.
-       */
       const { data: perfil, error: perfilError } = await supabase
         .from("perfiles")
         .select("user_id, nombre, rol, activo")
@@ -59,6 +55,7 @@ export default function LoginPage() {
 
       if (!perfil) {
         await supabase.auth.signOut();
+
         throw new Error(
           "Tu usuario todavía no tiene un perfil configurado en ShortBizAI."
         );
@@ -66,6 +63,7 @@ export default function LoginPage() {
 
       if (perfil.activo === false) {
         await supabase.auth.signOut();
+
         throw new Error(
           "Tu cuenta está desactivada. Contacta al administrador."
         );
@@ -99,6 +97,49 @@ export default function LoginPage() {
     }
   }
 
+  async function recuperarContrasena() {
+    setError("");
+    setMensaje("");
+
+    const correo = email.trim().toLowerCase();
+
+    if (!correo) {
+      setError(
+        "Primero escribe tu email para enviarte el enlace de recuperación."
+      );
+      return;
+    }
+
+    setRecuperando(true);
+
+    try {
+      const { error: resetError } =
+        await supabase.auth.resetPasswordForEmail(correo, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+
+      if (resetError) {
+        throw resetError;
+      }
+
+      setMensaje(
+        "Te enviamos un correo para recuperar tu contraseña. Revisa también la carpeta de spam."
+      );
+    } catch (err: any) {
+      console.error(
+        "ERROR RECUPERANDO CONTRASEÑA:",
+        err
+      );
+
+      setError(
+        err?.message ||
+          "No fue posible enviar el correo de recuperación."
+      );
+    } finally {
+      setRecuperando(false);
+    }
+  }
+
   return (
     <main
       style={{
@@ -121,7 +162,12 @@ export default function LoginPage() {
           boxShadow: "0 25px 70px rgba(0,0,0,0.35)",
         }}
       >
-        <div style={{ textAlign: "center", marginBottom: "30px" }}>
+        <div
+          style={{
+            textAlign: "center",
+            marginBottom: "30px",
+          }}
+        >
           <div
             style={{
               width: "58px",
@@ -221,9 +267,37 @@ export default function LoginPage() {
               borderRadius: "12px",
               fontSize: "16px",
               outline: "none",
-              marginBottom: "20px",
+              marginBottom: "10px",
             }}
           />
+
+          <div
+            style={{
+              textAlign: "right",
+              marginBottom: "20px",
+            }}
+          >
+            <button
+              type="button"
+              onClick={recuperarContrasena}
+              disabled={recuperando}
+              style={{
+                border: "none",
+                background: "transparent",
+                color: "#2563eb",
+                fontSize: "14px",
+                fontWeight: 700,
+                cursor: recuperando
+                  ? "default"
+                  : "pointer",
+                padding: 0,
+              }}
+            >
+              {recuperando
+                ? "Enviando..."
+                : "¿Olvidaste tu contraseña?"}
+            </button>
+          </div>
 
           {error && (
             <div
@@ -242,6 +316,23 @@ export default function LoginPage() {
             </div>
           )}
 
+          {mensaje && (
+            <div
+              style={{
+                marginBottom: "18px",
+                padding: "12px 14px",
+                borderRadius: "10px",
+                background: "#ecfdf5",
+                border: "1px solid #a7f3d0",
+                color: "#047857",
+                fontSize: "14px",
+                lineHeight: 1.5,
+              }}
+            >
+              {mensaje}
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={cargando}
@@ -250,14 +341,20 @@ export default function LoginPage() {
               border: "none",
               borderRadius: "12px",
               padding: "15px",
-              background: cargando ? "#6b7280" : "#111827",
+              background: cargando
+                ? "#6b7280"
+                : "#111827",
               color: "#ffffff",
               fontSize: "16px",
               fontWeight: 700,
-              cursor: cargando ? "not-allowed" : "pointer",
+              cursor: cargando
+                ? "not-allowed"
+                : "pointer",
             }}
           >
-            {cargando ? "Ingresando..." : "Iniciar sesión"}
+            {cargando
+              ? "Ingresando..."
+              : "Iniciar sesión"}
           </button>
         </form>
 
