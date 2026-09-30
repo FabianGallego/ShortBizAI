@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 export async function POST(req: Request) {
   try {
@@ -42,7 +41,7 @@ export async function POST(req: Request) {
     }
 
     // ==========================================
-    // VALIDAR TELEGRAM
+    // VALIDAR TOKEN DEL BOT
     // ==========================================
 
     if (!TELEGRAM_TOKEN) {
@@ -59,19 +58,159 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!TELEGRAM_CHAT_ID) {
+    // ==========================================
+    // BUSCAR RESERVA
+    //
+    // La reserva determina la empresa.
+    // No confiamos en empresaId enviado
+    // desde el navegador.
+    // ==========================================
+
+    const {
+      data: reservaInfo,
+      error: reservaInfoError,
+    } = await supabaseAdmin
+      .from("reservas")
+      .select("id, empresa_id")
+      .eq("id", reservaId)
+      .maybeSingle();
+
+    if (reservaInfoError) {
       console.error(
-        "❌ TELEGRAM: falta TELEGRAM_CHAT_ID"
+        "❌ ERROR BUSCANDO RESERVA:",
+        reservaInfoError
       );
 
       return NextResponse.json(
         {
           ok: false,
-          error: "Falta TELEGRAM_CHAT_ID",
+          error: "No se pudo buscar la reserva",
+          detalle: reservaInfoError.message,
         },
         { status: 500 }
       );
     }
+
+    if (!reservaInfo) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Reserva no encontrada",
+        },
+        { status: 404 }
+      );
+    }
+
+    const empresaId = reservaInfo.empresa_id;
+
+    if (!empresaId) {
+      console.error(
+        `❌ RESERVA ${reservaId}: no tiene empresa_id`
+      );
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "La reserva no tiene una empresa asociada",
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log(
+      `🏢 RESERVA ${reservaId}: empresa_id = ${empresaId}`
+    );
+
+    // ==========================================
+    // BUSCAR CONFIGURACIÓN TELEGRAM
+    // DE ESA EMPRESA
+    // ==========================================
+
+    const {
+      data: configuracionTelegram,
+      error: configuracionError,
+    } = await supabaseAdmin
+      .from("empresa_notificaciones")
+      .select(
+        "empresa_id, telegram_activo, telegram_chat_id, telegram_conectado"
+      )
+      .eq("empresa_id", empresaId)
+      .maybeSingle();
+
+    if (configuracionError) {
+      console.error(
+        "❌ ERROR BUSCANDO CONFIGURACIÓN TELEGRAM:",
+        configuracionError
+      );
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "No se pudo consultar la configuración de Telegram",
+          detalle: configuracionError.message,
+        },
+        { status: 500 }
+      );
+    }
+
+    // ==========================================
+    // VALIDAR CONFIGURACIÓN TELEGRAM
+    // ==========================================
+
+    if (!configuracionTelegram) {
+      console.error(
+        `❌ EMPRESA ${empresaId}: no tiene configuración de notificaciones`
+      );
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "La empresa no tiene configuración de Telegram",
+          empresaId,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!configuracionTelegram.telegram_activo) {
+      console.log(
+        `ℹ️ TELEGRAM: empresa ${empresaId} tiene Telegram desactivado`
+      );
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Telegram está desactivado para esta empresa",
+          empresaId,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!configuracionTelegram.telegram_chat_id) {
+      console.error(
+        `❌ TELEGRAM: empresa ${empresaId} no tiene telegram_chat_id`
+      );
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "La empresa no tiene un chat de Telegram configurado",
+          empresaId,
+        },
+        { status: 400 }
+      );
+    }
+
+    const TELEGRAM_CHAT_ID =
+      configuracionTelegram.telegram_chat_id;
+
+    console.log(
+      `📲 TELEGRAM: empresa ${empresaId} → chat ${TELEGRAM_CHAT_ID}`
+    );
 
     // ==========================================
     // RECLAMAR RESERVA
@@ -79,7 +218,7 @@ export async function POST(req: Request) {
     // Solo continúa si NO está marcada
     // como telegram_notificado = true.
     //
-    // Esto permite false o null.
+    // Esto evita mensajes duplicados.
     // ==========================================
 
     const {
@@ -96,7 +235,7 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     // ==========================================
-    // NO SE PUDO RECLAMAR
+    // ERROR AL RECLAMAR
     // ==========================================
 
     if (reservaError) {
@@ -115,6 +254,10 @@ export async function POST(req: Request) {
       );
     }
 
+    // ==========================================
+    // YA HABÍA SIDO PROCESADA
+    // ==========================================
+
     if (!reserva) {
       console.log(
         `ℹ️ TELEGRAM: reserva ${reservaId} ya fue procesada.`
@@ -123,6 +266,7 @@ export async function POST(req: Request) {
       return NextResponse.json({
         ok: true,
         reservaId,
+        empresaId,
         telegramEnviado: false,
         duplicado: true,
         mensaje: "La reserva ya fue notificada.",
@@ -148,6 +292,8 @@ export async function POST(req: Request) {
 🆔 Reserva: ${reservaId}`;
 
     console.log("📨 TELEGRAM: enviando mensaje...");
+    console.log("🏢 EMPRESA:", empresaId);
+    console.log("📲 CHAT:", TELEGRAM_CHAT_ID);
 
     // ==========================================
     // ENVIAR A TELEGRAM
@@ -241,6 +387,7 @@ export async function POST(req: Request) {
           detalle:
             resultadoTelegram?.description ||
             "Error desconocido de Telegram",
+          empresaId,
         },
         { status: 500 }
       );
@@ -265,6 +412,11 @@ export async function POST(req: Request) {
     );
 
     console.log(
+      "EMPRESA ID:",
+      empresaId
+    );
+
+    console.log(
       "MESSAGE ID:",
       messageId
     );
@@ -285,6 +437,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ok: true,
       reservaId,
+      empresaId,
       telegramEnviado: true,
       telegramMessageId: messageId,
       telegramChatId: chatId,

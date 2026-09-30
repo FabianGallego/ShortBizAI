@@ -848,20 +848,18 @@ export default function AgenteAAFPage() {
         true
       );
 
-      const {
-        data,
-        error,
-      } =
-        await supabase
-          .from("empresas")
-          .select(
-            "id, nombre, codigo_publico"
-          )
-          .eq(
-            "id",
-            empresaId
-          )
-          .maybeSingle();
+
+     const {
+  data,
+  error,
+} = await supabase.rpc(
+  "obtener_empresa_publica_por_id",
+  {
+    p_empresa_id: Number(empresaId),
+  }
+);
+
+
 
       if (error) {
 
@@ -1918,10 +1916,30 @@ export default function AgenteAAFPage() {
 
       if (error) {
 
-        console.error(
-          "ERROR AL GUARDAR RESERVA:",
-          error
-        );
+      console.error(
+  "ERROR AL GUARDAR RESERVA:",
+  JSON.stringify(error, null, 2)
+);
+
+console.error(
+  "ERROR MESSAGE:",
+  error?.message
+);
+
+console.error(
+  "ERROR CODE:",
+  error?.code
+);
+
+console.error(
+  "ERROR DETAILS:",
+  error?.details
+);
+
+console.error(
+  "ERROR HINT:",
+  error?.hint
+);
 
         setErrorReserva(
           t.errorGuardar

@@ -155,6 +155,13 @@ export default function Home() {
             </div>
 
             <Link
+              href="/login"
+              className="hidden sm:inline-flex items-center justify-center border border-gray-300 bg-white hover:bg-gray-50 text-gray-900 px-5 lg:px-6 py-3 rounded-lg font-black text-xs lg:text-sm transition whitespace-nowrap"
+            >
+              {isEnglish ? "LOGIN" : "INICIAR SESIÓN"}
+            </Link>
+
+            <Link
               href="/cliente/agente-aaf"
               className="hidden sm:inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white px-5 lg:px-6 py-3 rounded-lg font-black text-xs lg:text-sm transition shadow-lg whitespace-nowrap"
             >
@@ -257,9 +264,17 @@ export default function Home() {
                 </div>
 
                 <Link
+                  href="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="mt-4 flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-4 text-sm font-black text-gray-900"
+                >
+                  {isEnglish ? "LOGIN" : "INICIAR SESIÓN"}
+                </Link>
+
+                <Link
                   href="/cliente/agente-aaf"
                   onClick={() => setMenuOpen(false)}
-                  className="mt-4 flex items-center justify-center rounded-lg bg-red-600 px-5 py-4 text-sm font-black text-white shadow-lg"
+                  className="mt-2 flex items-center justify-center rounded-lg bg-red-600 px-5 py-4 text-sm font-black text-white shadow-lg"
                 >
                   {isEnglish ? "BOOK A SESSION" : "RESERVAR UNA SESIÓN"}
                 </Link>
