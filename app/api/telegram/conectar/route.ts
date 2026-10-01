@@ -19,7 +19,7 @@ function crearTokenConexion(empresaId: number, expira: number) {
     .digest("hex")
     .slice(0, 32);
 
- return `${empresaId}_${expira}_${firma}`;
+  return `${empresaId}_${expira}_${firma}`;
 }
 
 export async function POST(request: Request) {
@@ -156,7 +156,11 @@ export async function POST(request: Request) {
 
       const resultadoBot = await respuestaBot.json();
 
-      if (!respuestaBot.ok || !resultadoBot?.ok || !resultadoBot?.result?.username) {
+      if (
+        !respuestaBot.ok ||
+        !resultadoBot?.ok ||
+        !resultadoBot?.result?.username
+      ) {
         console.error("ERROR OBTENIENDO BOT TELEGRAM:", resultadoBot);
 
         return NextResponse.json(
