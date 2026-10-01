@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 import webpush from "web-push";
+import crypto from "crypto";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -284,31 +284,37 @@ Si necesitas realizar una nueva reserva, puedes hacerlo nuevamente.
 
 
 // =====================================================
-// CONEXIÓN AUTOMÁTICA DE TELEGRAM
+// CONEXIÓN AUTOMÁTICA DE TELEGRAM POR EMPRESA
 // =====================================================
 
-function verificarTokenConexion(token: string) 
-
-{
-  if (!TELEGRAM_TOKEN) {
-    return null;
-  }
+function verificarTokenConexion(token: string) {
+  if (!TELEGRAM_TOKEN) return null;
 
   const partes = token.split(".");
 
-  if (partes.length !== 3) {
-    return null;
-  }
+  if (partes.length !== 3) return null;
 
-  const [empresaIdTexto, expiraTexto, firma] = partes;
-  const empresaId = Number(empresaIdTexto);
-  const expira = Number(expiraTexto);
+  const empresaId = Number(partes[0]);
+  const expira = Number(partes[1]);
+  const firma = partes[2];
 
-  if (!empresaId || !expira || !firma) {
-    return null;
-  }
+  if (!empresaId || !expira || !firma) return null;
 
-  if (Math.floor(Date.now() / 1000) > expira) {
+  // Los dos endpoints pueden ejecutarse en instancias distintas.
+  // Damos un margen de 12 horas para desfases de reloj entre runtimes,
+  // sin eliminar la expiración del token.
+  const ahora = Math.floor(Date.now() / 1000);
+  const MARGEN_DESFASE_RELOJ = 12 * 60 * 60;
+
+  if (ahora > expira + MARGEN_DESFASE_RELOJ) {
+    console.warn(
+      "⚠️ TOKEN TELEGRAM EXPIRADO:",
+      {
+        ahora,
+        expira,
+        diferenciaSegundos: ahora - expira,
+      }
+    );
     return null;
   }
 
@@ -320,16 +326,7 @@ function verificarTokenConexion(token: string)
     .digest("hex")
     .slice(0, 32);
 
-  if (firma.length !== firmaEsperada.length) {
-    return null;
-  }
-
-  if (
-    !crypto.timingSafeEqual(
-      Buffer.from(firma),
-      Buffer.from(firmaEsperada)
-    )
-  ) {
+  if (firma !== firmaEsperada) {
     return null;
   }
 
@@ -340,11 +337,11 @@ function verificarTokenConexion(token: string)
 }
 
 async function enviarMensajeTelegram(
-  chatId: string | number,
+  chatId: number | string,
   texto: string
 ) {
   if (!TELEGRAM_TOKEN) {
-    throw new Error("Falta TELEGRAM_BOT_TOKEN.");
+    throw new Error("Falta TELEGRAM_BOT_TOKEN");
   }
 
   const respuesta = await fetch(
@@ -365,8 +362,7 @@ async function enviarMensajeTelegram(
 
   if (!respuesta.ok || !resultado?.ok) {
     throw new Error(
-      resultado?.description ||
-        "Telegram rechazó el mensaje."
+      resultado?.description || "Telegram rechazó el mensaje"
     );
   }
 
@@ -424,70 +420,50 @@ export async function POST(req: Request) {
 
 
     // =====================================================
-    // CONECTAR TELEGRAM AUTOMÁTICAMENTE CON /START
+    // CONEXIÓN AUTOMÁTICA DE TELEGRAM
     // =====================================================
 
     if (body.message) {
-      const mensajeTelegram = body.message;
-      const texto = String(mensajeTelegram.text || "").trim();
-      const chatId = mensajeTelegram.chat?.id;
+      const texto = String(body.message.text || "").trim();
+      const chatId = body.message.chat?.id;
 
-      if (texto.startsWith("/start")) {
-        if (!chatId) {
-          console.error("❌ /START SIN CHAT ID");
-          return NextResponse.json({ ok: true });
-        }
-
+      if (texto.startsWith("/start") && chatId) {
         const partesStart = texto.split(/\s+/);
-        const parametroStart = partesStart[1];
+        const parametro = partesStart[1] || "";
 
-        if (!parametroStart) {
+        if (!parametro.startsWith("empresa_")) {
           await enviarMensajeTelegram(
             chatId,
             "👋 Hola. Para conectar Telegram con tu restaurante, inicia la conexión desde ShortBizAI."
           );
 
-          return NextResponse.json({ ok: true });
+          return NextResponse.json({
+            ok: true,
+            conectado: false,
+          });
         }
 
-        if (!parametroStart.startsWith("empresa_")) {
-          await enviarMensajeTelegram(
-            chatId,
-            "❌ El enlace de conexión de ShortBizAI no es válido."
-          );
-
-          return NextResponse.json({ ok: true });
-        }
-
-        const tokenConexion =
-          parametroStart.substring("empresa_".length);
-
-        const conexion =
-          verificarTokenConexion(tokenConexion);
+        const tokenConexion = parametro.substring("empresa_".length);
+        const conexion = verificarTokenConexion(tokenConexion);
 
         if (!conexion) {
           await enviarMensajeTelegram(
             chatId,
-            "❌ El enlace de conexión ha expirado o no es válido. Genera un nuevo enlace desde ShortBizAI."
+            "❌ Este enlace de conexión no es válido o ya expiró. Vuelve a ShortBizAI y pulsa «Conectar Telegram» nuevamente."
           );
 
-          return NextResponse.json({ ok: true });
+          return NextResponse.json({
+            ok: true,
+            conectado: false,
+          });
         }
 
-        const empresaId = conexion.empresaId;
-
-        // ===================================================
-        // COMPROBAR EMPRESA
-        // ===================================================
-
-        const {
-          data: empresa,
-          error: empresaError,
-        } = await supabaseAdmin
-          .from("empresas")
-          .select("id, nombre, activo")
-          .eq("id", empresaId)
-          .maybeSingle();
+        const { data: empresa, error: empresaError } =
+          await supabaseAdmin
+            .from("empresas")
+            .select("id, nombre, activo")
+            .eq("id", conexion.empresaId)
+            .maybeSingle();
 
         if (empresaError) {
           console.error(
@@ -500,32 +476,32 @@ export async function POST(req: Request) {
             "❌ No fue posible comprobar la empresa. Intenta nuevamente."
           );
 
-          return NextResponse.json({ ok: true });
+          return NextResponse.json({
+            ok: false,
+            conectado: false,
+          });
         }
 
         if (!empresa || empresa.activo === false) {
           await enviarMensajeTelegram(
             chatId,
-            "❌ La empresa no está activa en ShortBizAI."
+            "❌ La empresa no está activa o ya no está disponible."
           );
 
-          return NextResponse.json({ ok: true });
+          return NextResponse.json({
+            ok: true,
+            conectado: false,
+          });
         }
 
-        // ===================================================
-        // GUARDAR CHAT ID DE LA EMPRESA
-        // ===================================================
-
-        const {
-          data: configuracionTelegram,
-          error: configuracionError,
-        } = await supabaseAdmin
-          .from("empresa_notificaciones")
-          .select(
-            "empresa_id, telegram_activo, telegram_chat_id, telegram_conectado"
-          )
-          .eq("empresa_id", empresaId)
-          .maybeSingle();
+        const { data: configuracion, error: configuracionError } =
+          await supabaseAdmin
+            .from("empresa_notificaciones")
+            .select(
+              "empresa_id, telegram_activo, telegram_chat_id, telegram_conectado"
+            )
+            .eq("empresa_id", empresa.id)
+            .maybeSingle();
 
         if (configuracionError) {
           console.error(
@@ -535,50 +511,74 @@ export async function POST(req: Request) {
 
           await enviarMensajeTelegram(
             chatId,
-            "❌ No fue posible guardar la conexión de Telegram."
+            "❌ No fue posible guardar la conexión de Telegram. Intenta nuevamente."
           );
 
-          return NextResponse.json({ ok: true });
+          return NextResponse.json({
+            ok: false,
+            conectado: false,
+          });
         }
 
-        let guardarError = null;
+        if (configuracion) {
+          const { error: actualizarTelegramError } =
+            await supabaseAdmin
+              .from("empresa_notificaciones")
+              .update({
+                telegram_chat_id: String(chatId),
+                telegram_conectado: true,
+              })
+              .eq("empresa_id", empresa.id);
 
-        if (configuracionTelegram) {
-          const resultadoUpdate = await supabaseAdmin
-            .from("empresa_notificaciones")
-            .update({
-              telegram_chat_id: String(chatId),
-              telegram_conectado: true,
-            })
-            .eq("empresa_id", empresaId);
+          if (actualizarTelegramError) {
+            console.error(
+              "❌ ERROR ACTUALIZANDO TELEGRAM:",
+              actualizarTelegramError
+            );
 
-          guardarError = resultadoUpdate.error;
-        } else {
-          const resultadoInsert = await supabaseAdmin
-            .from("empresa_notificaciones")
-            .insert({
-              empresa_id: empresaId,
-              telegram_chat_id: String(chatId),
-              telegram_conectado: true,
-              telegram_activo: true,
+            await enviarMensajeTelegram(
+              chatId,
+              "❌ No fue posible guardar la conexión de Telegram. Intenta nuevamente."
+            );
+
+            return NextResponse.json({
+              ok: false,
+              conectado: false,
             });
+          }
+        } else {
+          const { error: insertarTelegramError } =
+            await supabaseAdmin
+              .from("empresa_notificaciones")
+              .insert({
+                empresa_id: empresa.id,
+                telegram_chat_id: String(chatId),
+                telegram_conectado: true,
+                telegram_activo: true,
+              });
 
-          guardarError = resultadoInsert.error;
+          if (insertarTelegramError) {
+            console.error(
+              "❌ ERROR CREANDO CONFIGURACIÓN TELEGRAM:",
+              insertarTelegramError
+            );
+
+            await enviarMensajeTelegram(
+              chatId,
+              "❌ No fue posible guardar la conexión de Telegram. Intenta nuevamente."
+            );
+
+            return NextResponse.json({
+              ok: false,
+              conectado: false,
+            });
+          }
         }
 
-        if (guardarError) {
-          console.error(
-            "❌ ERROR GUARDANDO CONEXIÓN TELEGRAM:",
-            guardarError
-          );
-
-          await enviarMensajeTelegram(
-            chatId,
-            "❌ No fue posible guardar la conexión de Telegram."
-          );
-
-          return NextResponse.json({ ok: true });
-        }
+        await enviarMensajeTelegram(
+          chatId,
+          `✅ Telegram conectado correctamente.\n\nRestaurante: ${empresa.nombre}\n\nShortBizAI ya puede enviar aquí las notificaciones de reservas.`
+        );
 
         console.log(
           "================================="
@@ -590,11 +590,7 @@ export async function POST(req: Request) {
 
         console.log(
           "EMPRESA:",
-          empresa.id
-        );
-
-        console.log(
-          "NOMBRE:",
+          empresa.id,
           empresa.nombre
         );
 
@@ -607,15 +603,12 @@ export async function POST(req: Request) {
           "================================="
         );
 
-        await enviarMensajeTelegram(
-          chatId,
-          `✅ Telegram conectado correctamente con ${empresa.nombre}.\n\nYa puedes recibir las notificaciones de reservas de ShortBizAI en este chat.`
-        );
-
         return NextResponse.json({
           ok: true,
-          telegramConectado: true,
+          conectado: true,
           empresaId: empresa.id,
+          empresaNombre: empresa.nombre,
+          telegramChatId: String(chatId),
         });
       }
     }
