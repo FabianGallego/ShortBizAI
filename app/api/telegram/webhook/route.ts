@@ -294,7 +294,7 @@ function verificarTokenConexion(token: string)
     return null;
   }
 
-  const partes = token.split("_");
+  const partes = token.split(".");
 
   if (partes.length !== 3) {
     return null;

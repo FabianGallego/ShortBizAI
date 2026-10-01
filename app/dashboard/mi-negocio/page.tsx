@@ -250,6 +250,7 @@ export default function MiNegocioPage() {
   const [guardandoTelegram, setGuardandoTelegram] = useState(false);
   const [errorTelegram, setErrorTelegram] = useState("");
   const [mensajeTelegram, setMensajeTelegram] = useState("");
+  const [comandoTelegram, setComandoTelegram] = useState("");
 
   const [empresa, setEmpresa] = useState<Empresa | null>(null);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
@@ -452,10 +453,41 @@ export default function MiNegocioPage() {
         );
       }
 
-      window.open(resultado.telegramUrl, "_blank", "noopener,noreferrer");
+      // Telegram Web puede abrir el chat sin ejecutar correctamente el
+      // parámetro ?start=. Para evitar que el propietario tenga que copiar
+      // el código, preparamos el comando /start en el portapapeles y abrimos
+      // directamente Telegram Web.
+      const urlTelegram = new URL(resultado.telegramUrl);
+      const parametroStart = urlTelegram.searchParams.get("start") || "";
+
+      if (!parametroStart) {
+        throw new Error("Telegram no devolvió el parámetro de conexión.");
+      }
+
+      const comandoStart = `/start ${parametroStart}`;
+      let comandoCopiado = false;
+
+      try {
+        await navigator.clipboard.writeText(comandoStart);
+        comandoCopiado = true;
+        setComandoTelegram("");
+      } catch (clipboardError) {
+        console.warn(
+          "NO FUE POSIBLE COPIAR EL COMANDO DE TELEGRAM:",
+          clipboardError
+        );
+        setComandoTelegram(comandoStart);
+      }
+
+      const botUsername = urlTelegram.pathname.replace("/", "");
+      const telegramWebUrl = `https://web.telegram.org/k/#@${botUsername}`;
+
+      window.open(telegramWebUrl, "_blank", "noopener,noreferrer");
 
       setMensajeTelegram(
-        "Telegram está listo. Abre el bot y pulsa START para completar la conexión."
+        comandoCopiado
+          ? "Telegram Web está abierto. El comando de conexión quedó copiado; pégalo en el chat de AAF Business y envíalo."
+          : "Telegram Web está abierto. Copia el comando que aparece abajo, pégalo en el chat de AAF Business y envíalo."
       );
 
       // Esperamos unos segundos y consultamos la configuración de esta empresa.
@@ -1580,6 +1612,72 @@ export default function MiNegocioPage() {
                       }}
                     >
                       ✅ {mensajeTelegram}
+                    </div>
+                  )}
+
+                  {comandoTelegram && (
+                    <div
+                      style={{
+                        marginTop: 12,
+                        padding: 12,
+                        borderRadius: 11,
+                        border: "1px solid #59402d",
+                        background: "#120c08",
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: "#806754",
+                          fontSize: 11,
+                          fontWeight: 800,
+                          marginBottom: 7,
+                        }}
+                      >
+                        Comando de conexión
+                      </div>
+
+                      <div
+                        style={{
+                          color: "#eadfd2",
+                          fontSize: 11,
+                          lineHeight: 1.45,
+                          wordBreak: "break-all",
+                          marginBottom: 10,
+                        }}
+                      >
+                        {comandoTelegram}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(comandoTelegram);
+                            setMensajeTelegram(
+                              "Comando copiado. Pégalo en Telegram Web y envíalo."
+                            );
+                          } catch (err) {
+                            console.error(
+                              "ERROR COPIANDO COMANDO TELEGRAM:",
+                              err
+                            );
+                            setErrorTelegram(
+                              "No fue posible copiar automáticamente. Selecciona el comando y cópialo."
+                            );
+                          }
+                        }}
+                        style={{
+                          border: 0,
+                          borderRadius: 9,
+                          padding: "8px 12px",
+                          background: "#c69a6b",
+                          color: "#1b0e08",
+                          fontWeight: 900,
+                          cursor: "pointer",
+                        }}
+                      >
+                        📋 Copiar comando
+                      </button>
                     </div>
                   )}
 
