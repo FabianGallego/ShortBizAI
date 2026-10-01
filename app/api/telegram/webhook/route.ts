@@ -287,12 +287,14 @@ Si necesitas realizar una nueva reserva, puedes hacerlo nuevamente.
 // CONEXIÓN AUTOMÁTICA DE TELEGRAM
 // =====================================================
 
-function verificarTokenConexion(token: string) {
+function verificarTokenConexion(token: string) 
+
+{
   if (!TELEGRAM_TOKEN) {
     return null;
   }
 
-  const partes = token.split(".");
+  const partes = token.split("_");
 
   if (partes.length !== 3) {
     return null;

@@ -19,7 +19,7 @@ function crearTokenConexion(empresaId: number, expira: number) {
     .digest("hex")
     .slice(0, 32);
 
-  return `${empresaId}.${expira}.${firma}`;
+ return `${empresaId}_${expira}_${firma}`;
 }
 
 export async function POST(request: Request) {
