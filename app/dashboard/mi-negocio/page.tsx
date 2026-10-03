@@ -275,11 +275,12 @@ export default function MiNegocioPage() {
         return;
       }
 
-      const { data: perfilData, error: perfilError } = await supabase
-        .from("perfiles")
-        .select("user_id, nombre, rol, activo")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const { data: perfilData, error: perfilError } =
+        await supabase
+          .from("perfiles")
+          .select("user_id, nombre, rol, activo")
+          .eq("user_id", user.id)
+          .maybeSingle();
 
       if (perfilError) {
         throw perfilError;
@@ -313,12 +314,13 @@ export default function MiNegocioPage() {
 
       setPerfil(perfilData);
 
-      const { data: relacion, error: relacionError } = await supabase
-        .from("usuarios_empresas")
-        .select("empresa_id, rol, activo")
-        .eq("user_id", user.id)
-        .eq("activo", true)
-        .maybeSingle();
+      const { data: relacion, error: relacionError } =
+        await supabase
+          .from("usuarios_empresas")
+          .select("empresa_id, rol, activo")
+          .eq("user_id", user.id)
+          .eq("activo", true)
+          .maybeSingle();
 
       if (relacionError) {
         throw relacionError;
@@ -330,28 +332,29 @@ export default function MiNegocioPage() {
         );
       }
 
-      const { data: empresaData, error: empresaError } = await supabase
-        .from("empresas")
-        .select(`
-          id,
-          nombre,
-          tipo,
-          ciudad,
-          pais,
-          telefono,
-          email,
-          sitio_web,
-          created_at,
-          codigo_publico,
-          imagen_bienvenida,
-          direccion,
-          sistema_reservas,
-          url_reservas,
-          plan,
-          activo
-        `)
-        .eq("id", relacion.empresa_id)
-        .maybeSingle();
+      const { data: empresaData, error: empresaError } =
+        await supabase
+          .from("empresas")
+          .select(`
+            id,
+            nombre,
+            tipo,
+            ciudad,
+            pais,
+            telefono,
+            email,
+            sitio_web,
+            created_at,
+            codigo_publico,
+            imagen_bienvenida,
+            direccion,
+            sistema_reservas,
+            url_reservas,
+            plan,
+            activo
+          `)
+          .eq("id", relacion.empresa_id)
+          .maybeSingle();
 
       if (empresaError) {
         throw empresaError;
@@ -375,15 +378,24 @@ export default function MiNegocioPage() {
         .maybeSingle();
 
       if (telegramError) {
-        console.error("ERROR CARGANDO TELEGRAM:", telegramError);
+        console.error(
+          "ERROR CARGANDO TELEGRAM:",
+          telegramError
+        );
       } else if (telegramData) {
-        setTelegramActivo(telegramData.telegram_activo === true);
+        setTelegramActivo(
+          telegramData.telegram_activo === true
+        );
+
         setTelegramChatId(
           telegramData.telegram_chat_id
             ? String(telegramData.telegram_chat_id)
             : ""
         );
-        setTelegramConectado(telegramData.telegram_conectado === true);
+
+        setTelegramConectado(
+          telegramData.telegram_conectado === true
+        );
       }
 
       setFormulario({
@@ -395,14 +407,21 @@ export default function MiNegocioPage() {
         email: empresaData.email || "",
         sitio_web: empresaData.sitio_web || "",
         direccion: empresaData.direccion || "",
-        imagen_bienvenida: empresaData.imagen_bienvenida || "",
-        sistema_reservas: empresaData.sistema_reservas !== false,
+        imagen_bienvenida:
+          empresaData.imagen_bienvenida || "",
+        sistema_reservas:
+          empresaData.sistema_reservas !== false,
         url_reservas: empresaData.url_reservas || "",
       });
     } catch (err: any) {
-      console.error("ERROR CARGANDO MI NEGOCIO:", err);
+      console.error(
+        "ERROR CARGANDO MI NEGOCIO:",
+        err
+      );
+
       setError(
-        err?.message || "No fue posible cargar la información."
+        err?.message ||
+          "No fue posible cargar la información."
       );
     } finally {
       setLoading(false);
@@ -422,115 +441,154 @@ export default function MiNegocioPage() {
   async function conectarTelegram() {
     if (!empresa || conectandoTelegram) return;
 
+    const ventanaTelegram = window.open(
+      "about:blank",
+      "_blank"
+    );
+
     try {
       setConectandoTelegram(true);
       setErrorTelegram("");
       setMensajeTelegram("");
 
-      const { data: sessionData, error: sessionError } =
-        await supabase.auth.getSession();
+      const {
+        data: sessionData,
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        throw sessionError;
+      }
 
-      const accessToken = sessionData.session?.access_token;
+      const accessToken =
+        sessionData.session?.access_token;
 
       if (!accessToken) {
-        throw new Error("La sesión del propietario no está disponible.");
-      }
+        if (ventanaTelegram) {
+          ventanaTelegram.close();
+        }
 
-      const response = await fetch("/api/telegram/conectar", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      const resultado = await response.json();
-
-      if (!response.ok || !resultado.ok || !resultado.telegramUrl) {
         throw new Error(
-          resultado.error || "No fue posible preparar la conexión con Telegram."
+          "La sesión del propietario no está disponible."
         );
       }
 
-      // Telegram Web puede abrir el chat sin ejecutar correctamente el
-      // parámetro ?start=. Para evitar que el propietario tenga que copiar
-      // el código, preparamos el comando /start en el portapapeles y abrimos
-      // directamente Telegram Web.
-      const urlTelegram = new URL(resultado.telegramUrl);
-      const parametroStart = urlTelegram.searchParams.get("start") || "";
-
-      if (!parametroStart) {
-        throw new Error("Telegram no devolvió el parámetro de conexión.");
-      }
-
-      const comandoStart = `/start ${parametroStart}`;
-      let comandoCopiado = false;
-
-      try {
-        await navigator.clipboard.writeText(comandoStart);
-        comandoCopiado = true;
-        setComandoTelegram("");
-      } catch (clipboardError) {
-        console.warn(
-          "NO FUE POSIBLE COPIAR EL COMANDO DE TELEGRAM:",
-          clipboardError
-        );
-        setComandoTelegram(comandoStart);
-      }
-
-      const botUsername = urlTelegram.pathname.replace("/", "");
-      const telegramWebUrl = `https://web.telegram.org/k/#@${botUsername}`;
-
-      window.open(telegramWebUrl, "_blank", "noopener,noreferrer");
-
-      setMensajeTelegram(
-        comandoCopiado
-          ? "Telegram Web está abierto. El comando de conexión quedó copiado; pégalo en el chat de AAF Business y envíalo."
-          : "Telegram Web está abierto. Copia el comando que aparece abajo, pégalo en el chat de AAF Business y envíalo."
+      const response = await fetch(
+        "/api/telegram/conectar",
+        {
+          method: "POST",
+          headers: {
+            Authorization:
+              `Bearer ${accessToken}`,
+          },
+        }
       );
 
-      // Esperamos unos segundos y consultamos la configuración de esta empresa.
-      // Cuando el webhook recibe /start, el estado pasa automáticamente a CONECTADO.
-      for (let intento = 0; intento < 10; intento++) {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+      const resultado =
+        await response.json();
 
-        const { data: estadoTelegram, error: estadoError } = await supabase
+
+      if (
+  !response.ok ||
+  !resultado.ok ||
+  !resultado.telegramUrl ||
+  !resultado.codigo
+) {
+  
+
+        
+        if (ventanaTelegram) {
+          ventanaTelegram.close();
+        }
+
+        throw new Error(
+          resultado.error ||
+            "No fue posible generar el código de conexión."
+        );
+      }
+
+      if (ventanaTelegram) {
+        ventanaTelegram.location.href =
+          resultado.telegramUrl;
+      } else {
+        window.location.href =
+          resultado.telegramUrl;
+      }
+
+      setMensajeTelegram(
+        `Código de conexión: ${resultado.codigo}. Abre AAF Business en Telegram y envía ese código de 6 dígitos. El código vence en 10 minutos.`
+      );
+
+      for (
+        let intento = 0;
+        intento < 20;
+        intento++
+      ) {
+        await new Promise(
+          (resolve) =>
+            setTimeout(resolve, 1500)
+        );
+
+        const {
+          data: estadoTelegram,
+          error: estadoError,
+        } = await supabase
           .from("empresa_notificaciones")
-          .select("telegram_activo, telegram_chat_id, telegram_conectado")
+          .select(
+            "telegram_activo, telegram_chat_id, telegram_conectado"
+          )
           .eq("empresa_id", empresa.id)
           .maybeSingle();
 
         if (estadoError) {
-          console.warn("ERROR VERIFICANDO CONEXIÓN TELEGRAM:", estadoError);
+          console.warn(
+            "ERROR VERIFICANDO CONEXIÓN TELEGRAM:",
+            estadoError
+          );
           continue;
         }
 
         if (estadoTelegram?.telegram_conectado) {
-          setTelegramActivo(estadoTelegram.telegram_activo === true);
+          setTelegramActivo(
+            estadoTelegram.telegram_activo === true
+          );
+
           setTelegramChatId(
             estadoTelegram.telegram_chat_id
-              ? String(estadoTelegram.telegram_chat_id)
+              ? String(
+                  estadoTelegram.telegram_chat_id
+                )
               : ""
           );
+
           setTelegramConectado(true);
+          setComandoTelegram("");
+
           setMensajeTelegram(
             "Telegram quedó conectado correctamente para este restaurante."
           );
+
           break;
         }
       }
     } catch (err: any) {
-      console.error("ERROR CONECTANDO TELEGRAM:", err);
+      console.error(
+        "ERROR CONECTANDO TELEGRAM:",
+        err
+      );
+
       setErrorTelegram(
-        err?.message || "No fue posible iniciar la conexión con Telegram."
+        err?.message ||
+          "No fue posible iniciar la conexión con Telegram."
       );
     } finally {
       setConectandoTelegram(false);
     }
   }
 
-  async function guardarTelegramActivo(nuevoEstado: boolean) {
+  async function guardarTelegramActivo(
+    nuevoEstado: boolean
+  ) {
     if (!empresa) return;
 
     try {
@@ -547,15 +605,22 @@ export default function MiNegocioPage() {
 
       if (error) throw error;
 
+      setTelegramActivo(nuevoEstado);
+
       setMensajeTelegram(
         nuevoEstado
           ? "Las notificaciones de Telegram están activas."
           : "Las notificaciones de Telegram están desactivadas."
       );
     } catch (err: any) {
-      console.error("ERROR ACTUALIZANDO TELEGRAM:", err);
+      console.error(
+        "ERROR ACTUALIZANDO TELEGRAM:",
+        err
+      );
+
       setErrorTelegram(
-        err?.message || "No fue posible actualizar Telegram."
+        err?.message ||
+          "No fue posible actualizar Telegram."
       );
     } finally {
       setGuardandoTelegram(false);
@@ -573,26 +638,41 @@ export default function MiNegocioPage() {
       const nombre = formulario.nombre.trim();
 
       if (!nombre) {
-        setError("El nombre del negocio es obligatorio.");
+        setError(
+          "El nombre del negocio es obligatorio."
+        );
         return;
       }
 
-      const { data, error: updateError } = await supabase
+      const {
+        data,
+        error: updateError,
+      } = await supabase
         .from("empresas")
         .update({
           nombre,
-          tipo: formulario.tipo.trim() || null,
-          ciudad: formulario.ciudad.trim() || null,
-          pais: formulario.pais.trim() || null,
-          telefono: formulario.telefono.trim() || null,
-          email: formulario.email.trim() || null,
-          sitio_web: formulario.sitio_web.trim() || null,
-          direccion: formulario.direccion.trim() || null,
+          tipo:
+            formulario.tipo.trim() || null,
+          ciudad:
+            formulario.ciudad.trim() || null,
+          pais:
+            formulario.pais.trim() || null,
+          telefono:
+            formulario.telefono.trim() || null,
+          email:
+            formulario.email.trim() || null,
+          sitio_web:
+            formulario.sitio_web.trim() || null,
+          direccion:
+            formulario.direccion.trim() || null,
           imagen_bienvenida:
-            formulario.imagen_bienvenida.trim() || null,
-          sistema_reservas: formulario.sistema_reservas,
+            formulario.imagen_bienvenida.trim() ||
+            null,
+          sistema_reservas:
+            formulario.sistema_reservas,
           url_reservas:
-            formulario.url_reservas.trim() || null,
+            formulario.url_reservas.trim() ||
+            null,
         })
         .eq("id", empresa.id)
         .select()
@@ -604,15 +684,22 @@ export default function MiNegocioPage() {
 
       setEmpresa(data);
 
-      setMensaje("Los datos del negocio fueron guardados correctamente.");
+      setMensaje(
+        "Los datos del negocio fueron guardados correctamente."
+      );
 
       setTimeout(() => {
         setMensaje("");
       }, 4000);
     } catch (err: any) {
-      console.error("ERROR GUARDANDO EMPRESA:", err);
+      console.error(
+        "ERROR GUARDANDO EMPRESA:",
+        err
+      );
+
       setError(
-        err?.message || "No fue posible guardar los cambios."
+        err?.message ||
+          "No fue posible guardar los cambios."
       );
     } finally {
       setGuardando(false);
@@ -647,7 +734,8 @@ export default function MiNegocioPage() {
               border: "3px solid #4a3020",
               borderTopColor: "#c69a6b",
               margin: "0 auto 16px",
-              animation: "spin 1s linear infinite",
+              animation:
+                "spin 1s linear infinite",
             }}
           />
 
@@ -734,7 +822,9 @@ export default function MiNegocioPage() {
           </p>
 
           <button
-            onClick={() => router.replace("/dashboard")}
+            onClick={() =>
+              router.replace("/dashboard")
+            }
             style={{
               height: 46,
               border: 0,
@@ -769,7 +859,6 @@ export default function MiNegocioPage() {
           display: "flex",
         }}
       >
-        {/* SIDEBAR */}
         <aside
           style={{
             width: 250,
@@ -849,7 +938,9 @@ export default function MiNegocioPage() {
           </div>
 
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() =>
+              router.push("/dashboard")
+            }
             style={menuStyle(false)}
           >
             <Icon name="home" size={18} />
@@ -857,39 +948,57 @@ export default function MiNegocioPage() {
           </button>
 
           <button
-            onClick={() => router.push("/dashboard/videos")}
+            onClick={() =>
+              router.push("/dashboard/videos")
+            }
             style={menuStyle(false)}
           >
             <Icon name="video" size={18} />
             <span>Videos</span>
-            <span style={prontoStyle()}>Pronto</span>
+            <span style={prontoStyle()}>
+              Pronto
+            </span>
           </button>
 
           <button
-            onClick={() => router.push("/dashboard/reservas")}
+            onClick={() =>
+              router.push("/dashboard/reservas")
+            }
             style={menuStyle(false)}
           >
             <Icon name="calendar" size={18} />
             <span>Reservas</span>
-            <span style={prontoStyle()}>Pronto</span>
+            <span style={prontoStyle()}>
+              Pronto
+            </span>
           </button>
 
           <button
-            onClick={() => router.push("/dashboard/fidelizacion")}
+            onClick={() =>
+              router.push(
+                "/dashboard/fidelizacion"
+              )
+            }
             style={menuStyle(false)}
           >
             <Icon name="heart" size={18} />
             <span>Fidelización</span>
-            <span style={prontoStyle()}>Pronto</span>
+            <span style={prontoStyle()}>
+              Pronto
+            </span>
           </button>
 
           <button
-            onClick={() => router.push("/dashboard/reportes")}
+            onClick={() =>
+              router.push("/dashboard/reportes")
+            }
             style={menuStyle(false)}
           >
             <Icon name="chart" size={18} />
             <span>Reportes</span>
-            <span style={prontoStyle()}>Pronto</span>
+            <span style={prontoStyle()}>
+              Pronto
+            </span>
           </button>
 
           <div
@@ -909,7 +1018,11 @@ export default function MiNegocioPage() {
 
           <button
             style={menuStyle(true)}
-            onClick={() => router.push("/dashboard/mi-negocio")}
+            onClick={() =>
+              router.push(
+                "/dashboard/mi-negocio"
+              )
+            }
           >
             <Icon name="settings" size={18} />
             <span>Mi negocio</span>
@@ -957,7 +1070,8 @@ export default function MiNegocioPage() {
                   whiteSpace: "nowrap",
                 }}
               >
-                {perfil?.nombre || "Propietario"}
+                {perfil?.nombre ||
+                  "Propietario"}
               </div>
 
               <div
@@ -994,13 +1108,13 @@ export default function MiNegocioPage() {
           </div>
         </aside>
 
-        {/* CONTENIDO */}
         <section
           style={{
             flex: 1,
             minWidth: 0,
-            padding: "34px 42px 50px",
+            padding: 32,
             boxSizing: "border-box",
+            overflow: "auto",
           }}
         >
           <div
@@ -1009,806 +1123,1017 @@ export default function MiNegocioPage() {
               margin: "0 auto",
             }}
           >
-            {/* HEADER */}
             <div
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                gap: 20,
-                marginBottom: 30,
+                marginBottom: 28,
               }}
             >
-              <div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 9,
-                    color: "#b58a5b",
-                    fontSize: 11,
-                    fontWeight: 900,
-                    letterSpacing: ".12em",
-                    textTransform: "uppercase",
-                    marginBottom: 9,
-                  }}
-                >
-                  <Icon name="settings" size={14} />
-                  Configuración del negocio
-                </div>
-
-                <h1
-                  style={{
-                    margin: 0,
-                    color: "#f8f1ea",
-                    fontSize: 34,
-                    lineHeight: 1.1,
-                    letterSpacing: "-.04em",
-                  }}
-                >
-                  Mi negocio
-                </h1>
-
-                <p
-                  style={{
-                    margin: "10px 0 0",
-                    color: "#a88d77",
-                    fontSize: 15,
-                    lineHeight: 1.6,
-                    maxWidth: 700,
-                  }}
-                >
-                  Administra la información que ShortBizAI utiliza para
-                  representar y operar tu negocio.
-                </p>
-              </div>
-
-              <button
-                onClick={guardarCambios}
-                disabled={guardando}
-                style={{
-                  height: 46,
-                  border: 0,
-                  borderRadius: 12,
-                  background: guardando
-                    ? "#725438"
-                    : "linear-gradient(145deg, #c69a6b, #9d7047)",
-                  color: "#1b0e08",
-                  padding: "0 20px",
-                  fontWeight: 900,
-                  cursor: guardando ? "default" : "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 9,
-                  boxShadow: "0 10px 25px rgba(0,0,0,.18)",
-                }}
-              >
-                <Icon name="save" size={17} />
-                {guardando ? "Guardando..." : "Guardar cambios"}
-              </button>
-            </div>
-
-            {/* MENSAJES */}
-            {mensaje && (
               <div
                 style={{
-                  marginBottom: 20,
-                  borderRadius: 13,
-                  border: "1px solid #53633b",
-                  background: "#25301c",
-                  color: "#cbd9b0",
-                  padding: "13px 16px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 9,
-                  fontSize: 14,
-                  fontWeight: 700,
+                  color: "#8f7561",
+                  fontSize: 12,
+                  fontWeight: 800,
+                  letterSpacing: ".12em",
+                  textTransform: "uppercase",
+                  marginBottom: 8,
                 }}
               >
-                <Icon name="check" size={18} />
-                {mensaje}
+                Configuración
               </div>
-            )}
+
+              <h1
+                style={{
+                  margin: 0,
+                  color: "#f7efe7",
+                  fontSize: 32,
+                  lineHeight: 1.1,
+                  letterSpacing: "-.03em",
+                }}
+              >
+                Mi negocio
+              </h1>
+
+              <p
+                style={{
+                  margin:
+                    "10px 0 0",
+                  color: "#9f8976",
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                }}
+              >
+                Administra la información y los canales de comunicación de tu negocio.
+              </p>
+            </div>
 
             {error && (
               <div
                 style={{
                   marginBottom: 20,
-                  borderRadius: 13,
-                  border: "1px solid #633b32",
-                  background: "#321914",
-                  color: "#e7b8a9",
                   padding: "13px 16px",
+                  borderRadius: 12,
+                  border:
+                    "1px solid #713c31",
+                  background: "#301710",
+                  color: "#efb4a6",
                   fontSize: 14,
-                  fontWeight: 700,
                 }}
               >
                 {error}
               </div>
             )}
 
-            {/* IDENTIDAD */}
-            <section style={cardStyle()}>
-              <div style={sectionHeaderStyle()}>
-                <div>
-                  <h2 style={sectionTitleStyle()}>
-                    Información del negocio
-                  </h2>
-                  <p style={sectionDescriptionStyle()}>
-                    Estos datos identifican a tu negocio dentro de
-                    ShortBizAI.
-                  </p>
-                </div>
-
-                <div style={iconBoxStyle()}>
-                  <Icon name="building" size={21} />
-                </div>
-              </div>
-
+            {mensaje && (
               <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns:
-                    "repeat(auto-fit, minmax(240px, 1fr))",
-                  gap: 20,
+                  marginBottom: 20,
+                  padding: "13px 16px",
+                  borderRadius: 12,
+                  border:
+                    "1px solid #4c6042",
+                  background: "#1c2818",
+                  color: "#b9d6ae",
+                  fontSize: 14,
                 }}
               >
-                <Campo
-                  label="Nombre del negocio"
-                  value={formulario.nombre}
-                  onChange={(v) => actualizarCampo("nombre", v)}
-                  placeholder="Ej. Restaurante Sebas"
-                />
+                {mensaje}
+              </div>
+            )}
 
-                <Campo
-                  label="Tipo de negocio"
-                  value={formulario.tipo}
-                  onChange={(v) => actualizarCampo("tipo", v)}
-                  placeholder="Ej. Restaurante"
-                />
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "minmax(0, 1.35fr) minmax(320px, .65fr)",
+                gap: 22,
+                alignItems: "start",
+              }}
+            >
+              <section style={cardStyle()}>
+                <div style={sectionHeaderStyle()}>
+                  <div>
+                    <div
+                      style={sectionTitleStyle()}
+                    >
+                      Información del negocio
+                    </div>
 
-                <Campo
-                  label="Teléfono"
-                  value={formulario.telefono}
-                  onChange={(v) => actualizarCampo("telefono", v)}
-                  placeholder="Ej. +1 929 000 0000"
-                />
-
-                <Campo
-                  label="Email"
-                  value={formulario.email}
-                  onChange={(v) => actualizarCampo("email", v)}
-                  placeholder="negocio@email.com"
-                  type="email"
-                />
-
-                <Campo
-                  label="Ciudad"
-                  value={formulario.ciudad}
-                  onChange={(v) => actualizarCampo("ciudad", v)}
-                  placeholder="Ej. New York"
-                />
-
-                <Campo
-                  label="País"
-                  value={formulario.pais}
-                  onChange={(v) => actualizarCampo("pais", v)}
-                  placeholder="Ej. Estados Unidos"
-                />
-
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <Campo
-                    label="Dirección"
-                    value={formulario.direccion}
-                    onChange={(v) =>
-                      actualizarCampo("direccion", v)
-                    }
-                    placeholder="Dirección completa del negocio"
-                  />
+                    <div
+                      style={
+                        sectionDescriptionStyle()
+                      }
+                    >
+                      Estos datos se utilizan en tu sistema y en la información pública del negocio.
+                    </div>
+                  </div>
                 </div>
 
-                <div style={{ gridColumn: "1 / -1" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(2, minmax(0, 1fr))",
+                    gap: 18,
+                  }}
+                >
+                  <Campo
+                    label="Nombre del negocio"
+                    value={formulario.nombre}
+                    onChange={(v) =>
+                      actualizarCampo(
+                        "nombre",
+                        v
+                      )
+                    }
+                    placeholder="Nombre del negocio"
+                  />
+
+                  <Campo
+                    label="Tipo de negocio"
+                    value={formulario.tipo}
+                    onChange={(v) =>
+                      actualizarCampo(
+                        "tipo",
+                        v
+                      )
+                    }
+                    placeholder="Restaurante, barbería, tienda..."
+                  />
+
+                  <Campo
+                    label="Ciudad"
+                    value={formulario.ciudad}
+                    onChange={(v) =>
+                      actualizarCampo(
+                        "ciudad",
+                        v
+                      )
+                    }
+                    placeholder="Queens"
+                  />
+
+                  <Campo
+                    label="País"
+                    value={formulario.pais}
+                    onChange={(v) =>
+                      actualizarCampo(
+                        "pais",
+                        v
+                      )
+                    }
+                    placeholder="Estados Unidos"
+                  />
+
+                  <Campo
+                    label="Teléfono"
+                    value={formulario.telefono}
+                    onChange={(v) =>
+                      actualizarCampo(
+                        "telefono",
+                        v
+                      )
+                    }
+                    placeholder="(718) 000-0000"
+                  />
+
+                  <Campo
+                    label="Email"
+                    value={formulario.email}
+                    onChange={(v) =>
+                      actualizarCampo(
+                        "email",
+                        v
+                      )
+                    }
+                    type="email"
+                    placeholder="negocio@email.com"
+                  />
+
                   <Campo
                     label="Sitio web"
                     value={formulario.sitio_web}
                     onChange={(v) =>
-                      actualizarCampo("sitio_web", v)
+                      actualizarCampo(
+                        "sitio_web",
+                        v
+                      )
                     }
                     placeholder="https://..."
                   />
-                </div>
-              </div>
-            </section>
 
-            {/* IMAGEN */}
-            <section style={cardStyle()}>
-              <div style={sectionHeaderStyle()}>
-                <div>
-                  <h2 style={sectionTitleStyle()}>
-                    Imagen del negocio
-                  </h2>
-                  <p style={sectionDescriptionStyle()}>
-                    Puedes guardar aquí la URL de la imagen que
-                    representa al negocio.
-                  </p>
-                </div>
-              </div>
-
-              <Campo
-                label="URL de imagen / logo"
-                value={formulario.imagen_bienvenida}
-                onChange={(v) =>
-                  actualizarCampo("imagen_bienvenida", v)
-                }
-                placeholder="https://..."
-              />
-
-              {formulario.imagen_bienvenida && (
-                <div
-                  style={{
-                    marginTop: 18,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 18,
-                    padding: 14,
-                    borderRadius: 14,
-                    background: "#1a0f09",
-                    border: "1px solid #3b2618",
-                  }}
-                >
-                  <img
-                    src={formulario.imagen_bienvenida}
-                    alt="Imagen del negocio"
-                    style={{
-                      width: 74,
-                      height: 74,
-                      borderRadius: 14,
-                      objectFit: "cover",
-                      border: "1px solid #4a3020",
-                    }}
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
+                  <Campo
+                    label="Dirección"
+                    value={formulario.direccion}
+                    onChange={(v) =>
+                      actualizarCampo(
+                        "direccion",
+                        v
+                      )
+                    }
+                    placeholder="Dirección del negocio"
                   />
 
-                  <div>
-                    <div
-                      style={{
-                        color: "#eadfd2",
-                        fontWeight: 800,
-                        fontSize: 14,
-                      }}
-                    >
-                      Imagen configurada
-                    </div>
-
-                    <div
-                      style={{
-                        color: "#8f7561",
-                        fontSize: 12,
-                        marginTop: 4,
-                      }}
-                    >
-                      Se utilizará como imagen de referencia del
-                      negocio.
-                    </div>
-                  </div>
-                </div>
-              )}
-            </section>
-
-            {/* RESERVAS */}
-            <section style={cardStyle()}>
-              <div style={sectionHeaderStyle()}>
-                <div>
-                  <h2 style={sectionTitleStyle()}>
-                    Sistema de reservas
-                  </h2>
-                  <p style={sectionDescriptionStyle()}>
-                    Controla si este negocio utiliza el sistema de
-                    reservas de ShortBizAI.
-                  </p>
-                </div>
-
-                <div style={iconBoxStyle()}>
-                  <Icon name="calendar" size={21} />
-                </div>
-              </div>
-
-              <div
-                style={{
-                  border: "1px solid #3f291b",
-                  background: "#1a0f09",
-                  borderRadius: 15,
-                  padding: 18,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 20,
-                  flexWrap: "wrap",
-                }}
-              >
-                <div>
                   <div
                     style={{
-                      color: "#eee3d8",
-                      fontSize: 15,
-                      fontWeight: 800,
+                      gridColumn:
+                        "1 / -1",
                     }}
                   >
-                    Reservas ShortBizAI
+                    <Campo
+                      label="Imagen de bienvenida"
+                      value={
+                        formulario.imagen_bienvenida
+                      }
+                      onChange={(v) =>
+                        actualizarCampo(
+                          "imagen_bienvenida",
+                          v
+                        )
+                      }
+                      placeholder="URL de la imagen"
+                    />
                   </div>
-
-                  <div
-                    style={{
-                      color: "#927865",
-                      fontSize: 13,
-                      marginTop: 5,
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    Permite que tus clientes soliciten reservas
-                    utilizando ShortBizAI.
-                  </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    actualizarCampo(
-                      "sistema_reservas",
-                      !formulario.sistema_reservas
-                    )
-                  }
-                  style={{
-                    border: "1px solid #59402d",
-                    borderRadius: 999,
-                    padding: "7px 12px 7px 8px",
-                    background: formulario.sistema_reservas
-                      ? "#28311e"
-                      : "#281812",
-                    color: formulario.sistema_reservas
-                      ? "#c8d6a7"
-                      : "#ad8170",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    cursor: "pointer",
-                    fontWeight: 800,
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 25,
-                      height: 25,
-                      borderRadius: "50%",
-                      background: formulario.sistema_reservas
-                        ? "#91a56d"
-                        : "#694439",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#171008",
-                    }}
-                  >
-                    {formulario.sistema_reservas ? (
-                      <Icon name="check" size={14} />
-                    ) : null}
-                  </span>
-
-                  {formulario.sistema_reservas
-                    ? "Activado"
-                    : "Desactivado"}
-                </button>
-              </div>
-
-              <div style={{ marginTop: 20 }}>
-                <Campo
-                  label="URL de reservas"
-                  value={formulario.url_reservas}
-                  onChange={(v) =>
-                    actualizarCampo("url_reservas", v)
-                  }
-                  placeholder="URL pública de reservas"
-                />
-              </div>
-            </section>
-
-            {/* DATOS DEL SISTEMA */}
-            <section style={cardStyle()}>
-              <div style={sectionHeaderStyle()}>
-                <div>
-                  <h2 style={sectionTitleStyle()}>
-                    Información de ShortBizAI
-                  </h2>
-                  <p style={sectionDescriptionStyle()}>
-                    Datos generados por el sistema. Estos valores no
-                    se modifican desde aquí.
-                  </p>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns:
-                    "repeat(auto-fit, minmax(230px, 1fr))",
-                  gap: 16,
-                }}
-              >
-                <InfoSistema
-                  label="ID de empresa"
-                  value={String(empresa.id)}
-                />
-
-                <InfoSistema
-                  label="Código público"
-                  value={empresa.codigo_publico || "Pendiente"}
-                />
-
-                <InfoSistema
-                  label="Plan"
-                  value={empresa.plan || "free"}
-                />
-
-                <InfoSistema
-                  label="Estado"
-                  value={empresa.activo ? "Activa" : "Inactiva"}
-                  estado={empresa.activo}
-                />
-              </div>
-            </section>
-
-            {/* NOTIFICACIONES */}
-            <section style={cardStyle()}>
-              <div style={sectionHeaderStyle()}>
-                <div>
-                  <h2 style={sectionTitleStyle()}>
-                    Notificaciones
-                  </h2>
-
-                  <p style={sectionDescriptionStyle()}>
-                    Aquí conectaremos los canales de comunicación
-                    del negocio.
-                  </p>
-                </div>
-
-                <div style={iconBoxStyle()}>
-                  <Icon name="heart" size={21} />
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns:
-                    "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: 14,
-                }}
-              >
                 <div
                   style={{
-                    border: "1px solid #392518",
-                    background: "#1a0f09",
-                    borderRadius: 14,
-                    padding: 18,
+                    marginTop: 24,
+                    paddingTop: 24,
+                    borderTop:
+                      "1px solid #392316",
                   }}
                 >
                   <div
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 10,
+                      color: "#eadfd2",
+                      fontSize: 14,
+                      fontWeight: 800,
+                      marginBottom: 12,
                     }}
                   >
-                    <div
-                      style={{
-                        color: "#eadfd2",
-                        fontSize: 14,
-                        fontWeight: 850,
-                      }}
-                    >
-                      Telegram
-                    </div>
-
-                    <span
-                      style={{
-                        color: telegramConectado ? "#9eb17b" : "#795d49",
-                        fontSize: 11,
-                        fontWeight: 800,
-                      }}
-                    >
-                      {telegramConectado ? "CONECTADO" : "NO CONFIGURADO"}
-                    </span>
+                    Reservas
                   </div>
 
                   <div
                     style={{
-                      color: "#806754",
-                      fontSize: 12,
-                      lineHeight: 1.45,
-                      marginTop: 7,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent:
+                        "space-between",
+                      gap: 18,
+                      padding: 15,
+                      borderRadius: 14,
+                      background:
+                        "#1b100a",
+                      border:
+                        "1px solid #382216",
                     }}
                   >
-                    Recibe avisos de nuevas reservas de este restaurante.
-                  </div>
-
-                  {!telegramConectado ? (
-                    <button
-                      type="button"
-                      onClick={conectarTelegram}
-                      disabled={conectandoTelegram}
-                      style={{
-                        width: "100%",
-                        marginTop: 16,
-                        height: 44,
-                        border: 0,
-                        borderRadius: 11,
-                        background: conectandoTelegram
-                          ? "#725438"
-                          : "linear-gradient(145deg, #c69a6b, #9d7047)",
-                        color: "#1b0e08",
-                        fontWeight: 900,
-                        cursor: conectandoTelegram ? "default" : "pointer",
-                      }}
-                    >
-                      {conectandoTelegram
-                        ? "Preparando conexión..."
-                        : "🔗 Conectar Telegram"}
-                    </button>
-                  ) : (
-                    <>
+                    <div>
                       <div
                         style={{
-                          marginTop: 16,
-                          padding: 12,
-                          borderRadius: 11,
-                          border: "1px solid #394528",
-                          background: "#182016",
-                          color: "#c8d6a7",
+                          color:
+                            "#e9ddd1",
+                          fontSize: 14,
+                          fontWeight: 700,
+                        }}
+                      >
+                        Sistema de reservas
+                      </div>
+
+                      <div
+                        style={{
+                          color:
+                            "#927965",
+                          fontSize: 12,
+                          marginTop: 4,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        Activa esta opción si el negocio recibe reservas.
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        actualizarCampo(
+                          "sistema_reservas",
+                          !formulario.sistema_reservas
+                        )
+                      }
+                      style={{
+                        width: 52,
+                        height: 30,
+                        border: 0,
+                        borderRadius: 30,
+                        background:
+                          formulario.sistema_reservas
+                            ? "#b58a5b"
+                            : "#493226",
+                        cursor:
+                          "pointer",
+                        position:
+                          "relative",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <span
+                        style={{
+                          position:
+                            "absolute",
+                          top: 4,
+                          left:
+                            formulario.sistema_reservas
+                              ? 26
+                              : 4,
+                          width: 22,
+                          height: 22,
+                          borderRadius:
+                            "50%",
+                          background:
+                            "#fff7ef",
+                          transition:
+                            "left .2s ease",
+                        }}
+                      />
+                    </button>
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 16,
+                    }}
+                  >
+                    <Campo
+                      label="URL de reservas"
+                      value={
+                        formulario.url_reservas
+                      }
+                      onChange={(v) =>
+                        actualizarCampo(
+                          "url_reservas",
+                          v
+                        )
+                      }
+                      placeholder="https://..."
+                      disabled={
+                        !formulario.sistema_reservas
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent:
+                      "flex-end",
+                    marginTop: 24,
+                  }}
+                >
+                  <button
+                    onClick={guardarCambios}
+                    disabled={guardando}
+                    style={{
+                      height: 46,
+                      border: 0,
+                      borderRadius: 12,
+                      padding:
+                        "0 20px",
+                      background:
+                        guardando
+                          ? "#6d543d"
+                          : "#b58a5b",
+                      color: "#1a0d07",
+                      fontWeight: 900,
+                      cursor:
+                        guardando
+                          ? "not-allowed"
+                          : "pointer",
+                      display: "flex",
+                      alignItems:
+                        "center",
+                      gap: 9,
+                    }}
+                  >
+                    <Icon
+                      name="save"
+                      size={17}
+                    />
+
+                    {guardando
+                      ? "Guardando..."
+                      : "Guardar cambios"}
+                  </button>
+                </div>
+              </section>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection:
+                    "column",
+                  gap: 22,
+                }}
+              >
+                <section style={cardStyle()}>
+                  <div
+                    style={
+                      sectionHeaderStyle()
+                    }
+                  >
+                    <div>
+                      <div
+                        style={
+                          sectionTitleStyle()
+                        }
+                      >
+                        Telegram
+                      </div>
+
+                      <div
+                        style={
+                          sectionDescriptionStyle()
+                        }
+                      >
+                        Conecta Telegram para recibir las notificaciones de reservas.
+                      </div>
+                    </div>
+
+                    <div
+                      style={iconBoxStyle(
+                        "#29351f",
+                        "#b8d6aa"
+                      )}
+                    >
+                      TG
+                    </div>
+                  </div>
+
+                  {telegramConectado ? (
+                    <div
+                      style={{
+                        padding: 16,
+                        borderRadius: 14,
+                        background:
+                          "#192318",
+                        border:
+                          "1px solid #405437",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display:
+                            "flex",
+                          alignItems:
+                            "center",
+                          gap: 10,
+                          color:
+                            "#c9dfbf",
+                          fontWeight: 800,
+                          fontSize: 14,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius:
+                              "50%",
+                            background:
+                              "#30452b",
+                            display:
+                              "flex",
+                            alignItems:
+                              "center",
+                            justifyContent:
+                              "center",
+                          }}
+                        >
+                          <Icon
+                            name="check"
+                            size={16}
+                          />
+                        </div>
+
+                        Telegram conectado
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 10,
+                          color:
+                            "#9caf94",
                           fontSize: 12,
                           lineHeight: 1.5,
                         }}
                       >
-                        ✅ Telegram conectado automáticamente.
-                        <br />
-                        El Chat ID fue asignado por ShortBizAI.
+                        Las reservas de este restaurante pueden enviar notificaciones al chat conectado.
+                      </div>
+
+                      {telegramChatId && (
+                        <div
+                          style={{
+                            marginTop: 12,
+                            color:
+                              "#809077",
+                            fontSize: 11,
+                          }}
+                        >
+                          Chat ID:{" "}
+                          {telegramChatId}
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          marginTop: 16,
+                          display:
+                            "flex",
+                          alignItems:
+                            "center",
+                          justifyContent:
+                            "space-between",
+                          gap: 12,
+                          paddingTop: 14,
+                          borderTop:
+                            "1px solid #304128",
+                        }}
+                      >
+                        <div>
+                          <div
+                            style={{
+                              color:
+                                "#d8e6d2",
+                              fontSize: 13,
+                              fontWeight: 700,
+                            }}
+                          >
+                            Notificaciones activas
+                          </div>
+
+                          <div
+                            style={{
+                              color:
+                                "#82917b",
+                              fontSize: 11,
+                              marginTop: 3,
+                            }}
+                          >
+                            Controla si Telegram recibe avisos.
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            guardarTelegramActivo(
+                              !telegramActivo
+                            )
+                          }
+                          disabled={
+                            guardandoTelegram
+                          }
+                          style={{
+                            width: 52,
+                            height: 30,
+                            border: 0,
+                            borderRadius:
+                              30,
+                            background:
+                              telegramActivo
+                                ? "#b58a5b"
+                                : "#493226",
+                            cursor:
+                              guardandoTelegram
+                                ? "not-allowed"
+                                : "pointer",
+                            position:
+                              "relative",
+                            flexShrink: 0,
+                          }}
+                        >
+                          <span
+                            style={{
+                              position:
+                                "absolute",
+                              top: 4,
+                              left:
+                                telegramActivo
+                                  ? 26
+                                  : 4,
+                              width: 22,
+                              height: 22,
+                              borderRadius:
+                                "50%",
+                              background:
+                                "#fff7ef",
+                              transition:
+                                "left .2s ease",
+                            }}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div
+                        style={{
+                          padding: 16,
+                          borderRadius: 14,
+                          background:
+                            "#21130c",
+                          border:
+                            "1px solid #382216",
+                          color:
+                            "#a68c77",
+                          fontSize: 13,
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        Telegram todavía no está conectado. Presiona el botón para generar un código de conexión.
                       </div>
 
                       <button
                         type="button"
-                        onClick={() => {
-                          const nuevoEstado = !telegramActivo;
-                          setTelegramActivo(nuevoEstado);
-                          void guardarTelegramActivo(nuevoEstado);
+                        onClick={
+                          conectarTelegram
+                        }
+                        disabled={
+                          conectandoTelegram
+                        }
+                        style={{
+                          width:
+                            "100%",
+                          height: 48,
+                          marginTop: 14,
+                          border: 0,
+                          borderRadius: 12,
+                          background:
+                            conectandoTelegram
+                              ? "#6d543d"
+                              : "#b58a5b",
+                          color:
+                            "#1a0d07",
+                          fontWeight: 900,
+                          cursor:
+                            conectandoTelegram
+                              ? "not-allowed"
+                              : "pointer",
+                          display:
+                            "flex",
+                          alignItems:
+                            "center",
+                          justifyContent:
+                            "center",
+                          gap: 9,
                         }}
-                        disabled={guardandoTelegram}
+                      >
+                        <Icon
+                          name="arrow"
+                          size={17}
+                        />
+
+                        {conectandoTelegram
+                          ? "Generando código..."
+                          : "Conectar Telegram"}
+                      </button>
+
+                      {mensajeTelegram && (
+                        <div
+                          style={{
+                            marginTop: 14,
+                            padding: 14,
+                            borderRadius: 12,
+                            background:
+                              "#202818",
+                            border:
+                              "1px solid #405437",
+                            color:
+                              "#bfd4b6",
+                            fontSize: 13,
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          {mensajeTelegram}
+                        </div>
+                      )}
+
+                      {errorTelegram && (
+                        <div
+                          style={{
+                            marginTop: 14,
+                            padding: 14,
+                            borderRadius: 12,
+                            background:
+                              "#301710",
+                            border:
+                              "1px solid #713c31",
+                            color:
+                              "#efb4a6",
+                            fontSize: 13,
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          {errorTelegram}
+                        </div>
+                      )}
+
+                      {comandoTelegram && (
+                        <div
+                          style={{
+                            marginTop: 14,
+                          }}
+                        >
+                          <div
+                            style={{
+                              color:
+                                "#cdb9a5",
+                              fontSize: 11,
+                              fontWeight: 800,
+                              letterSpacing:
+                                ".08em",
+                              textTransform:
+                                "uppercase",
+                              marginBottom:
+                                7,
+                            }}
+                          >
+                            Código de conexión
+                          </div>
+
+                          <div
+                            style={{
+                              padding:
+                                "14px 16px",
+                              borderRadius:
+                                12,
+                              background:
+                                "#160c07",
+                              border:
+                                "1px solid #4a3020",
+                              color:
+                                "#f3dfc6",
+                              fontSize: 25,
+                              fontWeight: 900,
+                              letterSpacing:
+                                ".18em",
+                              textAlign:
+                                "center",
+                            }}
+                          >
+                            {comandoTelegram}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {telegramConectado &&
+                    mensajeTelegram && (
+                      <div
                         style={{
                           marginTop: 14,
-                          border: "1px solid #59402d",
-                          borderRadius: 999,
-                          padding: "7px 12px",
-                          background: telegramActivo ? "#28311e" : "#281812",
-                          color: telegramActivo ? "#c8d6a7" : "#ad8170",
-                          cursor: guardandoTelegram ? "default" : "pointer",
-                          fontWeight: 800,
+                          padding: 14,
+                          borderRadius: 12,
+                          background:
+                            "#202818",
+                          border:
+                            "1px solid #405437",
+                          color:
+                            "#bfd4b6",
+                          fontSize: 13,
+                          lineHeight: 1.6,
                         }}
                       >
-                        {telegramActivo
-                          ? "🟢 Telegram activo"
-                          : "⚪ Telegram desactivado"}
-                      </button>
-                    </>
-                  )}
+                        {mensajeTelegram}
+                      </div>
+                    )}
 
-                  {mensajeTelegram && (
-                    <div
-                      style={{
-                        marginTop: 12,
-                        color: "#9eb17b",
-                        fontSize: 12,
-                        fontWeight: 700,
-                      }}
-                    >
-                      ✅ {mensajeTelegram}
-                    </div>
-                  )}
-
-                  {comandoTelegram && (
-                    <div
-                      style={{
-                        marginTop: 12,
-                        padding: 12,
-                        borderRadius: 11,
-                        border: "1px solid #59402d",
-                        background: "#120c08",
-                      }}
-                    >
+                  {telegramConectado &&
+                    errorTelegram && (
                       <div
                         style={{
-                          color: "#806754",
-                          fontSize: 11,
-                          fontWeight: 800,
-                          marginBottom: 7,
+                          marginTop: 14,
+                          padding: 14,
+                          borderRadius: 12,
+                          background:
+                            "#301710",
+                          border:
+                            "1px solid #713c31",
+                          color:
+                            "#efb4a6",
+                          fontSize: 13,
+                          lineHeight: 1.6,
                         }}
                       >
-                        Comando de conexión
+                        {errorTelegram}
+                      </div>
+                    )}
+                </section>
+
+                <section style={cardStyle()}>
+                  <div
+                    style={
+                      sectionHeaderStyle()
+                    }
+                  >
+                    <div>
+                      <div
+                        style={
+                          sectionTitleStyle()
+                        }
+                      >
+                        Identificación
                       </div>
 
                       <div
-                        style={{
-                          color: "#eadfd2",
-                          fontSize: 11,
-                          lineHeight: 1.45,
-                          wordBreak: "break-all",
-                          marginBottom: 10,
-                        }}
+                        style={
+                          sectionDescriptionStyle()
+                        }
                       >
-                        {comandoTelegram}
+                        Información interna de esta empresa.
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            await navigator.clipboard.writeText(comandoTelegram);
-                            setMensajeTelegram(
-                              "Comando copiado. Pégalo en Telegram Web y envíalo."
-                            );
-                          } catch (err) {
-                            console.error(
-                              "ERROR COPIANDO COMANDO TELEGRAM:",
-                              err
-                            );
-                            setErrorTelegram(
-                              "No fue posible copiar automáticamente. Selecciona el comando y cópialo."
-                            );
-                          }
-                        }}
-                        style={{
-                          border: 0,
-                          borderRadius: 9,
-                          padding: "8px 12px",
-                          background: "#c69a6b",
-                          color: "#1b0e08",
-                          fontWeight: 900,
-                          cursor: "pointer",
-                        }}
-                      >
-                        📋 Copiar comando
-                      </button>
                     </div>
-                  )}
+                  </div>
 
-                  {errorTelegram && (
-                    <div
-                      style={{
-                        marginTop: 12,
-                        color: "#e7b8a9",
-                        fontSize: 12,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {errorTelegram}
-                    </div>
-                  )}
-                </div>
+                  <InfoSistema
+                    label="ID de empresa"
+                    value={String(
+                      empresa.id
+                    )}
+                  />
 
-                <Canal
-                  nombre="Email"
-                  descripcion="Confirmaciones al cliente"
-                  estado="Activo"
-                  activo
-                />
+                  <InfoSistema
+                    label="Código público"
+                    value={
+                      empresa.codigo_publico ||
+                      "No disponible"
+                    }
+                  />
 
-                <Canal
-                  nombre="Push"
-                  descripcion="Notificaciones del navegador"
-                  estado="Disponible"
-                  activo
-                />
+                  <InfoSistema
+                    label="Plan"
+                    value={
+                      empresa.plan ||
+                      "No definido"
+                    }
+                  />
 
-                <Canal
-                  nombre="WhatsApp"
-                  descripcion="Mensajes al cliente"
-                  estado="Próximamente"
-                />
+                  <InfoSistema
+                    label="Estado"
+                    value={
+                      empresa.activo === false
+                        ? "Inactiva"
+                        : "Activa"
+                    }
+                  />
+                </section>
               </div>
-            </section>
+            </div>
 
-            {/* FUTURO */}
             <section
               style={{
                 ...cardStyle(),
-                background:
-                  "linear-gradient(145deg, #21130c, #29180e)",
+                marginTop: 22,
               }}
             >
               <div
+                style={sectionHeaderStyle()}
+              >
+                <div>
+                  <div
+                    style={
+                      sectionTitleStyle()
+                    }
+                  >
+                    Canales de comunicación
+                  </div>
+
+                  <div
+                    style={
+                      sectionDescriptionStyle()
+                    }
+                  >
+                    Aquí podrás conectar los canales que ShortBizAI utilizará para atender a tus clientes.
+                  </div>
+                </div>
+              </div>
+
+              <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(3, minmax(0, 1fr))",
                   gap: 14,
                 }}
               >
-                <div
-                  style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: 13,
-                    background: "#3b2618",
-                    color: "#c69a6b",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Icon name="arrow" size={21} />
-                </div>
+                <Canal
+                  titulo="Telegram"
+                  descripcion={
+                    telegramConectado
+                      ? "Conectado"
+                      : "Pendiente de conexión"
+                  }
+                  conectado={
+                    telegramConectado
+                  }
+                />
 
-                <div>
-                  <h3
-                    style={{
-                      margin: 0,
-                      color: "#f0e5db",
-                      fontSize: 16,
-                    }}
-                  >
-                    Próximamente
-                  </h3>
+                <Canal
+                  titulo="WhatsApp"
+                  descripcion="Próximamente"
+                  conectado={false}
+                />
 
-                  <p
-                    style={{
-                      margin: "5px 0 0",
-                      color: "#a88d77",
-                      fontSize: 13,
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    Desde este perfil iremos incorporando horarios,
-                    redes sociales, preferencias de contenido,
-                    información para videos y configuración avanzada
-                    del negocio.
-                  </p>
-                </div>
+                <Canal
+                  titulo="Email"
+                  descripcion="Próximamente"
+                  conectado={false}
+                />
               </div>
             </section>
 
             <div
               style={{
-                textAlign: "center",
-                color: "#644b38",
+                marginTop: 24,
+                paddingBottom: 30,
+                color: "#6f5948",
                 fontSize: 11,
-                padding: "18px 0 0",
+                textAlign: "center",
               }}
             >
-              ShortBizAI · Perfil del negocio · ID {empresa.id}
+              ShortBizAI · Business OS
             </div>
           </div>
         </section>
       </div>
+
+      <style jsx global>{`
+        * {
+          box-sizing: border-box;
+        }
+
+        button,
+        input {
+          font-family: inherit;
+        }
+
+        button {
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        @media (max-width: 980px) {
+          aside {
+            width: 220px !important;
+          }
+
+          section > div {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        @media (max-width: 720px) {
+          aside {
+            display: none !important;
+          }
+
+          section {
+            padding: 20px !important;
+          }
+
+          section > div {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </main>
   );
 }
 
-function menuStyle(activo: boolean) {
+function menuStyle(active: boolean) {
   return {
     width: "100%",
     height: 44,
-    border: "1px solid transparent",
+    border: 0,
     borderRadius: 11,
-    background: activo ? "#342115" : "transparent",
-    color: activo ? "#e3c29e" : "#a58a73",
+    background: active
+      ? "#2b1a10"
+      : "transparent",
+    color: active
+      ? "#e8d5c0"
+      : "#967b66",
+    cursor: "pointer",
     display: "flex",
     alignItems: "center",
     gap: 11,
     padding: "0 11px",
-    marginBottom: 5,
-    cursor: "pointer",
     fontSize: 13,
-    fontWeight: activo ? 800 : 650,
+    fontWeight: active
+      ? 800
+      : 700,
+    marginBottom: 4,
     textAlign: "left" as const,
   };
 }
@@ -1816,7 +2141,7 @@ function menuStyle(activo: boolean) {
 function prontoStyle() {
   return {
     marginLeft: "auto",
-    color: "#6d5441",
+    color: "#765b47",
     fontSize: 9,
     fontWeight: 800,
     textTransform: "uppercase" as const,
@@ -1826,54 +2151,56 @@ function prontoStyle() {
 
 function cardStyle() {
   return {
-    background: "#21130c",
-    border: "1px solid #3b2618",
-    borderRadius: 19,
-    padding: 24,
-    marginBottom: 20,
-    boxShadow: "0 14px 40px rgba(0,0,0,.13)",
+    background: "#1d1009",
+    border: "1px solid #392316",
+    borderRadius: 18,
+    padding: 22,
   };
 }
 
 function sectionHeaderStyle() {
   return {
     display: "flex",
-    justifyContent: "space-between",
     alignItems: "flex-start",
-    gap: 20,
-    marginBottom: 22,
+    justifyContent: "space-between",
+    gap: 16,
+    marginBottom: 20,
   };
 }
 
 function sectionTitleStyle() {
   return {
-    margin: 0,
-    color: "#f1e6dc",
-    fontSize: 18,
-    fontWeight: 850,
+    color: "#f2e8de",
+    fontSize: 17,
+    fontWeight: 900,
     letterSpacing: "-.02em",
   };
 }
 
 function sectionDescriptionStyle() {
   return {
-    margin: "6px 0 0",
-    color: "#927865",
-    fontSize: 13,
+    color: "#8f7561",
+    fontSize: 12,
     lineHeight: 1.5,
+    marginTop: 5,
   };
 }
 
-function iconBoxStyle() {
+function iconBoxStyle(
+  background: string,
+  color: string
+) {
   return {
-    width: 42,
-    height: 42,
+    width: 40,
+    height: 40,
     borderRadius: 12,
-    background: "#342115",
-    color: "#c69a6b",
+    background,
+    color,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    fontSize: 11,
+    fontWeight: 900,
     flexShrink: 0,
   };
 }
@@ -1881,29 +2208,28 @@ function iconBoxStyle() {
 function InfoSistema({
   label,
   value,
-  estado,
 }: {
   label: string;
   value: string;
-  estado?: boolean | null;
 }) {
   return (
     <div
       style={{
-        border: "1px solid #392518",
-        background: "#1a0f09",
-        borderRadius: 13,
-        padding: 15,
+        display: "flex",
+        alignItems: "center",
+        justifyContent:
+          "space-between",
+        gap: 14,
+        padding:
+          "11px 0",
+        borderBottom:
+          "1px solid #302016",
       }}
     >
       <div
         style={{
-          color: "#765b46",
-          fontSize: 10,
-          fontWeight: 800,
-          letterSpacing: ".08em",
-          textTransform: "uppercase",
-          marginBottom: 7,
+          color: "#8f7561",
+          fontSize: 12,
         }}
       >
         {label}
@@ -1911,15 +2237,13 @@ function InfoSistema({
 
       <div
         style={{
-          color:
-            estado === true
-              ? "#a9bb82"
-              : estado === false
-              ? "#bd8270"
-              : "#d9c6b5",
-          fontSize: 14,
-          fontWeight: 800,
-          wordBreak: "break-word",
+          color: "#d9cbbf",
+          fontSize: 12,
+          fontWeight: 700,
+          textAlign:
+            "right" as const,
+          wordBreak:
+            "break-word" as const,
         }}
       >
         {value}
@@ -1929,74 +2253,66 @@ function InfoSistema({
 }
 
 function Canal({
-  nombre,
+  titulo,
   descripcion,
-  estado,
-  activo = false,
+  conectado,
 }: {
-  nombre: string;
+  titulo: string;
   descripcion: string;
-  estado: string;
-  activo?: boolean;
+  conectado: boolean;
 }) {
   return (
     <div
       style={{
-        border: "1px solid #392518",
-        background: "#1a0f09",
-        borderRadius: 14,
         padding: 16,
+        borderRadius: 14,
+        background: "#21130c",
+        border: conectado
+          ? "1px solid #405437"
+          : "1px solid #382216",
       }}
     >
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
           alignItems: "center",
+          justifyContent:
+            "space-between",
           gap: 10,
         }}
       >
         <div
           style={{
             color: "#eadfd2",
-            fontSize: 14,
-            fontWeight: 850,
+            fontSize: 13,
+            fontWeight: 800,
           }}
         >
-          {nombre}
+          {titulo}
         </div>
 
-        <span
+        <div
           style={{
-            width: 9,
-            height: 9,
+            width: 8,
+            height: 8,
             borderRadius: "50%",
-            background: activo ? "#91a56d" : "#6c5140",
-            flexShrink: 0,
+            background: conectado
+              ? "#8eb47c"
+              : "#6e5542",
           }}
         />
       </div>
 
       <div
         style={{
-          color: "#806754",
-          fontSize: 12,
-          lineHeight: 1.45,
-          marginTop: 6,
+          color: conectado
+            ? "#9caf94"
+            : "#7f6754",
+          fontSize: 11,
+          marginTop: 7,
         }}
       >
         {descripcion}
-      </div>
-
-      <div
-        style={{
-          color: activo ? "#9eb17b" : "#795d49",
-          fontSize: 11,
-          fontWeight: 750,
-          marginTop: 12,
-        }}
-      >
-        {estado}
       </div>
     </div>
   );

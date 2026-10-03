@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import webpush from "web-push";
-import crypto from "crypto";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -81,6 +80,7 @@ async function enviarWhatsApp(
 
   // Si el teléfono viene con 10 dígitos,
   // asumimos Estados Unidos.
+
   if (
     telefonoWhatsApp.length === 10
   ) {
@@ -124,30 +124,20 @@ async function enviarWhatsApp(
 
   const mensaje = confirmado
     ? `Hola ${nombre} 👋
-
 Tu reserva ha sido confirmada. ✅
-
 📅 Fecha: ${fechaTexto}
 🕐 Hora: ${horaTexto}
 👥 Personas: ${personasTexto}
-
 Número de reserva: #${reservaId}
-
 Gracias por reservar con nosotros.
-
 — ShortBizAI`
     : `Hola ${nombre} 👋
-
 Tu reserva ha sido cancelada. ❌
-
 📅 Fecha: ${fechaTexto}
 🕐 Hora: ${horaTexto}
 👥 Personas: ${personasTexto}
-
 Número de reserva: #${reservaId}
-
 Si necesitas realizar una nueva reserva, puedes hacerlo nuevamente.
-
 — ShortBizAI`;
 
   // ===================================================
@@ -265,6 +255,7 @@ Si necesitas realizar una nueva reserva, puedes hacerlo nuevamente.
       respuesta:
         resultado,
     };
+
   } catch (error: any) {
     const motivo =
       error?.message ||
@@ -282,96 +273,64 @@ Si necesitas realizar una nueva reserva, puedes hacerlo nuevamente.
   }
 }
 
-
 // =====================================================
-// CONEXIÓN AUTOMÁTICA DE TELEGRAM POR EMPRESA
+// ENVIAR MENSAJE TELEGRAM
 // =====================================================
-
-function verificarTokenConexion(token: string) {
-  if (!TELEGRAM_TOKEN) return null;
-
-  const partes = token.split("_");
-
-  if (partes.length !== 3) return null;
-
-  const empresaId = Number(partes[0]);
-  const expira = Number(partes[1]);
-  const firma = partes[2];
-
-  if (!empresaId || !expira || !firma) return null;
-
-  // Los dos endpoints pueden ejecutarse en instancias distintas.
-  // Damos un margen de 12 horas para desfases de reloj entre runtimes,
-  // sin eliminar la expiración del token.
-  const ahora = Math.floor(Date.now() / 1000);
-  const MARGEN_DESFASE_RELOJ = 12 * 60 * 60;
-
-  if (ahora > expira + MARGEN_DESFASE_RELOJ) {
-    console.warn(
-      "⚠️ TOKEN TELEGRAM EXPIRADO:",
-      {
-        ahora,
-        expira,
-        diferenciaSegundos: ahora - expira,
-      }
-    );
-    return null;
-  }
-
-  const datos = `${empresaId}.${expira}`;
-
-  const firmaEsperada = crypto
-    .createHmac("sha256", TELEGRAM_TOKEN)
-    .update(datos)
-    .digest("hex")
-    .slice(0, 32);
-
-  if (firma !== firmaEsperada) {
-    return null;
-  }
-
-  return {
-    empresaId,
-    expira,
-  };
-}
 
 async function enviarMensajeTelegram(
   chatId: number | string,
   texto: string
 ) {
   if (!TELEGRAM_TOKEN) {
-    throw new Error("Falta TELEGRAM_BOT_TOKEN");
+    throw new Error(
+      "Falta TELEGRAM_BOT_TOKEN"
+    );
   }
 
-  const respuesta = await fetch(
-    `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: texto,
-      }),
-    }
-  );
+  const respuesta =
+    await fetch(
+      `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`,
+      {
+        method: "POST",
 
-  const resultado = await respuesta.json();
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
 
-  if (!respuesta.ok || !resultado?.ok) {
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: texto,
+        }),
+      }
+    );
+
+  const resultado =
+    await respuesta.json();
+
+  if (
+    !respuesta.ok ||
+    !resultado?.ok
+  ) {
     throw new Error(
-      resultado?.description || "Telegram rechazó el mensaje"
+      resultado?.description ||
+      "Telegram rechazó el mensaje"
     );
   }
 
   return resultado;
 }
 
-export async function POST(req: Request) {
+// =====================================================
+// POST - WEBHOOK TELEGRAM
+// =====================================================
+
+export async function POST(
+  req: Request
+) {
   try {
-    const body = await req.json();
+    const body =
+      await req.json();
 
     console.log(
       "================================="
@@ -382,7 +341,11 @@ export async function POST(req: Request) {
     );
 
     console.log(
-      JSON.stringify(body, null, 2)
+      JSON.stringify(
+        body,
+        null,
+        2
+      )
     );
 
     console.log(
@@ -401,10 +364,14 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           ok: false,
+
           error:
             "Falta TELEGRAM_BOT_TOKEN",
         },
-        { status: 500 }
+
+        {
+          status: 500,
+        }
       );
     }
 
@@ -418,38 +385,114 @@ export async function POST(req: Request) {
       process.env.VAPID_PRIVATE_KEY!
     );
 
-
     // =====================================================
     // CONEXIÓN AUTOMÁTICA DE TELEGRAM
+    // POR CÓDIGO DE 6 DÍGITOS
     // =====================================================
 
     if (body.message) {
-      const texto = String(body.message.text || "").trim();
-      const chatId = body.message.chat?.id;
 
-      if (texto.startsWith("/start") && chatId) {
-        const partesStart = texto.split(/\s+/);
-        const parametro = partesStart[1] || "";
+      const texto =
+        String(
+          body.message.text || ""
+        ).trim();
 
-        if (!parametro.startsWith("empresa_")) {
+      const chatId =
+        body.message.chat?.id;
+
+      // ===================================================
+      // /START
+      //
+      // Ya no usamos tokens ni HMAC.
+      // ===================================================
+
+      if (
+        chatId &&
+        texto.startsWith("/start")
+      ) {
+
+        await enviarMensajeTelegram(
+          chatId,
+
+          "👋 Hola. Para conectar Telegram con tu restaurante, genera un código de 6 dígitos desde ShortBizAI y envíamelo aquí."
+        );
+
+        return NextResponse.json({
+          ok: true,
+          conectado: false,
+        });
+      }
+
+      // ===================================================
+      // CÓDIGO DE 6 DÍGITOS
+      // ===================================================
+
+      if (
+        chatId &&
+        /^\d{6}$/.test(texto)
+      ) {
+
+        const ahora =
+          new Date().toISOString();
+
+        // =================================================
+        // BUSCAR CÓDIGO
+        // =================================================
+
+        const {
+          data: conexion,
+          error: conexionError,
+        } =
+          await supabaseAdmin
+            .from(
+              "telegram_conexiones"
+            )
+            .select(
+              "empresa_id, codigo, expira_at, usado_at"
+            )
+            .eq(
+              "codigo",
+              texto
+            )
+            .is(
+              "usado_at",
+              null
+            )
+            .gt(
+              "expira_at",
+              ahora
+            )
+            .maybeSingle();
+
+        if (conexionError) {
+
+          console.error(
+            "❌ ERROR BUSCANDO CÓDIGO TELEGRAM:",
+            conexionError
+          );
+
           await enviarMensajeTelegram(
             chatId,
-            "👋 Hola. Para conectar Telegram con tu restaurante, inicia la conexión desde ShortBizAI."
+
+            "❌ No fue posible validar el código. Intenta nuevamente."
           );
 
           return NextResponse.json({
-            ok: true,
+            ok: false,
             conectado: false,
           });
         }
 
-        const tokenConexion = parametro.substring("empresa_".length);
-        const conexion = verificarTokenConexion(tokenConexion);
+        // =================================================
+        // CÓDIGO INVÁLIDO / EXPIRADO / USADO
+        // =================================================
 
         if (!conexion) {
+
           await enviarMensajeTelegram(
             chatId,
-            "❌ Este enlace de conexión no es válido o ya expiró. Vuelve a ShortBizAI y pulsa «Conectar Telegram» nuevamente."
+
+            "❌ El código no es válido, ya fue utilizado o expiró. Genera un código nuevo desde ShortBizAI."
           );
 
           return NextResponse.json({
@@ -458,14 +501,27 @@ export async function POST(req: Request) {
           });
         }
 
-        const { data: empresa, error: empresaError } =
+        // =================================================
+        // BUSCAR EMPRESA
+        // =================================================
+
+        const {
+          data: empresa,
+          error: empresaError,
+        } =
           await supabaseAdmin
             .from("empresas")
-            .select("id, nombre, activo")
-            .eq("id", conexion.empresaId)
+            .select(
+              "id, nombre, activo"
+            )
+            .eq(
+              "id",
+              conexion.empresa_id
+            )
             .maybeSingle();
 
         if (empresaError) {
+
           console.error(
             "❌ ERROR BUSCANDO EMPRESA PARA TELEGRAM:",
             empresaError
@@ -473,6 +529,7 @@ export async function POST(req: Request) {
 
           await enviarMensajeTelegram(
             chatId,
+
             "❌ No fue posible comprobar la empresa. Intenta nuevamente."
           );
 
@@ -482,9 +539,18 @@ export async function POST(req: Request) {
           });
         }
 
-        if (!empresa || empresa.activo === false) {
+        // =================================================
+        // EMPRESA INACTIVA
+        // =================================================
+
+        if (
+          !empresa ||
+          empresa.activo === false
+        ) {
+
           await enviarMensajeTelegram(
             chatId,
+
             "❌ La empresa no está activa o ya no está disponible."
           );
 
@@ -494,16 +560,29 @@ export async function POST(req: Request) {
           });
         }
 
-        const { data: configuracion, error: configuracionError } =
+        // =================================================
+        // BUSCAR CONFIGURACIÓN DE NOTIFICACIONES
+        // =================================================
+
+        const {
+          data: configuracion,
+          error: configuracionError,
+        } =
           await supabaseAdmin
-            .from("empresa_notificaciones")
+            .from(
+              "empresa_notificaciones"
+            )
             .select(
               "empresa_id, telegram_activo, telegram_chat_id, telegram_conectado"
             )
-            .eq("empresa_id", empresa.id)
+            .eq(
+              "empresa_id",
+              empresa.id
+            )
             .maybeSingle();
 
         if (configuracionError) {
+
           console.error(
             "❌ ERROR BUSCANDO CONFIGURACIÓN TELEGRAM:",
             configuracionError
@@ -511,6 +590,7 @@ export async function POST(req: Request) {
 
           await enviarMensajeTelegram(
             chatId,
+
             "❌ No fue posible guardar la conexión de Telegram. Intenta nuevamente."
           );
 
@@ -520,17 +600,39 @@ export async function POST(req: Request) {
           });
         }
 
-        if (configuracion) {
-          const { error: actualizarTelegramError } =
-            await supabaseAdmin
-              .from("empresa_notificaciones")
-              .update({
-                telegram_chat_id: String(chatId),
-                telegram_conectado: true,
-              })
-              .eq("empresa_id", empresa.id);
+        // =================================================
+        // ACTUALIZAR CONFIGURACIÓN EXISTENTE
+        // =================================================
 
-          if (actualizarTelegramError) {
+        if (configuracion) {
+
+          const {
+            error:
+              actualizarTelegramError,
+          } =
+            await supabaseAdmin
+              .from(
+                "empresa_notificaciones"
+              )
+              .update({
+                telegram_chat_id:
+                  String(chatId),
+
+                telegram_conectado:
+                  true,
+
+                telegram_activo:
+                  true,
+              })
+              .eq(
+                "empresa_id",
+                empresa.id
+              );
+
+          if (
+            actualizarTelegramError
+          ) {
+
             console.error(
               "❌ ERROR ACTUALIZANDO TELEGRAM:",
               actualizarTelegramError
@@ -538,6 +640,7 @@ export async function POST(req: Request) {
 
             await enviarMensajeTelegram(
               chatId,
+
               "❌ No fue posible guardar la conexión de Telegram. Intenta nuevamente."
             );
 
@@ -546,18 +649,39 @@ export async function POST(req: Request) {
               conectado: false,
             });
           }
+
         } else {
-          const { error: insertarTelegramError } =
+
+          // ===============================================
+          // CREAR CONFIGURACIÓN
+          // ===============================================
+
+          const {
+            error:
+              insertarTelegramError,
+          } =
             await supabaseAdmin
-              .from("empresa_notificaciones")
+              .from(
+                "empresa_notificaciones"
+              )
               .insert({
-                empresa_id: empresa.id,
-                telegram_chat_id: String(chatId),
-                telegram_conectado: true,
-                telegram_activo: true,
+                empresa_id:
+                  empresa.id,
+
+                telegram_chat_id:
+                  String(chatId),
+
+                telegram_conectado:
+                  true,
+
+                telegram_activo:
+                  true,
               });
 
-          if (insertarTelegramError) {
+          if (
+            insertarTelegramError
+          ) {
+
             console.error(
               "❌ ERROR CREANDO CONFIGURACIÓN TELEGRAM:",
               insertarTelegramError
@@ -565,6 +689,7 @@ export async function POST(req: Request) {
 
             await enviarMensajeTelegram(
               chatId,
+
               "❌ No fue posible guardar la conexión de Telegram. Intenta nuevamente."
             );
 
@@ -575,9 +700,59 @@ export async function POST(req: Request) {
           }
         }
 
+        // =================================================
+        // MARCAR CÓDIGO COMO USADO
+        //
+        // IMPORTANTE:
+        // Se hace DESPUÉS de guardar correctamente
+        // la conexión de Telegram.
+        // =================================================
+
+        const {
+          error:
+            marcarCodigoError,
+        } =
+          await supabaseAdmin
+            .from(
+              "telegram_conexiones"
+            )
+            .update({
+              usado_at:
+                new Date().toISOString(),
+            })
+            .eq(
+              "empresa_id",
+              empresa.id
+            )
+            .eq(
+              "codigo",
+              texto
+            )
+            .is(
+              "usado_at",
+              null
+            );
+
+        if (marcarCodigoError) {
+
+          console.error(
+            "⚠️ ERROR MARCANDO CÓDIGO TELEGRAM COMO USADO:",
+            marcarCodigoError
+          );
+        }
+
+        // =================================================
+        // CONFIRMACIÓN AL USUARIO
+        // =================================================
+
         await enviarMensajeTelegram(
           chatId,
-          `✅ Telegram conectado correctamente.\n\nRestaurante: ${empresa.nombre}\n\nShortBizAI ya puede enviar aquí las notificaciones de reservas.`
+
+          `✅ Telegram conectado correctamente.
+
+Restaurante: ${empresa.nombre}
+
+ShortBizAI ya puede enviar aquí las notificaciones de reservas.`
         );
 
         console.log(
@@ -585,7 +760,7 @@ export async function POST(req: Request) {
         );
 
         console.log(
-          "✅ TELEGRAM CONECTADO AUTOMÁTICAMENTE"
+          "✅ TELEGRAM CONECTADO POR CÓDIGO"
         );
 
         console.log(
@@ -605,12 +780,28 @@ export async function POST(req: Request) {
 
         return NextResponse.json({
           ok: true,
+
           conectado: true,
-          empresaId: empresa.id,
-          empresaNombre: empresa.nombre,
-          telegramChatId: String(chatId),
+
+          empresaId:
+            empresa.id,
+
+          empresaNombre:
+            empresa.nombre,
+
+          telegramChatId:
+            String(chatId),
         });
       }
+
+      // =================================================
+      // OTROS MENSAJES NORMALES
+      // =================================================
+
+      console.log(
+        "MENSAJE TELEGRAM:",
+        texto
+      );
     }
 
     // =====================================================
@@ -618,6 +809,7 @@ export async function POST(req: Request) {
     // =====================================================
 
     if (body.callback_query) {
+
       const callbackQuery =
         body.callback_query;
 
@@ -630,6 +822,7 @@ export async function POST(req: Request) {
       );
 
       if (!accion) {
+
         console.error(
           "❌ CALLBACK SIN ACCIÓN"
         );
@@ -650,7 +843,10 @@ export async function POST(req: Request) {
       const separador =
         accion.indexOf("_");
 
-      if (separador === -1) {
+      if (
+        separador === -1
+      ) {
+
         console.error(
           "❌ CALLBACK INVÁLIDO:",
           accion
@@ -678,25 +874,100 @@ export async function POST(req: Request) {
       );
 
       console.log(
-        "ID RESERVA:",
+        "ID:",
         id
       );
 
-      // ===================================================
-      // VALIDAR ACCIÓN
-      // ===================================================
+      if (
+        tipo !== "confirmar" &&
+        tipo !== "cancelar"
+      ) {
+
+        console.error(
+          "❌ TIPO DE CALLBACK NO PERMITIDO:",
+          tipo
+        );
+
+        return NextResponse.json({
+          ok: true,
+        });
+      }
+
+      const reservaId =
+        Number(id);
 
       if (
-        !id ||
-        ![
-          "confirmar",
-          "cancelar",
-        ].includes(tipo)
+        !Number.isFinite(
+          reservaId
+        )
       ) {
+
         console.error(
-          "❌ ACCIÓN INVÁLIDA:",
-          accion
+          "❌ ID DE RESERVA INVÁLIDO:",
+          id
         );
+
+        return NextResponse.json({
+          ok: true,
+        });
+      }
+
+      // ===================================================
+      // BUSCAR RESERVA
+      // ===================================================
+
+      const {
+        data: reserva,
+        error: reservaError,
+      } =
+        await supabaseAdmin
+          .from("reservas")
+          .select("*")
+          .eq(
+            "id",
+            reservaId
+          )
+          .maybeSingle();
+
+      if (reservaError) {
+
+        console.error(
+          "❌ ERROR BUSCANDO RESERVA:",
+          reservaError
+        );
+
+        return NextResponse.json(
+          {
+            ok: false,
+
+            error:
+              "No fue posible buscar la reserva",
+          },
+
+          {
+            status: 500,
+          }
+        );
+      }
+
+      if (!reserva) {
+
+        console.error(
+          "❌ RESERVA NO ENCONTRADA:",
+          reservaId
+        );
+
+        try {
+
+          await fetch(
+            `https://api.telegram.org/bot${TELEGRAM_TOKEN}/answerCallbackQuery?callback_query_id=${encodeURIComponent(
+              callbackQuery.id
+            )}&text=${encodeURIComponent(
+              "La reserva ya no existe."
+            )}`
+          );
+
+        } catch {}
 
         return NextResponse.json({
           ok: true,
@@ -707,163 +978,146 @@ export async function POST(req: Request) {
       // NUEVO ESTADO
       // ===================================================
 
-      const estado =
+      const nuevoEstado =
         tipo === "confirmar"
           ? "confirmada"
           : "cancelada";
 
-      console.log(
-        "NUEVO ESTADO:",
-        estado
-      );
-
       // ===================================================
-      // BUSCAR RESERVA
+      // ACTUALIZAR RESERVA
       // ===================================================
 
       const {
-        data: reservaExistente,
-        error: buscarError,
-      } = await supabaseAdmin
-        .from("reservas")
-        .select(
-          "id, cliente_nombre, telefono, email, fecha, hora, personas, push_endpoint, estado"
-        )
-        .eq("id", id)
-        .maybeSingle();
-
-      if (buscarError) {
-        console.error(
-          "❌ ERROR BUSCANDO RESERVA:",
-          buscarError
-        );
-
-        return NextResponse.json(
-          {
-            ok: false,
-            error:
-              "Error buscando la reserva",
-            detalle:
-              buscarError.message,
-          },
-          { status: 500 }
-        );
-      }
-
-      if (!reservaExistente) {
-        console.error(
-          "❌ RESERVA NO ENCONTRADA:",
-          id
-        );
-
-        try {
-          await fetch(
-            `https://api.telegram.org/bot${TELEGRAM_TOKEN}/answerCallbackQuery`,
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-
-              body: JSON.stringify({
-                callback_query_id:
-                  callbackQuery.id,
-
-                text:
-                  "❌ Reserva no encontrada",
-              }),
-            }
-          );
-        } catch (error) {
-          console.error(
-            "ERROR CALLBACK TELEGRAM:",
-            error
-          );
-        }
-
-        return NextResponse.json(
-          {
-            ok: false,
-            error:
-              "Reserva no encontrada",
-          },
-          { status: 404 }
-        );
-      }
-
-      console.log(
-        "RESERVA ENCONTRADA:",
-        reservaExistente
-      );
-
-      // ===================================================
-      // ACTUALIZAR ESTADO
-      // ===================================================
-
-      const {
-        data: reserva,
-        error: actualizarError,
-      } = await supabaseAdmin
-        .from("reservas")
-        .update({
-          estado,
-        })
-        .eq("id", id)
-        .select(
-          "id, cliente_nombre, telefono, email, fecha, hora, personas, push_endpoint, estado"
-        )
-        .single();
+        data:
+          reservaActualizada,
+        error:
+          actualizarError,
+      } =
+        await supabaseAdmin
+          .from("reservas")
+          .update({
+            estado:
+              nuevoEstado,
+          })
+          .eq(
+            "id",
+            reservaId
+          )
+          .select("*")
+          .maybeSingle();
 
       if (actualizarError) {
+
         console.error(
           "❌ ERROR ACTUALIZANDO RESERVA:",
           actualizarError
         );
 
+        try {
+
+          await fetch(
+            `https://api.telegram.org/bot${TELEGRAM_TOKEN}/answerCallbackQuery?callback_query_id=${encodeURIComponent(
+              callbackQuery.id
+            )}&text=${encodeURIComponent(
+              "No fue posible actualizar la reserva."
+            )}`
+          );
+
+        } catch {}
+
         return NextResponse.json(
           {
             ok: false,
+
             error:
-              "No se pudo actualizar la reserva",
-            detalle:
-              actualizarError.message,
+              "No fue posible actualizar la reserva",
           },
-          { status: 500 }
+
+          {
+            status: 500,
+          }
         );
       }
 
-      console.log(
-        "================================="
-      );
-
-      console.log(
-        "✅ RESERVA ACTUALIZADA"
-      );
-
-      console.log(
-        "ID:",
-        reserva.id
-      );
-
-      console.log(
-        "ESTADO:",
-        reserva.estado
-      );
-
-      console.log(
-        "================================="
-      );
+      const reservaFinal =
+        reservaActualizada ||
+        {
+          ...reserva,
+          estado:
+            nuevoEstado,
+        };
 
       // ===================================================
-      // RESPONDER A TELEGRAM
+      // RESPONDER AL BOTÓN DE TELEGRAM
       // ===================================================
 
       try {
-        const respuestaCallback =
+
+        await fetch(
+          `https://api.telegram.org/bot${TELEGRAM_TOKEN}/answerCallbackQuery`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                callback_query_id:
+                  callbackQuery.id,
+
+                text:
+                  tipo ===
+                  "confirmar"
+                    ? "Reserva confirmada"
+                    : "Reserva cancelada",
+
+                show_alert:
+                  false,
+              }),
+          }
+        );
+
+      } catch (
+        callbackError
+      ) {
+
+        console.error(
+          "❌ ERROR RESPONDIENDO CALLBACK TELEGRAM:",
+          callbackError
+        );
+      }
+
+      // ===================================================
+      // EDITAR MENSAJE TELEGRAM
+      // ===================================================
+
+      try {
+
+        const mensajeOriginal =
+          callbackQuery.message;
+
+        const chatId =
+          mensajeOriginal?.chat?.id;
+
+        const messageId =
+          mensajeOriginal?.message_id;
+
+        if (
+          chatId &&
+          messageId
+        ) {
+
+          const textoEstado =
+            tipo ===
+            "confirmar"
+              ? "✅ RESERVA CONFIRMADA"
+              : "❌ RESERVA CANCELADA";
+
           await fetch(
-            `https://api.telegram.org/bot${TELEGRAM_TOKEN}/answerCallbackQuery`,
+            `https://api.telegram.org/bot${TELEGRAM_TOKEN}/editMessageText`,
             {
               method: "POST",
 
@@ -872,529 +1126,451 @@ export async function POST(req: Request) {
                   "application/json",
               },
 
-              body: JSON.stringify({
-                callback_query_id:
-                  callbackQuery.id,
+              body:
+                JSON.stringify({
+                  chat_id:
+                    chatId,
 
-                text:
-                  tipo === "confirmar"
-                    ? "✅ Reserva confirmada"
-                    : "❌ Reserva cancelada",
+                  message_id:
+                    messageId,
 
-                show_alert: false,
-              }),
+                  text:
+                    `${textoEstado}\n\n` +
+                    `👤 ${reserva.cliente_nombre || "Cliente"}\n` +
+                    `📅 ${reserva.fecha || "—"}\n` +
+                    `🕐 ${reserva.hora || "—"}\n` +
+                    `👥 ${reserva.personas || "—"}\n` +
+                    `📞 ${reserva.telefono || "—"}\n` +
+                    `📧 ${reserva.email || "—"}\n\n` +
+                    `Reserva #${reserva.id}`,
+                }),
             }
           );
+        }
 
-        const resultadoCallback =
-          await respuestaCallback.json();
+      } catch (
+        editarError
+      ) {
 
-        console.log(
-          "TELEGRAM CALLBACK:",
-          resultadoCallback
-        );
-      } catch (error) {
         console.error(
-          "❌ ERROR RESPONDIENDO A TELEGRAM:",
-          error
+          "❌ ERROR EDITANDO MENSAJE TELEGRAM:",
+          editarError
         );
       }
 
       // ===================================================
-      // NOTIFICACIONES AL CLIENTE
-      //
-      // PUSH, EMAIL Y WHATSAPP SON INDEPENDIENTES.
-      //
-      // Si uno falla, los otros continúan.
+      // VARIABLES DE NOTIFICACIONES
       // ===================================================
 
-      let pushEnviado = false;
-      let emailEnviado = false;
-      let whatsappEnviado = false;
+      let pushEnviado =
+        false;
 
-      let motivoPush = "";
-      let motivoEmail = "";
-      let motivoWhatsApp = "";
+      let emailEnviado =
+        false;
+
+      let whatsappEnviado =
+        false;
+
+      let motivoPush =
+        "";
+
+      let motivoEmail =
+        "";
+
+      let motivoWhatsApp =
+        "";
 
       // ===================================================
-      // PUSH AL CLIENTE
+      // PUSH
       // ===================================================
 
-      if (!reserva.push_endpoint) {
-        console.warn(
-          "⚠️ ESTA RESERVA NO TIENE push_endpoint:",
-          reserva.id
-        );
-
-        motivoPush =
-          "La reserva no tiene push_endpoint";
-      } else {
-        // =================================================
-        // BUSCAR LA SUSCRIPCIÓN DEL CLIENTE
-        // =================================================
+      try {
 
         const {
-          data: suscripcion,
-          error: suscripcionError,
-        } = await supabaseAdmin
-          .from("push_subscriptions")
-          .select(
-            "id, endpoint, subscription"
-          )
-          .eq(
-            "endpoint",
-            reserva.push_endpoint
-          )
-          .maybeSingle();
+          data:
+            configuracionNotificaciones,
+          error:
+            configuracionNotificacionesError,
+        } =
+          await supabaseAdmin
+            .from(
+              "empresa_notificaciones"
+            )
+            .select(
+              "*"
+            )
+            .eq(
+              "empresa_id",
+              reservaFinal.empresa_id
+            )
+            .maybeSingle();
 
-        if (suscripcionError) {
+        if (
+          configuracionNotificacionesError
+        ) {
+
           console.error(
-            "❌ ERROR BUSCANDO SUSCRIPCIÓN:",
-            suscripcionError
+            "❌ ERROR BUSCANDO CONFIGURACIÓN DE NOTIFICACIONES:",
+            configuracionNotificacionesError
           );
 
           motivoPush =
-            suscripcionError.message ||
-            "Error buscando la suscripción";
-        } else if (!suscripcion) {
-          console.warn(
-            "⚠️ NO SE ENCONTRÓ SUSCRIPCIÓN PARA:",
-            reserva.push_endpoint
-          );
+            "No fue posible obtener la configuración de notificaciones.";
 
-          motivoPush =
-            "No se encontró la suscripción Push";
         } else {
-          console.log(
-            "PUSH: suscripción encontrada:",
-            suscripcion.id
-          );
 
-          const titulo =
-            tipo === "confirmar"
-              ? "✅ Reserva confirmada"
-              : "❌ Reserva cancelada";
+          // =================================================
+          // PUSH ACTIVADO
+          // =================================================
 
-          const mensaje =
-            tipo === "confirmar"
-              ? `Tu reserva para ${reserva.fecha} a las ${reserva.hora} fue confirmada.`
-              : `Tu reserva para ${reserva.fecha} a las ${reserva.hora} fue cancelada.`;
+          if (
+            configuracionNotificaciones
+              ?.push_activo !== false
+          ) {
 
-          try {
-            await webpush.sendNotification(
-              suscripcion.subscription,
-              JSON.stringify({
-                title: titulo,
-                body: mensaje,
-                icon:
-                  "/logo-foodshortai.png",
-                data: {
-                  reservaId:
-                    reserva.id,
-                  estado:
-                    reserva.estado,
-                },
-              })
-            );
-
-            pushEnviado = true;
-
-            console.log(
-              "================================="
-            );
-
-            console.log(
-              "✅ PUSH ENVIADO AL CLIENTE"
-            );
-
-            console.log(
-              "SUSCRIPCIÓN:",
-              suscripcion.id
-            );
-
-            console.log(
-              "RESERVA:",
-              reserva.id
-            );
-
-            console.log(
-              "================================="
-            );
-          } catch (pushError: any) {
-            console.error(
-              "❌ ERROR ENVIANDO PUSH:",
-              pushError
-            );
-
-            motivoPush =
-              pushError?.message ||
-              "No se pudo enviar Push";
-
-            // =============================================
-            // SUSCRIPCIÓN VENCIDA
-            // =============================================
-
-            if (
-              pushError?.statusCode === 404 ||
-              pushError?.statusCode === 410
-            ) {
-              const {
-                error: deleteError,
-              } = await supabaseAdmin
+            const {
+              data:
+                suscripciones,
+              error:
+                suscripcionesError,
+            } =
+              await supabaseAdmin
                 .from(
                   "push_subscriptions"
                 )
-                .delete()
+                .select("*")
                 .eq(
-                  "id",
-                  suscripcion.id
+                  "empresa_id",
+                  reservaFinal.empresa_id
                 );
 
-              if (deleteError) {
-                console.error(
-                  "❌ ERROR ELIMINANDO SUSCRIPCIÓN VENCIDA:",
-                  deleteError
-                );
-              } else {
-                console.log(
-                  "🗑️ SUSCRIPCIÓN ELIMINADA:",
-                  suscripcion.id
-                );
+            if (
+              suscripcionesError
+            ) {
+
+              console.error(
+                "❌ ERROR BUSCANDO SUSCRIPCIONES PUSH:",
+                suscripcionesError
+              );
+
+              motivoPush =
+                "No fue posible obtener las suscripciones Push.";
+
+            } else if (
+              !suscripciones ||
+              suscripciones.length ===
+                0
+            ) {
+
+              motivoPush =
+                "No hay dispositivos registrados para Push.";
+
+              console.log(
+                "⚠️ NO HAY SUSCRIPCIONES PUSH PARA LA EMPRESA:",
+                reservaFinal.empresa_id
+              );
+
+            } else {
+
+              for (
+                const suscripcion of suscripciones
+              ) {
+
+                try {
+
+                  const payload =
+                    JSON.stringify({
+                      title:
+                        tipo ===
+                        "confirmar"
+                          ? "Reserva confirmada"
+                          : "Reserva cancelada",
+
+                      body:
+                        `${reservaFinal.cliente_nombre || "Cliente"} - ${reservaFinal.fecha || "—"} ${reservaFinal.hora || "—"}`,
+
+                      icon:
+                        "/icon-192.png",
+
+                      badge:
+                        "/icon-192.png",
+
+                      data: {
+                        reservaId:
+                          reservaFinal.id,
+
+                        estado:
+                          reservaFinal.estado,
+                      },
+                    });
+
+                  await webpush.sendNotification(
+                    {
+                      endpoint:
+                        suscripcion.endpoint,
+
+                      keys: {
+                        p256dh:
+                          suscripcion.p256dh,
+
+                        auth:
+                          suscripcion.auth,
+                      },
+                    },
+
+                    payload
+                  );
+
+                  pushEnviado =
+                    true;
+
+                } catch (
+                  pushError: any
+                ) {
+
+                  console.error(
+                    "❌ ERROR ENVIANDO PUSH:",
+                    pushError
+                  );
+
+                  if (
+                    pushError?.statusCode ===
+                      404 ||
+                    pushError?.statusCode ===
+                      410
+                  ) {
+
+                    try {
+
+                      await supabaseAdmin
+                        .from(
+                          "push_subscriptions"
+                        )
+                        .delete()
+                        .eq(
+                          "endpoint",
+                          suscripcion.endpoint
+                        );
+
+                    } catch {}
+
+                  }
+
+                  motivoPush =
+                    pushError?.message ||
+                    "Error enviando Push";
+                }
               }
             }
+
+          } else {
+
+            motivoPush =
+              "Las notificaciones Push están desactivadas.";
           }
         }
+
+      } catch (
+        pushGeneralError: any
+      ) {
+
+        motivoPush =
+          pushGeneralError?.message ||
+          "Error general de Push";
+
+        console.error(
+          "❌ ERROR GENERAL PUSH:",
+          pushGeneralError
+        );
       }
 
       // ===================================================
       // EMAIL AL CLIENTE
       // ===================================================
 
-      if (!reserva.email?.trim()) {
-        console.warn(
-          "⚠️ ESTA RESERVA NO TIENE EMAIL:",
-          reserva.id
-        );
-
-        motivoEmail =
-          "La reserva no tiene email del cliente";
-      } else if (!RESEND_API_KEY) {
-        console.error(
-          "❌ FALTA RESEND_API_KEY"
-        );
-
-        motivoEmail =
-          "Falta RESEND_API_KEY";
-      } else {
-        const clienteNombre =
-          reserva.cliente_nombre?.trim() ||
-          "Cliente";
+      if (
+        RESEND_API_KEY &&
+        reservaFinal.email
+      ) {
 
         const asunto =
-          tipo === "confirmar"
-            ? "✅ Your reservation is confirmed"
-            : "❌ Your reservation has been cancelled";
+          tipo ===
+          "confirmar"
+            ? "Tu reserva ha sido confirmada"
+            : "Tu reserva ha sido cancelada";
 
-        const tituloEmail =
-          tipo === "confirmar"
-            ? "Reservation Confirmed"
-            : "Reservation Cancelled";
+        const html =
+          tipo ===
+          "confirmar"
 
-        const textoPrincipal =
-          tipo === "confirmar"
-            ? `Your reservation for ${reserva.fecha || "the requested date"} at ${reserva.hora || "the requested time"} has been confirmed.`
-            : `Your reservation for ${reserva.fecha || "the requested date"} at ${reserva.hora || "the requested time"} has been cancelled.`;
-
-        const colorEstado =
-          tipo === "confirmar"
-            ? "#16a34a"
-            : "#dc2626";
-
-        const html = `
+            ? `
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="x-apple-disable-message-reformatting" />
-  <meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no" />
-  <title>${asunto}</title>
-
-  <style>
-    body {
-      margin:0 !important;
-      padding:0 !important;
-      width:100% !important;
-      background:#f3f4f6;
-    }
-
-    table {
-      border-collapse:collapse;
-      border-spacing:0;
-    }
-
-    img {
-      border:0;
-      outline:none;
-      text-decoration:none;
-      display:block;
-    }
-
-    @media only screen and (max-width:620px) {
-      .outer {
-        padding:16px 10px !important;
-      }
-
-      .card {
-        border-radius:18px !important;
-      }
-
-      .card-pad {
-        padding:26px 20px !important;
-      }
-
-      .title {
-        font-size:22px !important;
-        line-height:28px !important;
-        letter-spacing:-.2px !important;
-        word-break:keep-all !important;
-        overflow-wrap:normal !important;
-        white-space:normal !important;
-      }
-
-      .intro {
-        font-size:16px !important;
-        line-height:25px !important;
-      }
-
-      .detail-pad {
-        padding:18px !important;
-      }
-
-      .detail-value {
-        font-size:16px !important;
-        line-height:22px !important;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Reserva confirmada</title>
 </head>
-
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">
-
-  <table
-    role="presentation"
-    width="100%"
-    cellpadding="0"
-    cellspacing="0"
-    border="0"
-    style="width:100%;background:#f3f4f6;"
-  >
-    <tr>
-      <td
-        class="outer"
-        align="center"
-        style="padding:30px 16px;"
-      >
-
-        <table
-          role="presentation"
-          width="600"
-          cellpadding="0"
-          cellspacing="0"
-          border="0"
-          style="width:100%;max-width:600px;"
-        >
-
-          <tr>
-            <td
-              align="center"
-              style="padding:0 0 16px;"
-            >
-              <div
-                style="font-size:15px;line-height:20px;font-weight:800;letter-spacing:2.5px;color:#111827;"
-              >
-                SHORTBIZAI
-              </div>
-            </td>
-          </tr>
-
-          <tr>
-            <td
-              class="card card-pad"
-              style="background:#ffffff;border:1px solid #e5e7eb;border-radius:20px;padding:34px 32px;box-shadow:0 4px 18px rgba(17,24,39,.06);"
-            >
-
-              <table
-                role="presentation"
-                width="100%"
-                cellpadding="0"
-                cellspacing="0"
-                border="0"
-              >
-
-                <tr>
-                  <td
-                    align="center"
-                    style="padding:0 0 24px;border-bottom:1px solid #eef0f2;"
-                  >
-
-                    <div
-                      style="display:inline-block;padding:7px 12px;border-radius:999px;background:${tipo === "confirmar" ? "#ecfdf3" : "#fef2f2"};color:${colorEstado};font-size:11px;line-height:14px;font-weight:800;letter-spacing:1px;text-transform:uppercase;"
-                    >
-                      ${tipo === "confirmar" ? "Confirmed" : "Cancelled"}
-                    </div>
-
-                    <h1
-                      class="title"
-                      style="margin:13px 0 0;color:${colorEstado};font-size:30px;line-height:36px;font-weight:800;letter-spacing:-.4px;"
-                    >
-                      ${tituloEmail}
-                    </h1>
-
-                  </td>
-                </tr>
-
-                <tr>
-                  <td style="padding:24px 0 0;">
-
-                    <p
-                      class="intro"
-                      style="margin:0 0 12px;font-size:16px;line-height:25px;color:#111827;"
-                    >
-                      Hello ${clienteNombre},
-                    </p>
-
-                    <p
-                      class="intro"
-                      style="margin:0 0 24px;font-size:16px;line-height:25px;color:#4b5563;"
-                    >
-                      ${textoPrincipal}
-                    </p>
-
-                    <table
-                      role="presentation"
-                      width="100%"
-                      cellpadding="0"
-                      cellspacing="0"
-                      border="0"
-                      style="width:100%;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;"
-                    >
-
-                      <tr>
-                        <td
-                          class="detail-pad"
-                          style="padding:20px;"
-                        >
-
-                          <div
-                            style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;"
-                          >
-                            Date
-                          </div>
-
-                          <div
-                            class="detail-value"
-                            style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding:5px 0 17px;"
-                          >
-                            ${reserva.fecha || "—"}
-                          </div>
-
-                          <div
-                            style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;"
-                          >
-                            Time
-                          </div>
-
-                          <div
-                            class="detail-value"
-                            style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding:5px 0 17px;"
-                          >
-                            ${reserva.hora || "—"}
-                          </div>
-
-                          <div
-                            style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;"
-                          >
-                            Guests
-                          </div>
-
-                          <div
-                            class="detail-value"
-                            style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding-top:5px;"
-                          >
-                            ${reserva.personas || "—"}
-                          </div>
-
-                        </td>
-                      </tr>
-
-                    </table>
-
-                    <table
-                      role="presentation"
-                      width="100%"
-                      cellpadding="0"
-                      cellspacing="0"
-                      border="0"
-                      style="margin-top:22px;"
-                    >
-
-                      <tr>
-                        <td
-                          align="center"
-                          style="padding:0;"
-                        >
-
-                          <div
-                            style="font-size:11px;line-height:16px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;font-weight:700;"
-                          >
-                            Reservation ID
-                          </div>
-
-                          <div
-                            style="font-size:14px;line-height:20px;color:#374151;font-weight:700;padding-top:3px;"
-                          >
-                            #${reserva.id}
-                          </div>
-
-                        </td>
-                      </tr>
-
-                    </table>
-
-                  </td>
-                </tr>
-
-              </table>
-
-            </td>
-          </tr>
-
-          <tr>
-            <td
-              align="center"
-              style="padding:16px 12px 0;"
-            >
-
-              <p
-                style="margin:0;font-size:11px;line-height:17px;color:#9ca3af;"
-              >
-                This is an automated reservation notification from ShortBizAI.
-              </p>
-
-            </td>
-          </tr>
-
-        </table>
-
-      </td>
-    </tr>
-  </table>
-
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr>
+<td align="center" style="padding:30px 15px;">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;">
+<tr>
+<td style="padding:30px;text-align:center;background:#111827;color:#ffffff;">
+<div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">
+ShortBizAI
+</div>
+<div style="font-size:28px;font-weight:800;margin-top:10px;">
+Reserva confirmada
+</div>
+</td>
+</tr>
+<tr>
+<td style="padding:35px;">
+<p style="font-size:18px;color:#111827;margin-top:0;">
+Hola ${reservaFinal.cliente_nombre || "Cliente"},
+</p>
+<p style="font-size:15px;line-height:24px;color:#4b5563;">
+Tu reserva ha sido confirmada correctamente.
+</p>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:25px;background:#f9fafb;border-radius:10px;">
+<tr>
+<td style="padding:22px;">
+<div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">
+Date
+</div>
+<div style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding:5px 0 17px;">
+${reservaFinal.fecha || "—"}
+</div>
+<div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">
+Time
+</div>
+<div style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding:5px 0 17px;">
+${reservaFinal.hora || "—"}
+</div>
+<div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">
+Guests
+</div>
+<div style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding-top:5px;">
+${reservaFinal.personas || "—"}
+</div>
+</td>
+</tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:22px;">
+<tr>
+<td align="center">
+<div style="font-size:11px;line-height:16px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;font-weight:700;">
+Reservation ID
+</div>
+<div style="font-size:14px;line-height:20px;color:#374151;font-weight:700;padding-top:3px;">
+#${reservaFinal.id}
+</div>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td align="center" style="padding:16px 12px 0;">
+<p style="margin:0;font-size:11px;line-height:17px;color:#9ca3af;">
+This is an automated reservation notification from ShortBizAI.
+</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
 </body>
-</html>`;
+</html>
+`
+
+            : `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Reserva cancelada</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr>
+<td align="center" style="padding:30px 15px;">
+<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;">
+<tr>
+<td style="padding:30px;text-align:center;background:#7f1d1d;color:#ffffff;">
+<div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">
+ShortBizAI
+</div>
+<div style="font-size:28px;font-weight:800;margin-top:10px;">
+Reserva cancelada
+</div>
+</td>
+</tr>
+<tr>
+<td style="padding:35px;">
+<p style="font-size:18px;color:#111827;margin-top:0;">
+Hola ${reservaFinal.cliente_nombre || "Cliente"},
+</p>
+<p style="font-size:15px;line-height:24px;color:#4b5563;">
+Tu reserva ha sido cancelada.
+</p>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:25px;background:#f9fafb;border-radius:10px;">
+<tr>
+<td style="padding:22px;">
+<div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">
+Date
+</div>
+<div style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding:5px 0 17px;">
+${reservaFinal.fecha || "—"}
+</div>
+<div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">
+Time
+</div>
+<div style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding:5px 0 17px;">
+${reservaFinal.hora || "—"}
+</div>
+<div style="font-size:11px;line-height:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6b7280;">
+Guests
+</div>
+<div style="font-size:17px;line-height:24px;font-weight:700;color:#111827;padding-top:5px;">
+${reservaFinal.personas || "—"}
+</div>
+</td>
+</tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:22px;">
+<tr>
+<td align="center">
+<div style="font-size:11px;line-height:16px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;font-weight:700;">
+Reservation ID
+</div>
+<div style="font-size:14px;line-height:20px;color:#374151;font-weight:700;padding-top:3px;">
+#${reservaFinal.id}
+</div>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td align="center" style="padding:16px 12px 0;">
+<p style="margin:0;font-size:11px;line-height:17px;color:#9ca3af;">
+This is an automated reservation notification from ShortBizAI.
+</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</body>
+</html>
+`;
 
         try {
+
           const respuestaEmail =
             await fetch(
               "https://api.resend.com/emails",
@@ -1409,18 +1585,20 @@ export async function POST(req: Request) {
                     "application/json",
                 },
 
-                body: JSON.stringify({
-                  from:
-                    RESERVA_FROM_EMAIL,
+                body:
+                  JSON.stringify({
+                    from:
+                      RESERVA_FROM_EMAIL,
 
-                  to: [
-                    reserva.email.trim(),
-                  ],
+                    to: [
+                      reservaFinal.email.trim(),
+                    ],
 
-                  subject: asunto,
+                    subject:
+                      asunto,
 
-                  html,
-                }),
+                    html,
+                  }),
               }
             );
 
@@ -1441,6 +1619,7 @@ export async function POST(req: Request) {
             !respuestaEmail.ok ||
             !resultadoEmail?.id
           ) {
+
             motivoEmail =
               resultadoEmail?.message ||
               resultadoEmail?.error ||
@@ -1450,8 +1629,11 @@ export async function POST(req: Request) {
               "❌ EMAIL NO ENVIADO:",
               motivoEmail
             );
+
           } else {
-            emailEnviado = true;
+
+            emailEnviado =
+              true;
 
             console.log(
               "================================="
@@ -1463,7 +1645,7 @@ export async function POST(req: Request) {
 
             console.log(
               "EMAIL:",
-              reserva.email.trim()
+              reservaFinal.email.trim()
             );
 
             console.log(
@@ -1475,7 +1657,11 @@ export async function POST(req: Request) {
               "================================="
             );
           }
-        } catch (emailError: any) {
+
+        } catch (
+          emailError: any
+        ) {
+
           motivoEmail =
             emailError?.message ||
             "Error enviando email";
@@ -1485,6 +1671,18 @@ export async function POST(req: Request) {
             emailError
           );
         }
+
+      } else if (
+        !RESEND_API_KEY
+      ) {
+
+        motivoEmail =
+          "Falta RESEND_API_KEY";
+
+      } else {
+
+        motivoEmail =
+          "La reserva no tiene email del cliente";
       }
 
       // ===================================================
@@ -1501,14 +1699,15 @@ export async function POST(req: Request) {
       // ===================================================
 
       try {
+
         const resultadoWhatsApp =
           await enviarWhatsApp(
-            reserva.telefono,
-            reserva.cliente_nombre,
-            reserva.fecha,
-            reserva.hora,
-            reserva.personas,
-            reserva.id,
+            reservaFinal.telefono,
+            reservaFinal.cliente_nombre,
+            reservaFinal.fecha,
+            reservaFinal.hora,
+            reservaFinal.personas,
+            reservaFinal.id,
             tipo === "confirmar"
           );
 
@@ -1518,12 +1717,16 @@ export async function POST(req: Request) {
         if (
           !resultadoWhatsApp.enviado
         ) {
+
           motivoWhatsApp =
             resultadoWhatsApp.motivo ||
             "WhatsApp no pudo enviar el mensaje";
         }
 
-      } catch (whatsappError: any) {
+      } catch (
+        whatsappError: any
+      ) {
+
         motivoWhatsApp =
           whatsappError?.message ||
           "Error enviando WhatsApp";
@@ -1548,12 +1751,12 @@ export async function POST(req: Request) {
 
       console.log(
         "RESERVA:",
-        reserva.id
+        reservaFinal.id
       );
 
       console.log(
         "ESTADO:",
-        reserva.estado
+        reservaFinal.estado
       );
 
       console.log(
@@ -1572,6 +1775,7 @@ export async function POST(req: Request) {
       );
 
       if (motivoPush) {
+
         console.log(
           "MOTIVO PUSH:",
           motivoPush
@@ -1579,6 +1783,7 @@ export async function POST(req: Request) {
       }
 
       if (motivoEmail) {
+
         console.log(
           "MOTIVO EMAIL:",
           motivoEmail
@@ -1586,6 +1791,7 @@ export async function POST(req: Request) {
       }
 
       if (motivoWhatsApp) {
+
         console.log(
           "MOTIVO WHATSAPP:",
           motivoWhatsApp
@@ -1603,10 +1809,10 @@ export async function POST(req: Request) {
           true,
 
         reservaId:
-          reserva.id,
+          reservaFinal.id,
 
         estado:
-          reserva.estado,
+          reservaFinal.estado,
 
         pushEnviado,
 
@@ -1630,6 +1836,7 @@ export async function POST(req: Request) {
     // =====================================================
 
     if (body.message) {
+
       console.log(
         "MENSAJE TELEGRAM:",
         body.message.text
@@ -1641,6 +1848,7 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
+
     console.error(
       "================================="
     );
@@ -1665,7 +1873,10 @@ export async function POST(req: Request) {
           error?.message ||
           "Error interno del webhook",
       },
-      { status: 500 }
+
+      {
+        status: 500,
+      }
     );
   }
 }
@@ -1675,15 +1886,19 @@ export async function POST(req: Request) {
 // =====================================================
 
 export async function GET() {
+
   try {
+
     const webhookUrl =
       "https://www.shortbizai.com/api/telegram/webhook";
 
     const respuesta =
       await fetch(
         `https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=${encodeURIComponent(webhookUrl)}`,
+
         {
           method: "GET",
+
           cache: "no-store",
         }
       );
@@ -1693,6 +1908,7 @@ export async function GET() {
 
     console.log(
       "TELEGRAM SET WEBHOOK:",
+
       JSON.stringify(
         resultado,
         null,
@@ -1701,7 +1917,9 @@ export async function GET() {
     );
 
     return NextResponse.json({
-      ok: resultado.ok,
+
+      ok:
+        resultado.ok,
 
       webhookUrl,
 
@@ -1710,6 +1928,7 @@ export async function GET() {
     });
 
   } catch (error: any) {
+
     console.error(
       "ERROR CONFIGURANDO WEBHOOK:",
       error
@@ -1723,7 +1942,10 @@ export async function GET() {
           error?.message ||
           "Error configurando webhook",
       },
-      { status: 500 }
+
+      {
+        status: 500,
+      }
     );
   }
 }
