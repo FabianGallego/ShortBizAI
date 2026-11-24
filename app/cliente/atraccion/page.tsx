@@ -166,47 +166,23 @@ export default function AtraccionPage() {
           return;
         }
 
-        // El Super Admin puede abrir Atracción para una empresa elegida
-        // desde el panel privado. Los clientes siguen usando su relación habitual.
+        // Atracción es una herramienta privada de producción del Super Admin.
+        // Los propietarios y usuarios de negocio no pueden abrir este módulo.
+        if (perfil.rol !== "super_admin" || perfil.activo === false) {
+          setError("Este módulo de producción está reservado al equipo administrador de ShortBizAI.");
+          return;
+        }
+
         const empresaIdParam = new URLSearchParams(window.location.search).get("empresaId");
-        let empresaId: number | null = null;
+        if (!empresaIdParam) {
+          setError("Selecciona una empresa desde el panel Super Admin.");
+          return;
+        }
 
-        if (perfil.rol === "super_admin" && perfil.activo !== false) {
-          if (!empresaIdParam) {
-            setError("Selecciona una empresa desde el panel Super Admin.");
-            return;
-          }
-
-          const parsedEmpresaId = Number(empresaIdParam);
-          if (!Number.isInteger(parsedEmpresaId) || parsedEmpresaId <= 0) {
-            setError("La empresa seleccionada no es válida.");
-            return;
-          }
-          empresaId = parsedEmpresaId;
-        } else {
-          if (empresaIdParam) {
-            setError("No tienes permiso para seleccionar otra empresa.");
-            return;
-          }
-
-          const { data: relacion, error: relacionError } = await supabase
-            .from("usuarios_empresas")
-            .select("empresa_id, rol, activo")
-            .eq("user_id", user.id)
-            .eq("activo", true)
-            .maybeSingle();
-
-          if (relacionError) {
-            console.error("ERROR RELACIÓN EMPRESA:", relacionError);
-            setError("No se pudo identificar la empresa del usuario.");
-            return;
-          }
-
-          if (!relacion?.empresa_id) {
-            setError("Este usuario no tiene una empresa asignada.");
-            return;
-          }
-          empresaId = relacion.empresa_id;
+        const empresaId = Number(empresaIdParam);
+        if (!Number.isInteger(empresaId) || empresaId <= 0) {
+          setError("La empresa seleccionada no es válida.");
+          return;
         }
 
         const {
