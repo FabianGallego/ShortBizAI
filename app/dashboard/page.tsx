@@ -645,16 +645,21 @@ export default function Dashboard() {
                 Inicio
               </a>
 
-              <div className="flex cursor-default items-center justify-between rounded-xl px-3.5 py-3 text-sm text-[#806650]">
+              <a
+                href="/cliente/atraccion"
+                className="flex items-center justify-between rounded-xl border border-[#62452e] bg-[#3b2618] px-3.5 py-3 text-sm font-semibold text-[#f2e2d1] shadow-lg shadow-black/10 transition hover:border-[#8a6542] hover:bg-[#49301f]"
+              >
                 <span className="flex items-center gap-3">
-                  <Icon name="video" size={18} />
+                  <span className="text-[#d1a774]">
+                    <Icon name="video" size={18} />
+                  </span>
                   Videos
                 </span>
 
-                <span className="text-[9px] font-bold uppercase tracking-wider text-[#5b4432]">
-                  Pronto
+                <span className="text-[9px] font-bold uppercase tracking-wider text-[#d1a774]">
+                  Activo
                 </span>
-              </div>
+              </a>
 
               <div className="flex cursor-default items-center justify-between rounded-xl px-3.5 py-3 text-sm text-[#806650]">
                 <span className="flex items-center gap-3">
@@ -978,10 +983,11 @@ export default function Dashboard() {
                     <Icon name="arrow" size={16} />
                   </div>
 
-                  <div className="group flex items-center justify-between rounded-xl border border-[#dfd1c2] bg-[#fbf7f2] p-4 transition hover:border-[#c7b29d] hover:bg-white">
-
+                  <a
+                    href="/cliente/atraccion"
+                    className="group flex items-center justify-between rounded-xl border border-[#c7b29d] bg-white p-4 transition hover:border-[#a98765] hover:shadow-md"
+                  >
                     <div className="flex items-center gap-3">
-
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#ebe0d5] text-[#77563a]">
                         <Icon name="video" size={17} />
                       </div>
@@ -992,15 +998,13 @@ export default function Dashboard() {
                         </p>
 
                         <p className="text-[11px] text-[#9a8069]">
-                          Contenido para tu negocio
+                          Crea anuncios cinematográficos para tu negocio
                         </p>
                       </div>
                     </div>
 
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-[#a18b77]">
-                      Próximo
-                    </span>
-                  </div>
+                    <Icon name="arrow" size={16} />
+                  </a>
 
                   <div className="group flex items-center justify-between rounded-xl border border-[#dfd1c2] bg-[#fbf7f2] p-4 transition hover:border-[#c7b29d] hover:bg-white">
 
