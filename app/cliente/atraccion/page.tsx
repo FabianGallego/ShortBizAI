@@ -166,25 +166,47 @@ export default function AtraccionPage() {
           return;
         }
 
-        const {
-          data: relacion,
-          error: relacionError,
-        } = await supabase
-          .from("usuarios_empresas")
-          .select("empresa_id, rol, activo")
-          .eq("user_id", user.id)
-          .eq("activo", true)
-          .maybeSingle();
+        // El Super Admin puede abrir Atracción para una empresa elegida
+        // desde el panel privado. Los clientes siguen usando su relación habitual.
+        const empresaIdParam = new URLSearchParams(window.location.search).get("empresaId");
+        let empresaId: number | null = null;
 
-        if (relacionError) {
-          console.error("ERROR RELACIÓN EMPRESA:", relacionError);
-          setError("No se pudo identificar la empresa del usuario.");
-          return;
-        }
+        if (perfil.rol === "super_admin" && perfil.activo !== false) {
+          if (!empresaIdParam) {
+            setError("Selecciona una empresa desde el panel Super Admin.");
+            return;
+          }
 
-        if (!relacion?.empresa_id) {
-          setError("Este usuario no tiene una empresa asignada.");
-          return;
+          const parsedEmpresaId = Number(empresaIdParam);
+          if (!Number.isInteger(parsedEmpresaId) || parsedEmpresaId <= 0) {
+            setError("La empresa seleccionada no es válida.");
+            return;
+          }
+          empresaId = parsedEmpresaId;
+        } else {
+          if (empresaIdParam) {
+            setError("No tienes permiso para seleccionar otra empresa.");
+            return;
+          }
+
+          const { data: relacion, error: relacionError } = await supabase
+            .from("usuarios_empresas")
+            .select("empresa_id, rol, activo")
+            .eq("user_id", user.id)
+            .eq("activo", true)
+            .maybeSingle();
+
+          if (relacionError) {
+            console.error("ERROR RELACIÓN EMPRESA:", relacionError);
+            setError("No se pudo identificar la empresa del usuario.");
+            return;
+          }
+
+          if (!relacion?.empresa_id) {
+            setError("Este usuario no tiene una empresa asignada.");
+            return;
+          }
+          empresaId = relacion.empresa_id;
         }
 
         const {
@@ -193,7 +215,7 @@ export default function AtraccionPage() {
         } = await supabase
           .from("empresas")
           .select("id, nombre, url_reservas")
-          .eq("id", relacion.empresa_id)
+          .eq("id", empresaId)
           .maybeSingle();
 
         if (empresaError) {
@@ -288,6 +310,21 @@ export default function AtraccionPage() {
     }
   }
 
+  async function fetchVideoAI(body: FormData) {
+    const { data, error } = await supabase.auth.getSession();
+    const accessToken = data.session?.access_token;
+
+    if (error || !accessToken) {
+      throw new Error("Tu sesión ha expirado. Vuelve a iniciar sesión.");
+    }
+
+    return fetch("/api/video-ai", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body,
+    });
+  }
+
   async function requestDirectorPlan(options: {
     sourceType: "poster" | "video" | "single-image" | "multiple-images";
     duration: number | string;
@@ -332,7 +369,7 @@ export default function AtraccionPage() {
       if (options.poster) body.append("posterImage", options.poster);
       (options.posterScenes || []).forEach((file) => body.append("posterSceneImages", file));
 
-      const response = await fetch("/api/video-ai", { method: "POST", body });
+      const response = await fetchVideoAI(body);
       let result: { success?: boolean; plan?: DirectorPlanData; error?: string; message?: string };
       try {
         result = await response.json();
@@ -519,10 +556,7 @@ async function handlePrepareVideo(data: VideoFormData) {
       }
     }
 
-    const response = await fetch("/api/video-ai", {
-      method: "POST",
-      body,
-    });
+    const response = await fetchVideoAI(body);
 
     if (!response.ok) {
       throw new Error(await getResponseError(response));
@@ -641,7 +675,7 @@ async function handlePrepareVideo(data: VideoFormData) {
       body.append("style", premiumForm.style);
       body.append("platform", premiumForm.platform);
 
-      const response = await fetch("/api/video-ai", { method: "POST", body });
+      const response = await fetchVideoAI(body);
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || result.message || "No se pudo generar el video visual.");
       if (!result.visualVideoUrl) throw new Error("El servidor no devolvió la previsualización visual.");
@@ -692,7 +726,7 @@ async function handlePrepareVideo(data: VideoFormData) {
       body.append("campaignBrand", campaignBrand.trim() || businessName);
       body.append("style", premiumForm.style);
 
-      const response = await fetch("/api/video-ai", { method: "POST", body });
+      const response = await fetchVideoAI(body);
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || result.message || "No se pudo generar el video visual.");
       if (!result.visualVideoUrl) throw new Error("El servidor no devolvió el video visual generado.");
@@ -760,7 +794,7 @@ async function handlePrepareVideo(data: VideoFormData) {
       body.append("platform", premiumForm.platform);
       if (backgroundMusicFile) body.append("backgroundMusic", backgroundMusicFile);
 
-      const response = await fetch("/api/video-ai", { method: "POST", body });
+      const response = await fetchVideoAI(body);
       let result: { success?: boolean; videoUrl?: string; error?: string; message?: string };
       try {
         result = await response.json();

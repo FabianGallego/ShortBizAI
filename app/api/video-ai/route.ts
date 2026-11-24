@@ -6,6 +6,7 @@ import {
 } from "@/lib/aiDirector";
 
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 import { spawn } from "node:child_process";
 
@@ -2054,6 +2055,37 @@ async function generateDirectorPlan(
 
 
 
+async function verificarSuperAdmin(request: Request): Promise<boolean> {
+  const authorization = request.headers.get("authorization") || "";
+  const token = authorization.replace(/^Bearer\s+/i, "").trim();
+  if (!token) return false;
+
+  const supabaseAuth = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    }
+  );
+
+  const { data: userData, error: userError } =
+    await supabaseAuth.auth.getUser(token);
+  if (userError || !userData.user) return false;
+
+  const { data: perfil, error: perfilError } = await supabaseAuth
+    .from("perfiles")
+    .select("rol, activo")
+    .eq("user_id", userData.user.id)
+    .maybeSingle();
+
+  return !perfilError && !!perfil && perfil.rol === "super_admin" && perfil.activo !== false;
+}
+
 export async function POST(request: Request) {
 
   let workDir: string | null = null;
@@ -2061,6 +2093,14 @@ export async function POST(request: Request) {
 
 
   try {
+
+    const autorizado = await verificarSuperAdmin(request);
+    if (!autorizado) {
+      return NextResponse.json(
+        { success: false, error: "Acceso exclusivo para Super Admin." },
+        { status: 403 }
+      );
+    }
 
     const formData = await request.formData();
 

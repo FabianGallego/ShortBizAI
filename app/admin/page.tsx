@@ -81,6 +81,10 @@ export default function AdminPage() {
   const [empresaSeleccionada, setEmpresaSeleccionada] =
     useState<Empresa | null>(null);
 
+  // Empresa activa en el productor integrado del panel Super Admin.
+  const [empresaProduccionId, setEmpresaProduccionId] =
+    useState<number | null>(null);
+
   const [mostrarPropietario, setMostrarPropietario] =
     useState(false);
 
@@ -991,6 +995,87 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+
+        <section
+          style={{
+            ...cardStyle,
+            marginBottom: "24px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 30 }}>🎬</div>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>
+                Producción de videos ShortBizAI
+              </h2>
+              <p style={{ margin: "6px 0 0", color: "#71717a", fontSize: 14 }}>
+                Productor integrado en ShortBizAI. Elige un negocio y carga aquí mismo el afiche, las fotos o los videos originales.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gap: 10, marginTop: 18 }}>
+            {empresas.length === 0 ? (
+              <p style={{ margin: 0, color: "#71717a", fontSize: 14 }}>
+                Todavía no hay empresas registradas.
+              </p>
+            ) : empresas.map((empresa) => (
+              <div
+                key={empresa.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  padding: "12px 14px",
+                  border: "1px solid #e4e4e7",
+                  borderRadius: 12,
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 750 }}>{empresa.nombre || "Empresa sin nombre"}</div>
+                  <div style={{ marginTop: 3, fontSize: 12, color: "#71717a" }}>
+                    {empresa.ciudad || "Ciudad no registrada"} · ID {empresa.id}
+                    {empresa.activo === false ? " · Inactiva" : " · Activa"}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEmpresaProduccionId(empresa.id)}
+                  style={{
+                    border: 0,
+                    borderRadius: 9,
+                    padding: "10px 15px",
+                    background: "#111827",
+                    color: "#ffffff",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  {empresaProduccionId === empresa.id ? "Empresa seleccionada" : "Producir aquí"}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {empresaProduccionId !== null && (
+            <div style={{ marginTop: 22, border: "1px solid #d4d4d8", borderRadius: 14, overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", padding: "14px 16px", background: "#f8fafc", borderBottom: "1px solid #e4e4e7" }}>
+                <div>
+                  <div style={{ fontWeight: 800 }}>Estudio de producción</div>
+                  <div style={{ color: "#64748b", fontSize: 13 }}>Empresa: {empresas.find((item) => item.id === empresaProduccionId)?.nombre || `ID ${empresaProduccionId}`}</div>
+                </div>
+                <button type="button" onClick={() => setEmpresaProduccionId(null)} style={{ border: "1px solid #cbd5e1", borderRadius: 8, padding: "8px 12px", background: "#fff", fontWeight: 700, cursor: "pointer" }}>Cerrar productor</button>
+              </div>
+              <iframe
+                title="Productor de videos ShortBizAI"
+                src={`/cliente/atraccion?empresaId=${empresaProduccionId}`}
+                style={{ display: "block", width: "100%", height: "1800px", border: 0, background: "#fff" }}
+              />
+            </div>
+          )}
+        </section>
 
         <section
           style={{
